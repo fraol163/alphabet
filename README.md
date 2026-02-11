@@ -11,8 +11,7 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
                 ?8P
 ```
 
-# Alphabet Programming Language 
-**The High-Density Turing-Complete Syntax**  
+# Alphabet Programming Language  
 **Developed by Fraol Teshome** (`fraolteshome444@gmail.com`)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

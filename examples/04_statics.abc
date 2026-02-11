@@ -1,0 +1,23 @@
+// Static Members Test
+c S {
+  s 1 x = 100
+  
+  s v m 1 f() {
+    z.o("Inside static method f")
+    r 500
+  }
+}
+
+// Access static field
+z.o("Initial S.x:")
+z.o(S.x)
+
+// Modify static field
+S.x = 200
+z.o("Modified S.x:")
+z.o(S.x)
+
+// Call static method
+1 y = S.f()
+z.o("Result of S.f():")
+z.o(y)

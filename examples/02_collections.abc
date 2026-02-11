@@ -1,0 +1,17 @@
+// Collections Test (Lists and Maps)
+
+// List
+13 a = [1, 2, 3]
+z.o("List a:")
+z.o(a)
+
+z.o("a[1]:")
+z.o(a[1])
+
+// Map
+14 m = {"k": 100, "x": 200}
+z.o("Map m:")
+z.o(m)
+
+z.o("m['k']:")
+z.o(m["k"])

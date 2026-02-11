@@ -1,0 +1,33 @@
+{
+  "name": "Alphabet",
+  "scopeName": "source.alphabet",
+  "patterns": [
+    {
+      "name": "comment.line.double-slash.alphabet",
+      "match": "//.*$"
+    },
+    {
+      "name": "keyword.control.alphabet",
+      "match": "\\b(i|e|l|b|k|r|t|h)\\b"
+    },
+    {
+      "name": "keyword.declaration.alphabet",
+      "match": "\\b(c|a|j|n|s|v|p|m)\\b"
+    },
+    {
+      "name": "string.quoted.double.alphabet",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.alphabet",
+          "match": "\\\\."
+        }
+      ]
+    },
+    {
+      "name": "constant.numeric.alphabet",
+      "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+    }
+  ]
+}

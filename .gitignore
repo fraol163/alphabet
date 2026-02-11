@@ -1,0 +1,25 @@
+# Alphabet Public Repository Configuration
+# Developed by Fraol Teshome
+
+# ‼️ PROTECTED SOURCE CODE ‼️
+# These files will NOT be uploaded to the public GitHub
+src/
+alphabet.py
+setup_dist.sh
+setup.py
+pyproject.toml
+.github/
+
+# Build Junk
+build/
+dist/
+alphabet.build/
+alphabet.dist/
+alphabet.onefile-build/
+*.egg-info/
+__pycache__/
+*.pyc
+
+# OS Files
+.DS_Store
+.env

@@ -1,0 +1,10 @@
+// Exception Handling Test
+t {
+  z.o("In try block")
+  z.t() // This is mapped in our VM to throw a "Custom Error 15"
+  z.o("This should not print")
+} h (15 e) {
+  z.o("Caught exception:")
+  z.o(e)
+}
+z.o("After try-handle")

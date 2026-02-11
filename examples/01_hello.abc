@@ -1,0 +1,19 @@
+// Alphabet Language: Hello World & Basics
+12 h = "Hello Alphabet! i am Fraol"
+z.o(h)
+
+1 x = 5
+1 y = 10
+
+i (x < y) {
+  z.o("x is smaller")
+} e {
+  z.o("y is smaller")
+}
+
+1 c = 3
+l (c > 0) {
+  z.o(c)
+  c = c - 1
+}
+z.o("Done!")

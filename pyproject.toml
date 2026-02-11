@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alphabet-lang"
+version = "1.0.0"
+authors = [
+  { name="Fraol Teshome", email="fraolteshome444@gmail.com" },
+]
+description = "A professional programming language using single-character keywords."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Compilers",
+    "Intended Audience :: Developers",
+]
+
+[project.scripts]
+alphabet = "alphabet:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]

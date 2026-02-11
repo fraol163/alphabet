@@ -1,14 +1,5 @@
-# Alphabet Public Repository Configuration
+# Alphabet Production Environment
 # Developed by Fraol Teshome
-
-# ‼️ PROTECTED SOURCE CODE ‼️
-# These files will NOT be uploaded to the public GitHub
-src/
-alphabet.py
-setup_dist.sh
-setup.py
-pyproject.toml
-.github/
 
 # Build Junk
 build/
@@ -20,6 +11,11 @@ alphabet.onefile-build/
 __pycache__/
 *.pyc
 
-# OS Files
+# Local OS & Environment
 .DS_Store
 .env
+.venv/
+venv/
+
+# NOTE: src/ and alphabet.py ARE included so GitHub Actions can build them.
+# YOU MUST SET THE REPOSITORY TO PRIVATE TO HIDE YOUR CODE.

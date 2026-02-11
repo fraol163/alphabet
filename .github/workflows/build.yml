@@ -1,0 +1,43 @@
+name: Build Alphabet Language
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Dependencies
+      run: |
+        pip install nuitka
+        
+    - name: Build Binary (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: python3 -m nuitka --standalone --onefile --follow-imports --remove-output --output-filename=alphabet alphabet.py
+
+    - name: Build Binary (Windows)
+      if: matrix.os == 'windows-latest'
+      run: python -m nuitka --standalone --onefile --follow-imports --remove-output --output-filename=alphabet alphabet.py
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: alphabet-${{ matrix.os }}
+        path: |
+          alphabet
+          alphabet.exe

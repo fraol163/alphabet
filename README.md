@@ -11,7 +11,7 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
                 ?8P
 ```
 
-# Alphabet Programming Language 🔤
+# Alphabet Programming Language 
 **The High-Density Turing-Complete Syntax**  
 **Developed by Fraol Teshome** (`fraolteshome444@gmail.com`)
 

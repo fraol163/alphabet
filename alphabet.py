@@ -5,10 +5,10 @@ import os
 script_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(script_dir, 'src'))
 
-from lexer import Lexer
-from parser import Parser
-from compiler import Compiler
-from vm import VM
+from src.lexer import Lexer
+from src.parser import Parser
+from src.compiler import Compiler
+from src.vm import VM
 
 VERSION = "1.0.0"
 DEVELOPER = "Fraol Teshome (fraolteshome444@gmail.com)"

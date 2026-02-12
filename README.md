@@ -83,7 +83,8 @@ graph TD
     style VM fill:#fff3e0,stroke:#ff9800,stroke-width:2px
     style Compiler fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
     style Bytecode fill:#eee,stroke:#999
-```
+
+```mermaid
 
 ## 📖 1. The Alphabet Dictionary (Keywords)
 Alphabet uses a strict one-character keyword system. Every letter has a specific structural purpose.

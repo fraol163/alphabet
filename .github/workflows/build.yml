@@ -1,4 +1,4 @@
-name: Build Alphabet Language
+name: Build Alphabet
 
 on:
   push:
@@ -29,14 +29,20 @@ jobs:
 
     - name: Build Binary (Linux)
       if: matrix.os == 'ubuntu-latest'
-      run: python3 -m nuitka --standalone --onefile --follow-imports --remove-output --output-filename=alphabet alphabet.py
+      run: |
+        python3 -m nuitka --onefile --follow-imports --remove-output \
+          --output-filename=alphabet alphabet.py
 
     - name: Build Binary (Windows)
       if: matrix.os == 'windows-latest'
-      run: python -m nuitka --standalone --onefile --follow-imports --remove-output --assume-yes-for-downloads --output-filename=alphabet.exe alphabet.py
+      run: |
+        python -m nuitka --onefile --follow-imports --remove-output \
+          --assume-yes-for-downloads --output-filename=alphabet.exe alphabet.py
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: alphabet-${{ matrix.os }}
-        path: alphabet* # Using a wildcard handles both 'alphabet' and 'alphabet.exe'
+        path: |
+          alphabet.exe
+          alphabet

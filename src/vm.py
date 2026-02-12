@@ -1,5 +1,5 @@
 import sys
-from bytecode import OpCode
+from src.bytecode import OpCode
 
 class AlphabetObject:
     def __init__(self, class_info):

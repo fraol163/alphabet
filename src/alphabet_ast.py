@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Optional, Any
-from lexer import Token
+from src.lexer import Token
 
 @dataclass
 class Expr:

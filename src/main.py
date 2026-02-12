@@ -1,7 +1,7 @@
-from lexer import Lexer
-from parser import Parser
-from compiler import Compiler
-from vm import VM
+from src.lexer import Lexer
+from src.parser import Parser
+from src.compiler import Compiler
+from src.vm import VM
 
 def run(source: str):
     lexer = Lexer(source)

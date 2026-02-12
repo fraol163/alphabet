@@ -115,6 +115,8 @@ Alphabet is distributed as a high-performance native binary. You do not need to 
     -   Type `C:\Alphabet` and click **OK**.
 4.  **Test:** Open PowerShell and type `alphabet -v`.
 5.  Make sure you installed Python
+6.  after that run `& "C:\Alphabet\alphabet.exe"` in Powershell
+7.  also on cmd by navigating to ` cd "C:\Alphabet` and type alphabet then enter
 ---
 
 ## 🚀 5. Getting Started Examples

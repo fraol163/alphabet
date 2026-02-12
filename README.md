@@ -33,6 +33,57 @@ Alphabet is not just a script; it is a full language stack:
 
 
 ---
+### 🏗 Architecture Overview
+
+```mermaid
+graph TD
+    Source([📄 Source Code .abc]) 
+    
+    subgraph Frontend [Compiler Frontend]
+        direction TB
+        Lexer[[lexer.py]]
+        Parser[[parser.py]]
+        AST{alphabet_ast.py}
+        
+        Source -->|Scan| Lexer
+        Lexer -->|Tokens| Parser
+        Parser -->|Construct| AST
+    end
+
+    subgraph Backend [Compiler Backend]
+        direction TB
+        Compiler[[compiler.py]]
+        Bytecode([bytecode.py])
+        
+        AST -->|Walk| Compiler
+        Compiler -->|Emit OpCodes| Bytecode
+    end
+
+    subgraph Runtime [Virtual Machine]
+        direction TB
+        VM[[vm.py]]
+        Stack[(Stack Engine)]
+        
+        Bytecode -->|Execute| VM
+        VM <--> Stack
+    end
+
+    VM --> Output([🚀 Console Output])
+
+    subgraph Tooling [Developer Experience]
+        LSP[[lsp.py]]
+        VSCode[alphabet-grammar.json]
+        LSP --- VSCode
+    end
+    
+    VSCode -.->|Syntax Highlights| Source
+
+    style Source fill:#f9f,stroke:#333,stroke-width:2px
+    style Output fill:#00ff00,stroke:#333,stroke-width:2px
+    style VM fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    style Compiler fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    style Bytecode fill:#eee,stroke:#999
+```
 
 ## 📖 1. The Alphabet Dictionary (Keywords)
 Alphabet uses a strict one-character keyword system. Every letter has a specific structural purpose.

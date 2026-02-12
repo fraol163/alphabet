@@ -1,5 +1,5 @@
 from typing import List, Optional
-from lexer import Token, TokenType
+from src.lexer import Token, TokenType
 from alphabet_ast import *
 
 class ParseError(RuntimeError):

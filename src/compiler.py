@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Optional
 from alphabet_ast import *
-from lexer import Token, TokenType
+from src.lexer import Token, TokenType
 from bytecode import OpCode
 
 class Compiler:

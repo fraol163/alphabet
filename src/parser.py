@@ -1,6 +1,6 @@
 from typing import List, Optional
 from src.lexer import Token, TokenType
-from alphabet_ast import *
+from src.alphabet_ast import *
 
 class ParseError(RuntimeError):
     pass

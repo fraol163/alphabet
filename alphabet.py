@@ -4,7 +4,7 @@ import os
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(script_dir, 'src'))
-
+from src.main import run
 from src.lexer import Lexer
 from src.parser import Parser
 from src.compiler import Compiler
@@ -73,18 +73,11 @@ def main():
     with open(arg, 'r') as f:
         source = f.read()
         
-    try:
+    try:            
         run(source)
     except Exception as e:
         print(f"Runtime Error: {e}")
-def main():
-    print(f"Alphabet VM version {VERSION} by {DEVELOPER}")
-    # Example: initialize and run the VM
-    vm = VM()
-    vm.run()
 
-if __name__ == "__main__":
-    main()
 
 if __name__ == "__main__":
     main()

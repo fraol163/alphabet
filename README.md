@@ -18,7 +18,17 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
 [![Build Status](https://github.com/fraol163/alphabet/actions/workflows/build.yml/badge.svg)](https://github.com/fraol163/alphabet/actions)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey.svg)](#-global-installation)
 
-**Alphabet** is a minimalist, high-density programming language where every keyword is a single character and every type is a numeric ID. Designed for developers who value logical elegance, speed, and maximum code density.
+
+**Alphabet** is a minimalist, compiled programming language built for extreme code density and logical elegance. It features a custom **Bytecode Virtual Machine (VM)** and a **Recursive Descent Parser**, allowing developers to write complex logic with single-character keywords.
+
+[Documentation](docs/DOCUMENTATION.md) | [Examples](examples/) | [Roadmap](docs/ROADMAP.md)
+
+## 🛠 Project Architecture
+Alphabet is not just a script; it is a full language stack:
+- **Lexer/Parser:** Converts shorthand syntax into an Abstract Syntax Tree (AST).
+- **Compiler:** Translates AST into optimized Alphabet Bytecode.
+- **Virtual Machine (VM):** A stack-based execution engine for high-performance processing.
+- **LSP Support:** Includes a Language Server Protocol for VS Code syntax highlighting.
 
 ---
 

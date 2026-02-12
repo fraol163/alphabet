@@ -30,6 +30,7 @@ Alphabet is not just a script; it is a full language stack:
 - **Virtual Machine (VM):** A stack-based execution engine for high-performance processing.
 - **LSP Support:** Includes a Language Server Protocol for VS Code syntax highlighting.
   
+![Alphabet Architecture Diagram](docs/architecture.png)
 
 
 ---

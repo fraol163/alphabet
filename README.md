@@ -114,6 +114,7 @@ Alphabet is distributed as a high-performance native binary. You do not need to 
     -   Select **Path** -> Click **Edit** -> Click **New**.
     -   Type `C:\Alphabet` and click **OK**.
 4.  **Test:** Open PowerShell and type `alphabet -v`.
+5.  Make sure you installed Python
 
 ---
 

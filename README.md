@@ -35,7 +35,7 @@ Alphabet is not just a script; it is a full language stack:
 ---
 ### 🏗 Architecture Overview
 
-```mermaid
+```
 graph TD
     Source([📄 Source Code .abc]) 
     
@@ -84,7 +84,7 @@ graph TD
     style Compiler fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
     style Bytecode fill:#eee,stroke:#999
 
-```mermaid
+```
 
 ## 📖 1. The Alphabet Dictionary (Keywords)
 Alphabet uses a strict one-character keyword system. Every letter has a specific structural purpose.

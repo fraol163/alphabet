@@ -115,37 +115,6 @@ Alphabet is distributed as a high-performance native binary. You do not need to 
     -   Type `C:\Alphabet` and click **OK**.
 4.  **Test:** Open PowerShell and type `alphabet -v`.
 5.  Make sure you installed Python
-### Another Requirement For Windows 
-
-1. A C++ compiler (e.g., g++ from MinGW/MSYS2 or MSVC from Visual Studio).
-2. Windows environment (tested on Windows 10/11).
-Optional: Add the compiled executable folder to your PATH for easier usage.
-
-after that 
-Installation
-Option 1: Using MSYS2
-1. Download and install MSYS2.
-2. Open the MSYS2 terminal and install the compiler:
-```
-pacman -S mingw-w64-x86_64-gcc
-```
-3. Navigate to the project folder:
-   ```
-   cd /c/path/to/alphabet
-   ```
-4. Compile the program:
-   ```
-   g++ alphabet.cpp -o alphabet.exe
-
-   ```
-5. Copy `alphabet.exe` to a folder like `C:\Alphabet`
-
-Option 2: Using Visual Studio
-
-1. Install Visual Studio Community with the “Desktop development with C++” workload.
-Open the project folder in Visual Studio.
-2. Build the solution (Ctrl+Shift+B).
-3. The compiled `alphabet.exe` will appear in `bin\Debug` or `bin\Release`
 ---
 
 ## 🚀 5. Getting Started Examples

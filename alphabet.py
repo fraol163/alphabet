@@ -5,7 +5,6 @@ import os
 script_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(script_dir, 'src'))
 
-from main import run
 from lexer import Lexer
 from parser import Parser
 from compiler import Compiler

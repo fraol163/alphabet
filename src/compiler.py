@@ -1,7 +1,7 @@
 from typing import List, Dict, Any, Optional
-from alphabet_ast import *
+from src.alphabet_ast import *
 from src.lexer import Token, TokenType
-from bytecode import OpCode
+from src.bytecode import OpCode
 
 class Compiler:
     def __init__(self):

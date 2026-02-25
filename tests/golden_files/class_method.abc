@@ -1,0 +1,11 @@
+#alphabet<golden_test>
+// Golden test: Class with method
+c Calculator {
+  v m 5 add(5 x, 5 y) {
+    r x + y
+  }
+}
+
+15 calc = n Calculator()
+5 result = calc.add(15, 25)
+z.o(result)

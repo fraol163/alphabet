@@ -1,0 +1,9 @@
+#alphabet<golden_test>
+// Golden test: Loop
+5 i = 0
+5 sum = 0
+l (i < 5) {
+  5 sum = sum + i
+  5 i = i + 1
+}
+z.o(sum)

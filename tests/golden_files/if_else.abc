@@ -1,0 +1,8 @@
+#alphabet<golden_test>
+// Golden test: If-Else
+5 x = 10
+i (x > 5) {
+  z.o("x is greater than 5")
+} e {
+  z.o("x is not greater than 5")
+}

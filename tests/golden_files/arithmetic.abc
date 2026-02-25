@@ -1,0 +1,8 @@
+#alphabet<golden_test>
+// Golden test: Arithmetic operations
+5 a = 10
+5 b = 20
+5 sum = a + b
+5 product = a * b
+z.o(sum)
+z.o(product)

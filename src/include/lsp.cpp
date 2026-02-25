@@ -71,7 +71,7 @@ std::string LanguageServer::process_message(const std::string& json) {
     return create_error(id, -32601, "Method not found: " + method);
 }
 
-std::vector<Diagnostic> LanguageServer::get_diagnostics(const std::string& uri, const std::string& content) {
+std::vector<Diagnostic> LanguageServer::get_diagnostics(const std::string& /*uri*/, const std::string& content) {
     std::vector<Diagnostic> diagnostics;
 
     if (content.find("#alphabet<") == std::string::npos) {
@@ -86,21 +86,6 @@ std::vector<Diagnostic> LanguageServer::get_diagnostics(const std::string& uri, 
         diagnostics.push_back(diag);
     }
 
-    std::regex keyword_pattern("\\b([a-z])\\b");
-    std::smatch match;
-    std::string::const_iterator search_start(content.cbegin());
-    
-    int line = 0;
-    int col = 0;
-    for (char c : content) {
-        if (c == '\n') {
-            line++;
-            col = 0;
-        } else {
-            col++;
-        }
-    }
-    
     return diagnostics;
 }
 

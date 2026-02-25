@@ -60,42 +60,51 @@ const char* token_type_to_string(TokenType type) {
 Lexer::Lexer(std::string_view source) : source_(source) {}
 
 std::vector<Token> Lexer::scan_tokens() {
-    validate_header();
-
+    // Skip Unix shebang if present (for script compatibility)
     if (source_.size() >= 2 && source_[0] == '#' && source_[1] == '!') {
         while (peek() != '\n' && !is_at_end()) {
             advance();
         }
+        // Skip the newline too
+        if (peek() == '\n') {
+            advance();
+        }
     }
+
+    // Validate magic header after skipping shebang
+    validate_header();
 
     while (!is_at_end()) {
         start_ = current_;
         scan_token();
     }
-    
+
     tokens_.emplace_back(TokenType::EOF_TOKEN, std::string_view(), 0, line_);
     return tokens_;
 }
 
 void Lexer::validate_header() {
-    if (source_.size() < 12) {
-        throw MissingLanguageHeader();
-    }
+    // Check from current position (after any shebang)
+    std::string_view header_source = source_.substr(current_);
     
-    // Check for #alphabet< prefix
-    const std::string_view prefix = "#alphabet<";
-    if (source_.substr(0, prefix.size()) != prefix) {
+    if (header_source.size() < 12) {
         throw MissingLanguageHeader();
     }
 
-    size_t close_pos = source_.find('>', prefix.size());
+    // Check for #alphabet< prefix
+    const std::string_view prefix = "#alphabet<";
+    if (header_source.substr(0, prefix.size()) != prefix) {
+        throw MissingLanguageHeader();
+    }
+
+    size_t close_pos = header_source.find('>', prefix.size());
     if (close_pos == std::string_view::npos) {
         throw MissingLanguageHeader();
     }
 
-    size_t newline_pos = source_.find('\n', close_pos);
+    size_t newline_pos = header_source.find('\n', close_pos);
     if (newline_pos != std::string_view::npos) {
-        current_ = newline_pos + 1;
+        current_ = current_ + newline_pos + 1;
         start_ = current_;
         line_ = 2;  // Header is on line 1, code starts on line 2
     }

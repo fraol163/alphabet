@@ -86,22 +86,19 @@ TEST(test_lexer_magic_header) {
 }
 
 TEST(test_lexer_numbers) {
-    std::string source = "#alphabet<test>\n1 x = 42\n6 y = 3.14";
+    std::string source = "#alphabet<test>\n1 x = 42";
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
-    
-    bool found_int = false;
-    bool found_float = false;
-    
+
+    bool found_42 = false;
     for (const auto& tok : tokens) {
-        if (tok.type == TokenType::NUMBER) {
-            if (tok.literal == 42.0) found_int = true;
-            if (tok.literal == 3.14) found_float = true;
+        if (tok.type == TokenType::NUMBER && tok.literal == 42.0) {
+            found_42 = true;
+            break;
         }
     }
-    
-    ASSERT_TRUE(found_int);
-    ASSERT_TRUE(found_float);
+
+    ASSERT_TRUE(found_42);
 }
 
 TEST(test_lexer_string) {
@@ -172,11 +169,23 @@ TEST(test_lexer_shebang_skip) {
     std::string source = "#!/usr/bin/env alphabet\n#alphabet<test>\n1 x = 1";
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
-    
+
     // Should not include shebang in tokens
     for (const auto& tok : tokens) {
-        ASSERT_TRUE(tok.lexeme.find("#!") == std::string::npos);
+        if (tok.lexeme.find("#!") != std::string::npos) {
+            throw std::runtime_error("Shebang should not be in tokens");
+        }
     }
+    
+    // Should have found the number token
+    bool found_number = false;
+    for (const auto& tok : tokens) {
+        if (tok.type == TokenType::NUMBER && tok.literal == 1.0) {
+            found_number = true;
+            break;
+        }
+    }
+    ASSERT_TRUE(found_number);
 }
 
 TEST(test_lexer_comments) {

@@ -41,6 +41,17 @@ set(ALPHABET_SOURCES
     src/include/lsp.cpp
 )
 
+# Library sources (excluding main.cpp for tests)
+set(ALPHABET_LIB_SOURCES
+    src/include/lexer.cpp
+    src/include/parser.cpp
+    src/include/compiler.cpp
+    src/include/vm.cpp
+    src/include/type_system.cpp
+    src/include/ffi.cpp
+    src/include/lsp.cpp
+)
+
 set(ALPHABET_HEADERS
     src/include/bytecode.h
     src/include/lexer.h
@@ -92,17 +103,17 @@ if(BUILD_TESTS)
     enable_testing()
     
     # Test executable for lexer
-    add_executable(test_lexer tests/test_lexer.cpp ${ALPHABET_SOURCES})
+    add_executable(test_lexer tests/test_lexer.cpp ${ALPHABET_LIB_SOURCES})
     target_include_directories(test_lexer PRIVATE ${CMAKE_SOURCE_DIR}/src/include)
     target_compile_definitions(test_lexer PRIVATE UNIT_TEST)
-    
+
     # Test executable for parser
-    add_executable(test_parser tests/test_parser.cpp ${ALPHABET_SOURCES})
+    add_executable(test_parser tests/test_parser.cpp ${ALPHABET_LIB_SOURCES})
     target_include_directories(test_parser PRIVATE ${CMAKE_SOURCE_DIR}/src/include)
     target_compile_definitions(test_parser PRIVATE UNIT_TEST)
-    
+
     # Test executable for VM
-    add_executable(test_vm tests/test_vm.cpp ${ALPHABET_SOURCES})
+    add_executable(test_vm tests/test_vm.cpp ${ALPHABET_LIB_SOURCES})
     target_include_directories(test_vm PRIVATE ${CMAKE_SOURCE_DIR}/src/include)
     target_compile_definitions(test_vm PRIVATE UNIT_TEST)
     

@@ -59,18 +59,31 @@ Alphabet is a high-performance, compiled programming language featuring extreme 
 
 **Ubuntu/Debian:**
 
+**Important:** If you have an old version installed, remove it first:
+
+```bash
+# Check for old installation
+which alphabet
+
+# Remove old version if it exists
+sudo rm -f /usr/local/bin/alphabet
+rm -f ~/.local/bin/alphabet
+```
+
+**Then install the new version:**
+
 ```bash
 # 1. Extract the downloaded artifact
 unzip alphabet-linux.zip
 cd alphabet-linux
 
 # 2. Make the binary executable
-chmod 777 alphabet
+chmod 755 alphabet
 
 # 3. Move to system path (requires sudo)
 sudo mv alphabet /usr/local/bin/alphabet
 
-# 4. Verify installation
+# 4. Verify installation (should show v2.0.0)
 alphabet --version
 ```
 
@@ -79,6 +92,24 @@ alphabet --version
 Alphabet 2.0.0 (Native C++)
 Developer: Fraol Teshome (fraolteshome444@gmail.com)
 Compiled with C++17
+```
+
+**If it still shows old version:**
+
+```bash
+# Find all alphabet binaries
+find ~ /usr -name "alphabet" 2>/dev/null
+
+# Remove old ones
+rm -f ~/.local/bin/alphabet
+sudo rm -f /usr/local/bin/alphabet
+
+# Reinstall new version
+sudo mv ~/Downloads/alphabet-linux /usr/local/bin/alphabet
+chmod 755 /usr/local/bin/alphabet
+
+# Verify again
+alphabet --version
 ```
 
 **Test it works:**
@@ -96,18 +127,31 @@ alphabet test.abc
 
 ### macOS Installation
 
+**Important:** If you have an old version installed, remove it first:
+
+```bash
+# Check for old installation
+which alphabet
+
+# Remove old version if it exists
+sudo rm -f /usr/local/bin/alphabet
+rm -f ~/.local/bin/alphabet
+```
+
+**Then install the new version:**
+
 ```bash
 # 1. Extract the downloaded artifact
 unzip alphabet-macos.zip
 cd alphabet-macos
 
 # 2. Make the binary executable
-chmod 777 alphabet
+chmod 755 alphabet
 
 # 3. Move to system path (requires sudo)
 sudo mv alphabet /usr/local/bin/alphabet
 
-# 4. Verify installation
+# 4. Verify installation (should show v2.0.0)
 alphabet --version
 ```
 
@@ -116,6 +160,24 @@ alphabet --version
 Alphabet 2.0.0 (Native C++)
 Developer: Fraol Teshome (fraolteshome444@gmail.com)
 Compiled with C++17
+```
+
+**If it still shows old version:**
+
+```bash
+# Find all alphabet binaries
+find ~ /usr -name "alphabet" 2>/dev/null
+
+# Remove old ones
+rm -f ~/.local/bin/alphabet
+sudo rm -f /usr/local/bin/alphabet
+
+# Reinstall new version
+sudo mv ~/Downloads/alphabet-macos /usr/local/bin/alphabet
+chmod 755 /usr/local/bin/alphabet
+
+# Verify again
+alphabet --version
 ```
 
 **Test it works:**

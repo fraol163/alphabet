@@ -80,8 +80,9 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
                 return TypeManager::F64;
             } else if constexpr (std::is_same_v<T, std::string>) {
                 return TypeManager::STR;
+            } else {
+                return TypeManager::I32;
             }
-            return TypeManager::I32;
         }, lit->value);
     }
     

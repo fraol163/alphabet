@@ -13,8 +13,8 @@ struct TypeInfo {
     uint16_t id;
     std::string name;
     bool is_primitive;
-    std::vector<uint16_t> interfaces;  // Implemented interface IDs
-    
+    std::vector<uint16_t> interfaces;
+
     TypeInfo(uint16_t i, std::string n, bool prim)
         : id(i), name(std::move(n)), is_primitive(prim) {}
 };
@@ -34,8 +34,7 @@ public:
     bool is_compatible(uint16_t source_type, uint16_t target_type) const;
     bool implements_interface(uint16_t type_id, uint16_t interface_id) const;
     [[nodiscard]] uint16_t next_custom_id() const { return next_custom_id_; }
-    
-    // Primitive type IDs (1-14)
+
     static constexpr uint16_t I8 = 1;
     static constexpr uint16_t I16 = 2;
     static constexpr uint16_t I32 = 3;
@@ -59,6 +58,6 @@ private:
     void register_primitive(uint16_t id, const std::string& name);
 };
 
-} // namespace alphabet
+}
 
-#endif // ALPHABET_TYPE_SYSTEM_H
+#endif

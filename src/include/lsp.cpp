@@ -80,7 +80,7 @@ std::vector<Diagnostic> LanguageServer::get_diagnostics(const std::string& /*uri
         diag.range.start.character = 0;
         diag.range.end.line = 0;
         diag.range.end.character = 0;
-        diag.severity = 1;  // Error
+        diag.severity = 1;
         diag.message = "Missing magic header '#alphabet<lang>' on line 1";
         diag.code = "MISSING_HEADER";
         diagnostics.push_back(diag);
@@ -238,5 +238,5 @@ int extract_json_int(const std::string& json, const std::string& key, int defaul
     return std::stoi(json.substr(pos));
 }
 
-} // namespace lsp
-} // namespace alphabet
+}
+}

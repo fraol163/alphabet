@@ -39,8 +39,7 @@ struct Value {
     Value(const Map& m) : data(std::make_shared<Map>(m)) {}
     Value(Map&& m) : data(std::make_shared<Map>(std::move(m))) {}
     Value(const ObjectPtr& o) : data(o) {}
-    
-    // Convenience methods
+
     bool is_null() const { return std::holds_alternative<std::monostate>(data); }
     bool is_number() const { return std::holds_alternative<double>(data); }
     bool is_string() const { return std::holds_alternative<std::string>(data); }
@@ -97,7 +96,6 @@ struct Value {
     }
 };
 
-// Comparison operators for Value
 inline bool operator==(const Value& a, const Value& b) {
     return a.data == b.data;
 }
@@ -106,19 +104,16 @@ inline bool operator!=(const Value& a, const Value& b) {
     return !(a == b);
 }
 
-// Call frame for function/method execution
-// Raw pointer arithmetic for performance in VM loop
 struct CallFrame {
     const std::vector<Instruction>* bytecode;
-    size_t ip = 0;  // Instruction pointer
+    size_t ip = 0;
     std::unordered_map<std::string, Value> locals;
-    std::vector<std::pair<size_t, size_t>> try_stack;  // (handler_ip, stack_depth)
-    
+    std::vector<std::pair<size_t, size_t>> try_stack;
+
     CallFrame() : bytecode(nullptr) {}
     explicit CallFrame(const std::vector<Instruction>* bc) : bytecode(bc) {}
 };
 
-// VM runtime exception
 class RuntimeError : public std::runtime_error {
 public:
     explicit RuntimeError(const std::string& msg) : std::runtime_error(msg) {}
@@ -155,6 +150,6 @@ private:
 
 std::string value_to_string(const Value& value);
 
-} // namespace alphabet
+}
 
-#endif // ALPHABET_VM_H
+#endif

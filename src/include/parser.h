@@ -67,6 +67,6 @@ private:
     ExprPtr finish_call(ExprPtr callee);
 };
 
-} // namespace alphabet
+}
 
-#endif // ALPHABET_PARSER_H
+#endif

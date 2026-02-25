@@ -86,14 +86,21 @@ void start_repl() {
     std::cout << "Alphabet Language [v" << VERSION << " - Native C++]\n";
     std::cout << "Developed by " << DEVELOPER << "\n";
     std::cout << "Type 'q' to exit.\n\n";
-    
+    std::cout << "Multi-line mode: Type '{' to start a block, then continue on next lines.\n";
+    std::cout << "Example:\n";
+    std::cout << "  >>> c MyClass {\n";
+    std::cout << "  ...   v m 1 getValue() {\n";
+    std::cout << "  ...     r 42\n";
+    std::cout << "  ...   }\n";
+    std::cout << "  ... }\n\n";
+
     alphabet::TypeManager type_manager;
-    ffi_init();  // C API function
-    
+    ffi_init();
+
     std::string line;
     std::string buffer;
     int brace_depth = 0;
-    
+
     while (true) {
         if (buffer.empty()) {
             std::cout << ">>> ";
@@ -145,7 +152,7 @@ std::string read_file(const std::string& path) {
     return oss.str();
 }
 
-} // anonymous namespace
+}
 
 int main(int argc, char* argv[]) {
     bool compile_only = false;
@@ -211,8 +218,7 @@ int main(int argc, char* argv[]) {
         start_repl();
         return 0;
     }
-    
-    // Need input file
+
     if (input_file.empty()) {
         std::cerr << "Error: No input file specified\n";
         std::cerr << "Use --help for usage information\n";
@@ -238,12 +244,10 @@ int main(int argc, char* argv[]) {
                     std::cerr << "Error: Cannot write to " << output_file << "\n";
                     return 1;
                 }
-                
-                // Write magic number
+
                 const char magic[] = "ALPH";
                 out.write(magic, 4);
-                
-                // Write instruction count
+
                 uint32_t count = static_cast<uint32_t>(program.main.size());
                 out.write(reinterpret_cast<const char*>(&count), sizeof(count));
 

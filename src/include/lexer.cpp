@@ -252,7 +252,9 @@ void Lexer::number() {
 }
 
 void Lexer::identifier() {
-    while (std::isalnum(static_cast<unsigned char>(peek()))) {
+    // Support Unicode identifiers (Amharic, Spanish, etc.)
+    // UTF-8 characters have high bit set (value > 127)
+    while (std::isalnum(static_cast<unsigned char>(peek())) || static_cast<unsigned char>(peek()) > 127) {
         advance();
     }
 

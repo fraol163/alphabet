@@ -41,29 +41,178 @@ Alphabet is a high-performance, compiled programming language featuring extreme 
 
 ### From GitHub Actions (Recommended)
 
+#### Step 1: Download the Binary
+
 1. Visit **[Actions](https://github.com/fraol163/alphabet/actions)**
-2. Select **latest build** -> Download artifact for your OS
-3. Extract and run
+2. Click on the **latest successful build** at the top of the list
+3. Scroll down to the **"Artifacts"** section
+4. Click on your operating system:
+   - **Linux:** `alphabet-linux`
+   - **macOS:** `alphabet-macos`
+   - **Windows:** `alphabet-windows.exe`
+
+#### Step 2: Install for Your Operating System
+
+---
+
+### Linux Installation
+
+**Ubuntu/Debian:**
+
+```bash
+# 1. Extract the downloaded artifact
+unzip alphabet-linux.zip
+cd alphabet-linux
+
+# 2. Make the binary executable
+chmod 777 alphabet
+
+# 3. Move to system path (requires sudo)
+sudo mv alphabet /usr/local/bin/alphabet
+
+# 4. Verify installation
+alphabet --version
+```
+
+**Expected output:**
+```
+Alphabet 2.0.0 (Native C++)
+Developer: Fraol Teshome (fraolteshome444@gmail.com)
+Compiled with C++17
+```
+
+**Test it works:**
+```bash
+# Create a test file
+echo -e '#alphabet<en>\n12 msg = "Hello"\nz.o(msg)' > test.abc
+
+# Run it
+alphabet test.abc
+```
+
+**Expected output:** `Hello`
+
+---
+
+### macOS Installation
+
+```bash
+# 1. Extract the downloaded artifact
+unzip alphabet-macos.zip
+cd alphabet-macos
+
+# 2. Make the binary executable
+chmod 777 alphabet
+
+# 3. Move to system path (requires sudo)
+sudo mv alphabet /usr/local/bin/alphabet
+
+# 4. Verify installation
+alphabet --version
+```
+
+**Expected output:**
+```
+Alphabet 2.0.0 (Native C++)
+Developer: Fraol Teshome (fraolteshome444@gmail.com)
+Compiled with C++17
+```
+
+**Test it works:**
+```bash
+# Create a test file
+echo -e '#alphabet<en>\n12 msg = "Hello"\nz.o(msg)' > test.abc
+
+# Run it
+alphabet test.abc
+```
+
+**Expected output:** `Hello`
+
+---
+
+### Windows Installation
+
+**Method 1: Manual Setup**
+
+```powershell
+# 1. Extract the downloaded artifact
+# Right-click alphabet-windows.exe.zip -> Extract All
+
+# 2. Create installation folder
+mkdir C:\Alphabet
+move alphabet-windows.exe C:\Alphabet\alphabet.exe
+
+# 3. Add to PATH (run PowerShell as Administrator)
+$userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+[Environment]::SetEnvironmentVariable("Path", "$userPath;C:\Alphabet", "User")
+
+# 4. Restart PowerShell and verify
+alphabet --version
+```
+
+**Method 2: Quick Setup (No PATH)**
+
+```powershell
+# 1. Extract the downloaded artifact
+# 2. Keep alphabet-windows.exe in a folder (e.g., Downloads)
+# 3. Run with full path:
+C:\Users\YourName\Downloads\alphabet-windows.exe program.abc
+```
+
+**Expected output:**
+```
+Alphabet 2.0.0 (Native C++)
+Developer: Fraol Teshome (fraolteshome444@gmail.com)
+Compiled with C++17
+```
+
+**Test it works:**
+```powershell
+# Create a test file
+@"
+#alphabet<en>
+12 msg = "Hello"
+z.o(msg)
+"@ | Out-File -FilePath test.abc -Encoding UTF8
+
+# Run it
+alphabet test.abc
+```
+
+**Expected output:** `Hello`
+
+---
 
 ### Build from Source
 
-```bash
-# Prerequisites: CMake 3.16+, C++17 compiler (g++, clang++, or MSVC)
+**Prerequisites:**
+- CMake 3.16 or higher
+- C++17 compiler (g++, clang++, or MSVC)
 
+```bash
+# Clone repository
 git clone https://github.com/fraol163/alphabet.git
 cd alphabet
+
+# Create build directory
 mkdir build && cd build
 
-# Standard build
+# Configure
 cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j$(nproc)
 
-# Install globally
-sudo make install
+# Build
+make -j$(nproc)          # Linux/macOS
+cmake --build . --config Release  # Windows
+
+# Install (optional)
+sudo make install        # Linux/macOS
 
 # Verify
 alphabet --version
 ```
+
+---
 
 ### Package Managers (Coming Soon)
 

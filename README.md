@@ -374,6 +374,43 @@ Alphabet source files use the `.abc` extension.
 
 This identifies the file as Alphabet source code. Without it, compilation fails with `MissingLanguageHeader` error.
 
+### Magic Header Format
+
+The magic header follows this format:
+
+```
+#alphabet<lang>
+```
+
+Where `<lang>` is a language code (2-5 letters):
+
+| Code | Language | Example |
+|------|----------|---------|
+| `en` | English | `#alphabet<en>` |
+| `am` | Amharic | `#alphabet<am>` |
+| `es` | Spanish | `#alphabet<es>` |
+| `fr` | French | `#alphabet<fr>` |
+| `de` | German | `#alphabet<de>` |
+| `zh` | Chinese | `#alphabet<zh>` |
+
+**Valid examples:**
+```alphabet
+#alphabet<en>      // English
+#alphabet<am>      // Amharic
+#alphabet<es>      // Spanish
+#alphabet<custom>  // Custom language identifier
+```
+
+**Invalid examples (will fail):**
+```alphabet
+#alphabet          // Missing language code
+#alphabet<>        // Empty language code
+alphabet<en>       // Missing # prefix
+#alphabet en>      // Missing < bracket
+```
+
+**Note:** The language code is currently for documentation purposes only. The compiler accepts any valid language identifier (letters only, 2-10 characters).
+
 ### Hello World
 
 ```alphabet
@@ -413,6 +450,127 @@ l (i < 10) {
 ```
 
 Output: `0`, `2`, `4`, `6`, `8`
+
+---
+
+## Examples in Multiple Languages
+
+Alphabet supports any language identifier in the magic header. Here are examples in different languages:
+
+### English (en)
+
+```alphabet
+#alphabet<en>
+12 greeting = "Hello, World!"
+z.o(greeting)
+
+12 name = "Alphabet"
+5 version = 2
+z.o(name)
+z.o("Version:")
+z.o(version)
+```
+
+**Output:**
+```
+Hello, World!
+Alphabet
+Version:
+2
+```
+
+### Amharic (am)
+
+```alphabet
+#alphabet<am>
+12 ሰላም = "ሰላም ዓለም!"
+z.o(ሰላም)
+
+12 ስም = "አልፋቤት"
+z.o(ስም)
+```
+
+**Output:**
+```
+ሰላም ዓለም!
+አልፋቤት
+```
+
+### Spanish (es)
+
+```alphabet
+#alphabet<es>
+12 saludo = "Hola, Mundo!"
+z.o(saludo)
+
+12 mensaje = "Bienvenido a Alphabet"
+z.o(mensaje)
+```
+
+**Output:**
+```
+Hola, Mundo!
+Bienvenido a Alphabet
+```
+
+### More Complex Example (English)
+
+```alphabet
+#alphabet<en>
+// Calculate factorial
+5 n = 5
+5 result = 1
+
+l (n > 0) {
+  5 result = result * n
+  5 n = n - 1
+}
+
+z.o("Factorial of 5 is:")
+z.o(result)
+```
+
+**Output:**
+```
+Factorial of 5 is:
+120
+```
+
+### Class Example (Amharic)
+
+```alphabet
+#alphabet<am>
+c ሰው {
+  v m 12 ስም() {
+    r "አበበ"
+  }
+}
+
+15 ሰው1 = n ሰው()
+z.o(ሰው1.ስም())
+```
+
+**Output:**
+```
+አበበ
+```
+
+### Arithmetic Example (Spanish)
+
+```alphabet
+#alphabet<es>
+5 numero1 = 10
+5 numero2 = 5
+5 suma = numero1 + numero2
+z.o("La suma es:")
+z.o(suma)
+```
+
+**Output:**
+```
+La suma es:
+15
+```
 
 ---
 

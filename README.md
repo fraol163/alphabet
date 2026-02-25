@@ -1,4 +1,5 @@
 ```text
+
             d8b            d8b                 d8b
            88P            ?88                 ?88                d8P
           d88              88b                 88b            d888888P
@@ -10,40 +11,42 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
                 d88
                 ?8P
 ```
-
 # Alphabet Programming Language v2.0
+
 **Native C++ Compiled Ecosystem**
 
-**Developed by Fraol Teshome** (`fraolteshome444@gmail.com`)
+**Developed by Fraol Teshome** (fraolteshome444@gmail.com)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://github.com/fraol163/alphabet/actions/workflows/build.yml/badge.svg)](https://github.com/fraol163/alphabet/actions)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)](#-installation)
-[![C++17](https://img.shields.io/badge/C%2B%2B-17-green.svg)](https://en.cppreference.com/w/cpp/17)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)](#installation)
+[![C++17](https://img.shields.io/badge/C++-17-green.svg)](https://en.cppreference.com/w/cpp/17)
 
 ---
 
-## 🚀 Overview
+## Overview
 
-**Alphabet** is a high-performance, compiled programming language featuring extreme code density through single-character keywords. Now rewritten from Python to **native C++**, Alphabet delivers:
+Alphabet is a high-performance, compiled programming language featuring extreme code density through single-character keywords. Rewritten from Python to native C++, Alphabet delivers:
 
-- ⚡ **10-100x Performance** - Native compiled binary vs interpreted Python
-- 🔒 **Strong Static Typing** - Compile-time type validation
-- 🎯 **Zero-Copy Lexing** - `std::string_view` for maximum speed
-- 🧠 **Smart Memory** - Fixed-size stack, no heap fragmentation
-- 🔌 **FFI Support** - Link external C/C++ libraries
-- 💻 **LSP Integration** - VS Code real-time error highlighting
+- **10-100x Performance** - Native compiled binary vs interpreted Python
+- **Strong Static Typing** - Compile-time type validation
+- **Zero-Copy Lexing** - std::string_view for maximum speed
+- **Smart Memory** - Fixed-size stack, no heap fragmentation
+- **FFI Support** - Link external C/C++ libraries
+- **LSP Integration** - VS Code real-time error highlighting
 
 ---
 
-## 📦 Quick Install
+## Quick Install
 
 ### From GitHub Actions (Recommended)
+
 1. Visit **[Actions](https://github.com/fraol163/alphabet/actions)**
-2. Select **latest build** → Download artifact for your OS
+2. Select **latest build** -> Download artifact for your OS
 3. Extract and run
 
 ### Build from Source
+
 ```bash
 # Prerequisites: CMake 3.16+, C++17 compiler (g++, clang++, or MSVC)
 
@@ -63,6 +66,7 @@ alphabet --version
 ```
 
 ### Package Managers (Coming Soon)
+
 ```bash
 # Ubuntu/Debian
 sudo apt install alphabet-lang
@@ -76,53 +80,91 @@ choco install alphabet
 
 ---
 
-## 🎯 Language Features
+## Single-Character Keywords
 
-### Single-Character Keywords
-| Letter | Keyword | Example |
-|--------|---------|---------|
-| `i` | If | `i (x > 0) { }` |
-| `e` | Else | `i (...) { } e { }` |
-| `l` | Loop | `l (x > 0) { }` |
-| `c` | Class | `c MyClass { }` |
-| `v` | Public | `v m 1 f() { }` |
-| `p` | Private | `p 1 x = 10` |
-| `m` | Method | `v m 1 add() { }` |
-| `n` | New | `15 obj = n MyClass()` |
-| `r` | Return | `r x + y` |
-| `z` | System | `z.o("Hello")` |
+Alphabet uses exactly 17 single-letter keywords for maximum code density:
 
-[**Full Keyword Reference**](docs/DOCUMENTATION.md)
+| Letter | Keyword | Description | Example |
+|--------|---------|-------------|---------|
+| a | Abstract | Abstract class definition | `a c A { }` |
+| b | Break | Exit loop immediately | `b` |
+| c | Class | Define class blueprint | `c MyClass { }` |
+| e | Else | Alternative conditional path | `i (x) { } e { }` |
+| h | Handle | Catch exception | `h (15 e) { }` |
+| i | If | Conditional check | `i (x > 0) { }` |
+| j | Interface | Method contract | `j J { m 1 f() }` |
+| k | Continue | Skip to next iteration | `k` |
+| l | Loop | Repeat while condition true | `l (x > 0) { }` |
+| m | Method | Function in class | `v m 1 f() { }` |
+| n | New | Instantiate object | `15 o = n MyClass()` |
+| p | Private | Restrict access | `p 1 x = 10` |
+| r | Return | Exit method with value | `r x + y` |
+| s | Static | Class-level member | `s 1 x = 5` |
+| t | Try | Monitor for errors | `t { }` |
+| v | Public | Universal access | `v m 1 f() { }` |
+| z | System | Standard library gateway | `z.o("Hello")` |
 
-### Numeric Type System
-| ID | Type | Example |
-|----|------|---------|
-| 1-4 | Integers (i8-i64) | `1 x = 10` |
-| 5 | Generic int | `5 n = 100` |
-| 6-8 | Floats (f32-f64) | `6 pi = 3.14` |
-| 11 | Boolean | `11 ok = (1 == 1)` |
-| 12 | String | `12 s = "Hello"` |
-| 13 | List | `13 arr = [1, 2, 3]` |
-| 14 | Map | `14 m = {"key": 1}` |
-| 15+ | Custom Classes | `15 obj = n MyClass()` |
-
-**Type IDs 15+ are unlimited** - register custom types dynamically!
+**Unused Letters (Reserved):** d, f, g, q, u, w, x, y
 
 ---
 
-## 📖 Usage
+## Numeric Type System
+
+Alphabet identifies data types by numeric ID for maximum density:
+
+| ID | Type | Description | Example |
+|----|------|-------------|---------|
+| 1 | i8 | 8-bit signed integer | `1 x = 10` |
+| 2 | i16 | 16-bit signed integer | `2 x = 1000` |
+| 3 | i32 | 32-bit signed integer | `3 x = 50000` |
+| 4 | i64 | 64-bit signed integer | `4 x = 90000000` |
+| 5 | int | Generic integer | `5 x = 100` |
+| 6 | f32 | 32-bit floating point | `6 pi = 3.14` |
+| 7 | f64 | 64-bit floating point | `7 pi = 3.14159` |
+| 8 | float | Generic float | `8 x = 0.5` |
+| 9 | dec | Decimal (precision) | `9 money = 99.99` |
+| 10 | cpx | Complex number | `10 z = 1+2j` |
+| 11 | bool | Boolean (true/false) | `11 ok = (1 == 1)` |
+| 12 | str | String | `12 s = "Hello"` |
+| 13 | list | Dynamic array | `13 arr = [1, 2, 3]` |
+| 14 | map | Hash map/dictionary | `14 m = {"id": 1}` |
+| 15+ | obj | Custom class type | `15 user = n Person()` |
+
+**Note:** Type IDs 15 and above are automatically assigned to custom classes in definition order.
+
+---
+
+## System Functions
+
+The `z` (System) object provides built-in functionality:
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| z.o(x) | Print/output to console | `z.o("Hello")` |
+| z.i() | Read input from console | `5 x = z.i()` |
+| z.f(path) | Read file contents | `12 data = z.f("file.txt")` |
+| z.t() | Throw test error | `z.t()` |
+
+---
+
+## Usage
 
 ### File Extension
+
 Alphabet source files use the `.abc` extension.
 
 ### Magic Header Requirement
+
 **Every `.abc` file must start with a magic header:**
+
 ```alphabet
 #alphabet<en>
 ```
-This identifies the file as Alphabet source code. Without it, compilation fails.
+
+This identifies the file as Alphabet source code. Without it, compilation fails with `MissingLanguageHeader` error.
 
 ### Hello World
+
 ```alphabet
 #alphabet<en>
 12 greeting = "Hello, Alphabet!"
@@ -130,6 +172,7 @@ z.o(greeting)
 ```
 
 ### Object-Oriented Programming
+
 ```alphabet
 #alphabet<en>
 c Calculator {
@@ -140,10 +183,13 @@ c Calculator {
 
 15 calc = n Calculator()
 5 result = calc.add(15, 25)
-z.o(result)  // Output: 40
+z.o(result)
 ```
 
+Output: `40`
+
 ### Control Flow
+
 ```alphabet
 #alphabet<en>
 5 i = 0
@@ -155,9 +201,11 @@ l (i < 10) {
 }
 ```
 
+Output: `0`, `2`, `4`, `6`, `8`
+
 ---
 
-## 🛠 Command Line Interface
+## Command Line Interface
 
 ```bash
 # Run a program
@@ -177,6 +225,7 @@ alphabet --help
 ```
 
 ### Exit Codes
+
 | Code | Meaning |
 |------|---------|
 | 0 | Success |
@@ -186,19 +235,22 @@ alphabet --help
 
 ---
 
-## ❓ Troubleshooting
+## Troubleshooting
 
 ### "Missing magic header" Error
+
 **Problem:** File doesn't start with `#alphabet<lang>`
 **Fix:** Add `#alphabet<en>` as the first line
 
 ### "Type mismatch" Error
+
 **Problem:** Assigning incompatible types
 **Fix:** Check type IDs match (e.g., don't assign string to int)
 
 ### "Command not found: alphabet"
+
 **Problem:** Binary not in PATH
-**Fix:** 
+**Fix:**
 ```bash
 # Linux/macOS
 sudo make install
@@ -208,38 +260,46 @@ sudo make install
 ```
 
 ### Segmentation Fault
+
 **Problem:** Stack overflow or memory issue
-**Fix:** 
+**Fix:**
 - Report as bug (include .abc file)
 - Try with AddressSanitizer: `cmake -DENABLE_ASAN=ON ...`
 
 ---
 
-## 🔧 Advanced Features
+## Advanced Features
 
 ### Compile-Time Type Validation
+
 Alphabet enforces strict type compatibility **before** generating bytecode:
+
 ```alphabet
 #alphabet<en>
-5 x = "Hello"  // ❌ Compile Error: Type mismatch
+5 x = "Hello"  // Compile Error: Type mismatch
 ```
 
 ### Foreign Function Interface (FFI)
-Call external C/C++ libraries:
+
+Call external C/C++ libraries (API in development):
+
 ```alphabet
 #alphabet<en>
 // Load and call external functions
-// (FFI API in development)
+// FFI documentation coming soon
 ```
 
 ### Language Server Protocol (LSP)
+
 Real-time error highlighting in VS Code:
+
 ```bash
 # Start LSP server
 alphabet --lsp
 ```
 
-**VS Code Extension:** Configure in `.vscode/settings.json`:
+**VS Code Configuration:** Add to `.vscode/settings.json`:
+
 ```json
 {
   "alphabet.lsp.command": "alphabet",
@@ -249,69 +309,83 @@ alphabet --lsp
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│  User Space                                         │
-│  Source Code (.abc)                                 │
-└────────────────┬────────────────────────────────────┘
-                 │ Raw Text
-                 ▼
-┌─────────────────────────────────────────────────────┐
-│  Compiler Frontend                                  │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
-│  │   Lexer     │→ │   Parser    │→ │     AST     │ │
-│  │ string_view │  │  Recursive  │  │   Tree      │ │
-│  │  zero-copy  │  │  Descent    │  │             │ │
-│  └─────────────┘  └─────────────┘  └─────────────┘ │
-└─────────────────────────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────────┐
-│  Compiler Backend                                   │
-│  ┌─────────────┐  ┌─────────────┐                  │
-│  │   Type      │→ │  Bytecode   │                  │
-│  │  Validation │  │  Generator  │                  │
-│  │ (compile-   │  │  (uint8_t)  │                  │
-│  │   time)     │  │             │                  │
-│  └─────────────┘  └─────────────┘                  │
-└─────────────────────────────────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────────────────┐
-│  Runtime (VM)                                       │
-│  ┌─────────────────────────────────────────────┐   │
-│  │  Stack: std::array<Value, 65536>            │   │
-│  │  Fixed-size, no heap fragmentation          │   │
-│  └─────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────┘
-                 │
-                 ▼
-              Output
++------------------+
+|  User Space      |
+|  Source (.abc)   |
++------------------+
+        |
+        | Raw Text
+        v
++------------------+
+|  Lexer           |
+|  (string_view)   |
++------------------+
+        |
+        | Tokens
+        v
++------------------+
+|  Parser          |
+|  (Recursive      |
+|   Descent)       |
++------------------+
+        |
+        | AST
+        v
++------------------+
+|  Compiler        |
+|  (Type Check)    |
++------------------+
+        |
+        | Bytecode
+        v
++------------------+
+|  VM              |
+|  (Fixed Stack)   |
++------------------+
+        |
+        v
+     Output
 ```
 
-![Architecture Diagram](docs/architecture.png)
+### Component Description
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| Lexer | src/include/lexer.h/cpp | Zero-copy tokenization with std::string_view |
+| Parser | src/include/parser.h/cpp | Recursive descent to AST |
+| Compiler | src/include/compiler.h/cpp | AST to bytecode with type validation |
+| VM | src/include/vm.h/cpp | Stack-based execution with fixed array |
+| Type System | src/include/type_system.h/cpp | Dynamic type registry (unlimited custom types) |
+| FFI | src/include/ffi.h/cpp | C/C++ library bridge |
+| LSP | src/include/lsp.h/cpp | Language Server Protocol for VS Code |
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Run Test Suite
+
 ```bash
 cd build
 ctest --output-on-failure
 ```
 
 ### Golden File Tests
+
 ```bash
 # All tests in tests/golden_files/
 ./alphabet tests/golden_files/hello.abc       # Expected: "Hello, Alphabet!"
 ./alphabet tests/golden_files/arithmetic.abc  # Expected: 30, 200
 ./alphabet tests/golden_files/class_method.abc # Expected: 40
+./alphabet tests/golden_files/if_else.abc     # Expected: "x is greater than 5"
+./alphabet tests/golden_files/loop.abc        # Expected: 10
 ```
 
 ### AddressSanitizer (Memory Safety)
+
 ```bash
 cmake -DENABLE_ASAN=ON -DCMAKE_BUILD_TYPE=Debug ..
 make -j$(nproc)
@@ -320,34 +394,37 @@ ctest
 
 ---
 
-## 📊 Performance Comparison
+## Performance Comparison
 
 | Metric | Python (v1.0) | C++ (v2.0) | Improvement |
 |--------|---------------|------------|-------------|
-| Startup Time | ~50ms | ~2ms | **25x faster** |
-| Tokenization | String copies | Zero-copy | **10x faster** |
-| Memory | GC overhead | Fixed stack | **5x less** |
-| Execution | Interpreted | Native | **10-100x faster** |
+| Startup Time | ~50ms | ~2ms | 25x faster |
+| Tokenization | String copies | Zero-copy | 10x faster |
+| Memory | GC overhead | Fixed stack | 5x less |
+| Execution | Interpreted | Native | 10-100x faster |
 
 ---
 
-## 🌍 Cross-Platform Distribution
+## Cross-Platform Distribution
 
 ### Windows (NSIS Installer)
+
 - `.exe` installer with automatic PATH configuration
-- Download from GitHub Actions → `alphabet-windows.exe`
+- Download from GitHub Actions -> `alphabet-windows.exe`
 
 ### Linux (DEB / Tarball)
+
 - Debian/Ubuntu: `alphabet_2.0.0_amd64.deb`
 - Universal: `alphabet-2.0.0-Linux-x86_64.tar.gz`
 
 ### macOS (DMG / Homebrew)
+
 - DMG: `alphabet-2.0.0-macOS.dmg`
 - Homebrew: `brew install alphabet` (coming soon)
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 | Document | Description |
 |----------|-------------|
@@ -359,38 +436,45 @@ ctest
 
 ---
 
-## ⚡ Quick Reference
+## Alphabet Language Quick Reference
 
-### All Keywords (17 total)
+### All 26 Letters Status
+
 ```
-a - Abstract    h - Handle     o - (not used)   v - Public
-b - Break       i - If         p - Private     w - (not used)
-c - Class       j - Interface  q - (not used)  x - (not used)
-d - (not used)  k - Continue   r - Return      y - (not used)
-e - Else        l - Loop       s - Static      z - System
-f - (not used)  m - Method     t - Try
-g - (not used)  n - New        u - (not used)
+USED:     a b c e h i j k l m n p r s t v z (17 letters)
+RESERVED: d f g q u w x y (8 letters)
 ```
 
-### Type IDs
+### Type ID Quick Lookup
+
 ```
-1=i8    5=int    9=dec     13=list
-2=i16   6=f32   10=cpx    14=map
-3=i32   7=f64   11=bool   15+=custom class
-4=i64   8=float 12=str
+Integers:  1=i8   2=i16   3=i32   4=i64   5=int
+Floats:    6=f32  7=f64   8=float 9=dec   10=cpx
+Other:     11=bool 12=str  13=list 14=map
+Custom:    15+ (auto-assigned to classes)
 ```
 
-### System Functions (z object)
+### Operator Symbols
+
 ```
-z.o(x)    - Print/output
-z.i()     - Input/read
-z.f(path) - Read file
-z.t()     - Throw test error
+Arithmetic:  +  -  *  /  %
+Comparison:  == != >  <  >= <=
+Logical:     && || !
+Assignment:  =
+Access:      .  @  ^
+Delimiters:  {} () [] , :
+```
+
+### Memory Layout
+
+```
+Stack: std::array<Value, 65536>  (fixed, ~512KB)
+Heap:  Dynamic types only (lists, maps, objects)
 ```
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -399,6 +483,7 @@ z.t()     - Throw test error
 5. Submit a pull request
 
 ### Development Setup
+
 ```bash
 # Debug build with AddressSanitizer
 cmake -DENABLE_ASAN=ON -DCMAKE_BUILD_TYPE=Debug ..
@@ -413,23 +498,23 @@ make format
 
 ---
 
-## 📝 License
+## License
 
 MIT License - See [LICENSE](LICENSE) file
 
 ---
 
-## 📧 Contact
+## Contact
 
-**Fraol Teshome**  
-📧 fraolteshome444@gmail.com  
-💼 [GitHub](https://github.com/fraol163)
+**Fraol Teshome**
+- Email: fraolteshome444@gmail.com
+- GitHub: https://github.com/fraol163
 
 For tech presentations, partnerships, or inquiries.
 
 ---
 
-## 🎯 Roadmap
+## Roadmap
 
 - [ ] Package manager integration (apt, brew, choco)
 - [ ] Enhanced FFI with automatic type conversion
@@ -440,4 +525,4 @@ For tech presentations, partnerships, or inquiries.
 
 ---
 
-**Built with ❤️ using C++17**
+**Built with C++17**

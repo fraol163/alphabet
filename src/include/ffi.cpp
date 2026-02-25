@@ -4,6 +4,7 @@
 
 #ifdef _WIN32
     #include <windows.h>
+    #define strdup _strdup
 #else
     #include <dlfcn.h>
 #endif
@@ -248,8 +249,9 @@ FFIValue to_ffi_value(const FFIArg& arg) {
             return ffi_make_string(v.c_str());
         } else if constexpr (std::is_same_v<T, bool>) {
             return ffi_make_bool(v ? 1 : 0);
+        } else {
+            return ffi_make_null();
         }
-        return ffi_make_null();
     }, arg);
 }
 

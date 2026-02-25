@@ -95,10 +95,6 @@ bool Parser::check_next_is_identifier() const {
     return t.lexeme.size() == 1 && std::isalpha(static_cast<unsigned char>(t.lexeme[0]));
 }
 
-// ============================================================================
-// DECLARATION PARSERS
-// ============================================================================
-
 std::optional<StmtPtr> Parser::declaration() {
     try {
         if (check(TokenType::INTERFACE)) {
@@ -146,36 +142,35 @@ StmtPtr Parser::interface_declaration() {
     consume(TokenType::RBRACE, "Expect '}' after interface body.");
     
     return std::make_shared<ClassStmt>(name, nullptr, std::move(methods),
-                                       std::vector<VarStmt>{}, 
+                                       std::vector<VarStmt>{},
                                        std::vector<Variable>{}, true);
 }
 
 StmtPtr Parser::class_declaration() {
     Token name = consume_identifier("Expect class name.");
-    
+
     std::shared_ptr<Variable> superclass;
     std::vector<Variable> interfaces;
-    
+
     if (match({TokenType::EXTENDS})) {
         Token super_name = consume_identifier("Expect superclass or interface name.");
         superclass = std::make_shared<Variable>(super_name);
-        
+
         while (match({TokenType::COMMA})) {
             Token if_name = consume_identifier("Expect interface name.");
             interfaces.emplace_back(if_name);
         }
     }
-    
+
     consume(TokenType::LBRACE, "Expect '{' before class body.");
-    
+
     std::vector<FunctionStmt> methods;
     std::vector<VarStmt> fields;
-    
+
     while (!check(TokenType::RBRACE) && !is_at_end()) {
         std::optional<Token> visibility;
         bool is_static = false;
-        
-        // Parse modifiers
+
         while (true) {
             if (check(TokenType::PUBLIC) || check(TokenType::PRIVATE)) {
                 if (visibility) break;
@@ -187,7 +182,7 @@ StmtPtr Parser::class_declaration() {
                 break;
             }
         }
-        
+
         if (match({TokenType::METHOD})) {
             methods.push_back(method(visibility, is_static));
         } else if (check(TokenType::NUMBER)) {
@@ -196,7 +191,7 @@ StmtPtr Parser::class_declaration() {
             throw error(peek(), "Expect method or field declaration.");
         }
     }
-    
+
     consume(TokenType::RBRACE, "Expect '}' after class body.");
 
     return std::make_shared<ClassStmt>(name, std::move(superclass), std::move(methods),
@@ -538,4 +533,4 @@ ExprPtr Parser::primary() {
     throw error(peek(), "Expect expression.");
 }
 
-} // namespace alphabet
+}

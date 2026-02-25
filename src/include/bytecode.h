@@ -65,7 +65,6 @@ struct CompiledMethod {
     std::vector<std::string> param_names;
 };
 
-// Compiled class information for runtime
 struct CompiledClass {
     std::string name;
     std::string superclass;
@@ -78,7 +77,7 @@ struct CompiledClass {
 struct Program {
     std::vector<Instruction> main;
     std::vector<Instruction> static_init;
-    std::unordered_map<uint16_t, CompiledClass> classes;  // Class ID -> CompiledClass
+    std::unordered_map<uint16_t, CompiledClass> classes;
     std::vector<std::string> globals;
 };
 
@@ -124,6 +123,6 @@ inline const char* opcode_to_string(OpCode op) {
     }
 }
 
-} // namespace alphabet
+}
 
-#endif // ALPHABET_BYTECODE_H
+#endif

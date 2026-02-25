@@ -64,7 +64,7 @@ private:
 std::string extract_json_string(const std::string& json, const std::string& key);
 int extract_json_int(const std::string& json, const std::string& key, int default_val = 0);
 
-} // namespace lsp
-} // namespace alphabet
+}
+}
 
-#endif // ALPHABET_LSP_H
+#endif

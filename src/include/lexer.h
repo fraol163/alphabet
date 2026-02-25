@@ -49,8 +49,8 @@ enum class TokenType {
 
 struct Token {
     TokenType type;
-    std::string_view lexeme;  // Zero-copy reference into source
-    double literal;           // For NUMBER tokens
+    std::string_view lexeme;
+    double literal;
     size_t line;
     
     Token() : type(TokenType::EOF_TOKEN), literal(0), line(1) {}
@@ -66,8 +66,7 @@ public:
 class Lexer {
 public:
     explicit Lexer(std::string_view source);
-    
-    // Scan all tokens from source
+
     std::vector<Token> scan_tokens();
     
 private:
@@ -94,6 +93,6 @@ private:
 
 const char* token_type_to_string(TokenType type);
 
-} // namespace alphabet
+}
 
-#endif // ALPHABET_LEXER_H
+#endif

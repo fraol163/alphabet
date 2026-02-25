@@ -1,7 +1,12 @@
 #include "ffi.h"
-#include <dlfcn.h>
 #include <cstring>
 #include <stdexcept>
+
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <dlfcn.h>
+#endif
 
 extern "C" {
 
@@ -15,44 +20,67 @@ FFI_EXPORT void ffi_cleanup(void) {
 FFI_EXPORT FFIResult ffi_call(const char* lib, const char* func,
                               FFIValue* args, int arg_count) {
     FFIResult result = {0, ffi_make_null(), nullptr};
-    
+
     if (!lib || !func) {
         result.error_message = "Invalid library or function name";
         return result;
     }
-    
-    // Load the library
+
+#ifdef _WIN32
+    HMODULE handle = LoadLibraryA(lib);
+    if (!handle) {
+        result.error_message = "Failed to load library";
+        return result;
+    }
+
+    typedef FFIValue (*FuncType)(FFIValue*, int);
+    FuncType f = reinterpret_cast<FuncType>(GetProcAddress(handle, func));
+#else
     void* handle = dlopen(lib, RTLD_NOW);
     if (!handle) {
         result.error_message = dlerror();
         return result;
     }
-    
-    // Get function pointer
+
     typedef FFIValue (*FuncType)(FFIValue*, int);
     FuncType f = reinterpret_cast<FuncType>(dlsym(handle, func));
+#endif
+
     if (!f) {
+#ifdef _WIN32
+        result.error_message = "Function not found in library";
+#else
         result.error_message = dlerror();
         dlclose(handle);
+#endif
         return result;
     }
-    
-    // Call the function
+
     result.value = f(args, arg_count);
     result.success = 1;
-    
+
+#ifndef _WIN32
     dlclose(handle);
+#endif
     return result;
 }
 
 FFI_EXPORT void* ffi_load_library(const char* path) {
     if (!path) return nullptr;
+#ifdef _WIN32
+    return reinterpret_cast<void*>(LoadLibraryA(path));
+#else
     return dlopen(path, RTLD_NOW | RTLD_GLOBAL);
+#endif
 }
 
 FFI_EXPORT void ffi_unload_library(void* handle) {
     if (handle) {
+#ifdef _WIN32
+        FreeLibrary(reinterpret_cast<HMODULE>(handle));
+#else
         dlclose(handle);
+#endif
     }
 }
 
@@ -109,11 +137,7 @@ FFI_EXPORT void ffi_free_value(FFIValue* val) {
     }
 }
 
-} // extern "C"
-
-// ============================================================================
-// C++ API Implementation
-// ============================================================================
+}
 
 #ifdef __cplusplus
 
@@ -123,10 +147,14 @@ namespace ffi {
 struct FFIBridge::LibraryHandle {
     void* handle = nullptr;
     std::string path;
-    
+
     ~LibraryHandle() {
         if (handle) {
+#ifdef _WIN32
+            FreeLibrary(reinterpret_cast<HMODULE>(handle));
+#else
             dlclose(handle);
+#endif
         }
     }
 };
@@ -138,11 +166,15 @@ FFIBridge::~FFIBridge() {
 }
 
 bool FFIBridge::load_library(const std::string& path) {
+#ifdef _WIN32
+    void* handle = reinterpret_cast<void*>(LoadLibraryA(path.c_str()));
+#else
     void* handle = dlopen(path.c_str(), RTLD_NOW | RTLD_GLOBAL);
+#endif
     if (!handle) {
         return false;
     }
-    
+
     libraries_.push_back({handle, path});
     return true;
 }
@@ -153,38 +185,53 @@ void FFIBridge::unload_all() {
 
 FFIArg FFIBridge::call(const std::string& lib_path, const std::string& func_name,
                        const std::vector<FFIArg>& args) {
-    // Load library temporarily
+#ifdef _WIN32
+    void* handle = reinterpret_cast<void*>(LoadLibraryA(lib_path.c_str()));
+    if (!handle) {
+        throw std::runtime_error("Failed to load library");
+    }
+
+    typedef FFIValue (*FuncType)(FFIValue*, int);
+    FuncType f = reinterpret_cast<FuncType>(GetProcAddress(reinterpret_cast<HMODULE>(handle), func_name.c_str()));
+#else
     void* handle = dlopen(lib_path.c_str(), RTLD_NOW);
     if (!handle) {
         throw std::runtime_error(dlerror());
     }
-    
-    // Get function - assuming standard FFI signature
+
     typedef FFIValue (*FuncType)(FFIValue*, int);
     FuncType f = reinterpret_cast<FuncType>(dlsym(handle, func_name.c_str()));
+#endif
+
     if (!f) {
+#ifdef _WIN32
+        FreeLibrary(reinterpret_cast<HMODULE>(handle));
+        throw std::runtime_error("Function not found");
+#else
         dlclose(handle);
         throw std::runtime_error(dlerror());
+#endif
     }
-    
-    // Convert arguments
+
     std::vector<FFIValue> ffi_args(args.size());
     for (size_t i = 0; i < args.size(); ++i) {
         ffi_args[i] = to_ffi_value(args[i]);
     }
-    
-    // Call function
+
     FFIValue result = f(ffi_args.data(), static_cast<int>(args.size()));
-    
-    // Cleanup argument strings
+
     for (auto& arg : ffi_args) {
         if (arg.type == FFI_TYPE_STRING && arg.data.string_val) {
             free(const_cast<char*>(arg.data.string_val));
         }
     }
-    
+
+#ifdef _WIN32
+    FreeLibrary(reinterpret_cast<HMODULE>(handle));
+#else
     dlclose(handle);
-    
+#endif
+
     return from_ffi_value(result);
 }
 
@@ -223,7 +270,7 @@ FFIArg from_ffi_value(const FFIValue& val) {
     }
 }
 
-} // namespace ffi
-} // namespace alphabet
+}
+}
 
-#endif // __cplusplus
+#endif

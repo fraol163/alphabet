@@ -117,10 +117,10 @@ void VM::execute_instruction(CallFrame& frame) {
 
     switch (instr.op) {
         case OpCode::PUSH_CONST: {
-            if (auto* val = std::get_if<double>(&instr.operand)) {
-                push(Value(*val));
-            } else if (auto* val = std::get_if<std::string>(&instr.operand)) {
-                push(Value(*val));
+            if (auto* d = std::get_if<double>(&instr.operand)) {
+                push(Value(*d));
+            } else if (auto* s = std::get_if<std::string>(&instr.operand)) {
+                push(Value(*s));
             } else if (std::holds_alternative<std::monostate>(instr.operand) ||
                        std::holds_alternative<std::nullptr_t>(instr.operand)) {
                 push(Value(nullptr));
@@ -132,16 +132,13 @@ void VM::execute_instruction(CallFrame& frame) {
             std::visit([this, &frame](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, int64_t>) {
-                    // Global by index - look up name from globals_by_index_
                     if (static_cast<size_t>(op) < globals_by_index_.size()) {
                         const std::string& name = globals_by_index_[op];
-                        // First check frame locals (for method parameters)
                         auto local_it = frame.locals.find(name);
                         if (local_it != frame.locals.end()) {
                             push(local_it->second);
                             return;
                         }
-                        // Then check globals
                         auto it = globals_.find(name);
                         if (it != globals_.end()) {
                             push(it->second);
@@ -150,13 +147,11 @@ void VM::execute_instruction(CallFrame& frame) {
                     }
                     push(Value(nullptr));
                 } else if constexpr (std::is_same_v<T, std::string>) {
-                    // First check frame locals (for method parameters)
                     auto local_it = frame.locals.find(op);
                     if (local_it != frame.locals.end()) {
                         push(local_it->second);
                         return;
                     }
-                    // Then check globals
                     auto it = globals_.find(op);
                     if (it != globals_.end()) {
                         push(it->second);
@@ -173,7 +168,6 @@ void VM::execute_instruction(CallFrame& frame) {
             std::visit([this, &val](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, int64_t>) {
-                    // Global by index - look up name from globals_by_index_
                     if (static_cast<size_t>(op) < globals_by_index_.size()) {
                         const std::string& name = globals_by_index_[op];
                         globals_[name] = val;
@@ -327,12 +321,11 @@ void VM::execute_instruction(CallFrame& frame) {
                     for (int i = 0; i < arg_count; ++i) {
                         args.push_back(pop());
                     }
-                    std::reverse(args.begin(), args.end());  // Restore original order
+                    std::reverse(args.begin(), args.end());
 
                     Value callee = pop();
 
                     if (callee.is_string() && callee.as_string() == "SYSTEM_Z") {
-                        // Push args back for system_call to consume
                         for (auto& arg : args) {
                             push(arg);
                         }
@@ -342,36 +335,31 @@ void VM::execute_instruction(CallFrame& frame) {
 
                     if (callee.is_object()) {
                         ObjectPtr obj = callee.as_object();
-                        
-                        // Look up class by ID
+
                         auto class_it = classes_.find(obj->class_id);
                         if (class_it == classes_.end()) {
                             throw RuntimeError("Unknown class ID: " + std::to_string(obj->class_id));
                         }
-                        
+
                         const CompiledClass& cls = class_it->second;
-                        
-                        // Look up method in class
+
                         auto method_it = cls.methods.find(method_name);
                         if (method_it == cls.methods.end()) {
                             throw RuntimeError("Method '" + method_name + "' not found in class '" + cls.name + "'");
                         }
-                        
-                        // Create new call frame for method
+
                         const CompiledMethod& method_info = method_it->second;
                         CallFrame new_frame(&method_info.bytecode);
                         new_frame.locals["this"] = callee;
-                        
-                        // Set up parameters as locals using parameter names
+
                         for (size_t i = 0; i < args.size() && i < method_info.param_names.size(); ++i) {
                             new_frame.locals[method_info.param_names[i]] = args[i];
                         }
-                        
+
                         frames_.push_back(std::move(new_frame));
                         return;
                     }
-                    
-                    // Unknown callee type
+
                     push(Value(nullptr));
                 }
             }, instr.operand);
@@ -382,7 +370,6 @@ void VM::execute_instruction(CallFrame& frame) {
             std::visit([this](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, std::string>) {
-                    // Look up class ID by name from classes_
                     uint16_t class_id = 0;
                     for (const auto& [id, cls] : classes_) {
                         if (cls.name == op) {
@@ -463,7 +450,6 @@ void VM::execute_instruction(CallFrame& frame) {
                         ObjectPtr obj = obj_val.as_object();
                         auto it = obj->fields.find(op);
                         if (it != obj->fields.end()) {
-                            // Would need to convert back from void*
                         }
                         push(Value(nullptr));
                     } else {
@@ -473,7 +459,7 @@ void VM::execute_instruction(CallFrame& frame) {
             }, instr.operand);
             break;
         }
-        
+
         case OpCode::STORE_FIELD: {
             std::visit([this](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
@@ -482,7 +468,6 @@ void VM::execute_instruction(CallFrame& frame) {
                     Value obj_val = pop();
                     if (obj_val.is_object()) {
                         ObjectPtr obj = obj_val.as_object();
-                        // Would need to store as void*
                     }
                 }
             }, instr.operand);
@@ -633,4 +618,4 @@ const std::vector<Instruction>* VM::lookup_method(const CompiledClass& cls,
     return nullptr;
 }
 
-} // namespace alphabet
+}

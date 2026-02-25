@@ -33,7 +33,6 @@ const TypeInfo* TypeManager::get_type(uint16_t id) const {
 
 uint16_t TypeManager::register_type(const std::string& name,
                                     const std::vector<uint16_t>& interfaces) {
-    // Check if name already exists
     auto it = name_to_id_.find(name);
     if (it != name_to_id_.end()) {
         throw TypeError("Type '" + name + "' already registered with ID " + 
@@ -49,33 +48,28 @@ uint16_t TypeManager::register_type(const std::string& name,
 }
 
 bool TypeManager::is_compatible(uint16_t source_type, uint16_t target_type) const {
-    // Same type is always compatible
     if (source_type == target_type) return true;
-    
+
     const TypeInfo* source = get_type(source_type);
     const TypeInfo* target = get_type(target_type);
-    
+
     if (!source || !target) return false;
-    
-    // Primitives: numeric widening allowed
+
     if (source->is_primitive && target->is_primitive) {
-        // Integer widening chain
         if (source_type <= I64 && target_type <= I64) {
             return source_type <= target_type;
         }
-        // Float widening
         if ((source_type == F32 || source_type == FLOAT) &&
             (target_type == F64 || target_type == FLOAT)) {
             return true;
         }
         return false;
     }
-    
-    // Custom types: check inheritance/interface implementation
+
     if (!target->is_primitive) {
         return implements_interface(source_type, target_type);
     }
-    
+
     return false;
 }
 
@@ -87,9 +81,7 @@ bool TypeManager::implements_interface(uint16_t type_id, uint16_t interface_id) 
         if (iface == interface_id) return true;
     }
 
-    // TODO: Check superclass chain for inherited interface implementation
-
     return false;
 }
 
-} // namespace alphabet
+}

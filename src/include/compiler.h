@@ -37,7 +37,6 @@ private:
     uint16_t infer_expression_type(const ExprPtr& expr);
     bool types_compatible(uint16_t source, uint16_t target);
 
-    // Emit single instruction
     void emit(OpCode op, Operand operand = std::monostate{});
 
     void patch_jump(size_t index, size_t target);
@@ -54,7 +53,6 @@ private:
     void visit_block(const Block& stmt);
     void visit_return(const ReturnStmt& stmt);
 
-    // Expression visitors
     void visit_binary(const Binary& expr);
     void visit_unary(const Unary& expr);
     void visit_literal(const Literal& expr);
@@ -74,6 +72,6 @@ private:
     std::vector<Instruction> compile_method(const FunctionStmt& method);
 };
 
-} // namespace alphabet
+}
 
-#endif // ALPHABET_COMPILER_H
+#endif

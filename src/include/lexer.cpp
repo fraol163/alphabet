@@ -60,18 +60,15 @@ const char* token_type_to_string(TokenType type) {
 Lexer::Lexer(std::string_view source) : source_(source) {}
 
 std::vector<Token> Lexer::scan_tokens() {
-    // Skip Unix shebang if present (for script compatibility)
     if (source_.size() >= 2 && source_[0] == '#' && source_[1] == '!') {
         while (peek() != '\n' && !is_at_end()) {
             advance();
         }
-        // Skip the newline too
         if (peek() == '\n') {
             advance();
         }
     }
 
-    // Validate magic header after skipping shebang
     validate_header();
 
     while (!is_at_end()) {
@@ -84,14 +81,12 @@ std::vector<Token> Lexer::scan_tokens() {
 }
 
 void Lexer::validate_header() {
-    // Check from current position (after any shebang)
     std::string_view header_source = source_.substr(current_);
-    
+
     if (header_source.size() < 12) {
         throw MissingLanguageHeader();
     }
 
-    // Check for #alphabet< prefix
     const std::string_view prefix = "#alphabet<";
     if (header_source.substr(0, prefix.size()) != prefix) {
         throw MissingLanguageHeader();
@@ -106,7 +101,7 @@ void Lexer::validate_header() {
     if (newline_pos != std::string_view::npos) {
         current_ = current_ + newline_pos + 1;
         start_ = current_;
-        line_ = 2;  // Header is on line 1, code starts on line 2
+        line_ = 2;
     }
 }
 
@@ -252,8 +247,6 @@ void Lexer::number() {
 }
 
 void Lexer::identifier() {
-    // Support Unicode identifiers (Amharic, Spanish, etc.)
-    // UTF-8 characters have high bit set (value > 127)
     while (std::isalnum(static_cast<unsigned char>(peek())) || static_cast<unsigned char>(peek()) > 127) {
         advance();
     }
@@ -302,4 +295,4 @@ TokenType Lexer::keyword_type(char c) const {
     }
 }
 
-} // namespace alphabet
+}

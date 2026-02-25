@@ -4,7 +4,6 @@
 
 namespace alphabet {
 
-// Helper to convert string_view to string for map keys
 inline std::string sv_to_str(std::string_view sv) {
     return std::string(sv);
 }
@@ -47,20 +46,18 @@ bool Compiler::types_compatible(uint16_t source, uint16_t target) {
     if (source == target) return true;
 
     if (target == TypeManager::INT) {
-        return true;  // Allow any numeric type
+        return true;
     }
-    
-    // INTEGER types (1-5) can accept other integers with promotion
+
     if (target >= TypeManager::I8 && target <= TypeManager::INT) {
         if (source >= TypeManager::I8 && source <= TypeManager::F64) {
-            return true;  // Allow integer/float conversions for generic int
+            return true;
         }
     }
-    
-    // FLOAT types (6-8) can accept floats and integers
+
     if (target >= TypeManager::F32 && target <= TypeManager::FLOAT) {
         if (source >= TypeManager::I8 && source <= TypeManager::F64) {
-            return true;  // Allow numeric to float conversion
+            return true;
         }
     }
     
@@ -78,7 +75,7 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
         return std::visit([](const auto& value) -> uint16_t {
             using T = std::decay_t<decltype(value)>;
             if constexpr (std::is_same_v<T, std::monostate>) {
-                return TypeManager::I32;  // null
+                return TypeManager::I32;
             } else if constexpr (std::is_same_v<T, double>) {
                 return TypeManager::F64;
             } else if constexpr (std::is_same_v<T, std::string>) {
@@ -89,16 +86,13 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
     }
     
     if (auto* bin = dynamic_cast<const Binary*>(expr.get())) {
-        // Arithmetic operations preserve type
         uint16_t left_type = infer_expression_type(bin->left);
         uint16_t right_type = infer_expression_type(bin->right);
-        
-        // If both are integers, result is integer
+
         if (left_type >= TypeManager::I8 && left_type <= TypeManager::I64 &&
             right_type >= TypeManager::I8 && right_type <= TypeManager::I64) {
-            return std::max(left_type, right_type);  // Promote to larger
+            return std::max(left_type, right_type);
         }
-        // If either is float, result is float
         if (left_type == TypeManager::F32 || left_type == TypeManager::F64 ||
             right_type == TypeManager::F32 || right_type == TypeManager::F64) {
             return TypeManager::F64;
@@ -109,15 +103,13 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
     if (auto* var = dynamic_cast<const Variable*>(expr.get())) {
         std::string name = sv_to_str(var->name.lexeme);
         if (name == "z") return TypeManager::I32;
-        // Check if it's a class name
         if (class_map_.find(name) != class_map_.end()) {
-            return class_map_[name];  // Custom type ID
+            return class_map_[name];
         }
         return TypeManager::I32;
     }
 
     if (auto* new_expr = dynamic_cast<const New*>(expr.get())) {
-        // New expression returns the class type
         std::string class_name = sv_to_str(new_expr->name.lexeme);
         if (class_map_.find(class_name) != class_map_.end()) {
             return class_map_[class_name];
@@ -126,23 +118,20 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
     }
 
     if (auto* call = dynamic_cast<const Call*>(expr.get())) {
-        // Method call - infer return type
         if (auto* get = dynamic_cast<const Get*>(call->callee.get())) {
             std::string method_name = sv_to_str(get->name.lexeme);
-            if (method_name == "o") return TypeManager::I32;  // print returns null
+            if (method_name == "o") return TypeManager::I32;
         }
         return TypeManager::I32;
     }
 
     if (auto* list = dynamic_cast<const ListLiteral*>(expr.get())) {
-        // List literal returns list type (13)
-        (void)list;  // Suppress unused warning
+        (void)list;
         return TypeManager::LIST;
     }
 
     if (auto* map = dynamic_cast<const MapLiteral*>(expr.get())) {
-        // Map literal returns map type (14)
-        (void)map;  // Suppress unused warning
+        (void)map;
         return TypeManager::MAP;
     }
 
@@ -265,18 +254,18 @@ void Compiler::visit_expr(const ExprPtr& expr) {
         visit_logical(*e);
     } else if (auto* e = dynamic_cast<const Call*>(expr.get())) {
         visit_call(*e);
-    } else if (auto* e = dynamic_cast<const Get*>(expr.get())) {
-        visit_get(*e);
-    } else if (auto* e = dynamic_cast<const Set*>(expr.get())) {
-        visit_set(*e);
-    } else if (auto* e = dynamic_cast<const New*>(expr.get())) {
-        visit_new(*e);
-    } else if (auto* e = dynamic_cast<const ListLiteral*>(expr.get())) {
-        visit_list(*e);
-    } else if (auto* e = dynamic_cast<const MapLiteral*>(expr.get())) {
-        visit_map(*e);
-    } else if (auto* e = dynamic_cast<const IndexExpr*>(expr.get())) {
-        visit_index(*e);
+    } else if (auto* get = dynamic_cast<const Get*>(expr.get())) {
+        visit_get(*get);
+    } else if (auto* set = dynamic_cast<const Set*>(expr.get())) {
+        visit_set(*set);
+    } else if (auto* new_expr = dynamic_cast<const New*>(expr.get())) {
+        visit_new(*new_expr);
+    } else if (auto* list = dynamic_cast<const ListLiteral*>(expr.get())) {
+        visit_list(*list);
+    } else if (auto* map = dynamic_cast<const MapLiteral*>(expr.get())) {
+        visit_map(*map);
+    } else if (auto* index = dynamic_cast<const IndexExpr*>(expr.get())) {
+        visit_index(*index);
     }
 }
 
@@ -404,7 +393,6 @@ void Compiler::visit_logical(const Logical& expr) {
     visit_expr(expr.left);
 
     if (expr.op.type == TokenType::AND) {
-        // For AND: if left is false, skip right
         size_t false_jump = bytecode_.size();
         emit(OpCode::JUMP_IF_FALSE, static_cast<int64_t>(0));
         visit_expr(expr.right);
@@ -478,7 +466,6 @@ void Compiler::visit_set(const Set& expr) {
         std::string var_name = sv_to_str(var->name.lexeme);
         auto class_it = class_map_.find(var_name);
         if (class_it != class_map_.end()) {
-            // Static field
             visit_expr(expr.obj);
             visit_expr(expr.value);
             emit(OpCode::SET_STATIC, sv_to_str(expr.name.lexeme));
@@ -486,7 +473,6 @@ void Compiler::visit_set(const Set& expr) {
         }
     }
 
-    // Instance field
     visit_expr(expr.obj);
     visit_expr(expr.value);
     emit(OpCode::STORE_FIELD, sv_to_str(expr.name.lexeme));
@@ -501,7 +487,6 @@ void Compiler::visit_new(const New& expr) {
 
 void Compiler::visit_call(const Call& expr) {
     if (auto* get = dynamic_cast<const Get*>(expr.callee.get())) {
-        // Method call on object
         visit_expr(get->obj);
         for (const auto& arg : expr.arguments) {
             visit_expr(arg);
@@ -515,14 +500,12 @@ void Compiler::visit_call(const Call& expr) {
                                               static_cast<int>(expr.arguments.size())));
         }
     } else if (auto* var = dynamic_cast<const Variable*>(expr.callee.get())) {
-        // Function call or system call
         for (const auto& arg : expr.arguments) {
             visit_expr(arg);
         }
 
         std::string var_name = sv_to_str(var->name.lexeme);
         if (var_name == "z") {
-            // System object - handled at runtime
             emit(OpCode::PUSH_CONST, std::string("SYSTEM_Z"));
         }
 
@@ -536,14 +519,12 @@ void Compiler::visit_get(const Get& expr) {
         std::string var_name = sv_to_str(var->name.lexeme);
         auto class_it = class_map_.find(var_name);
         if (class_it != class_map_.end()) {
-            // Static field access
             visit_expr(expr.obj);
             emit(OpCode::GET_STATIC, sv_to_str(expr.name.lexeme));
             return;
         }
     }
 
-    // Instance field access
     visit_expr(expr.obj);
     emit(OpCode::LOAD_FIELD, sv_to_str(expr.name.lexeme));
 }
@@ -578,12 +559,10 @@ CompiledClass Compiler::compile_class_def(const ClassStmt& stmt) {
         cls.superclass = sv_to_str(stmt.superclass->name.lexeme);
     }
 
-    // Compile methods with parameter info
     for (const auto& method : stmt.methods) {
         CompiledMethod info;
         info.bytecode = compile_method(method);
-        
-        // Extract parameter names
+
         for (const auto& param : method.params) {
             info.param_names.push_back(sv_to_str(param.name.lexeme));
         }
@@ -596,7 +575,6 @@ CompiledClass Compiler::compile_class_def(const ClassStmt& stmt) {
         }
     }
 
-    // Compile static field initializers
     std::vector<Instruction> old_bytecode = std::move(bytecode_);
     bytecode_.clear();
 
@@ -622,8 +600,7 @@ std::vector<Instruction> Compiler::compile_method(const FunctionStmt& method) {
     for (const auto& stmt : method.body) {
         visit(stmt);
     }
-    
-    // Ensure method ends with RET
+
     if (bytecode_.empty() || bytecode_.back().op != OpCode::RET) {
         emit(OpCode::PUSH_CONST, nullptr);
         emit(OpCode::RET);
@@ -635,4 +612,4 @@ std::vector<Instruction> Compiler::compile_method(const FunctionStmt& method) {
     return result;
 }
 
-} // namespace alphabet
+}

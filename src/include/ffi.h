@@ -86,9 +86,9 @@ private:
 FFIValue to_ffi_value(const FFIArg& arg);
 FFIArg from_ffi_value(const FFIValue& val);
 
-} // namespace ffi
-} // namespace alphabet
+}
+}
 
-#endif // __cplusplus
+#endif
 
-#endif // ALPHABET_FFI_H
+#endif

@@ -1,0 +1,4 @@
+#alphabet<golden_test>
+// Golden test: Hello World
+12 greeting = "Hello, Alphabet!"
+z.o(greeting)

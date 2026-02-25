@@ -1,0 +1,2018 @@
+Directory structure:
+└── fraol163-alphabet/
+    ├── README.md
+    ├── alphabet.py
+    ├── pyproject.toml
+    ├── setup.py
+    ├── setup_dist.sh
+    ├── docs/
+    │   ├── COMPLETE_GUIDE.md
+    │   ├── DOCUMENTATION.md
+    │   ├── PRESENTATION.md
+    │   └── ROADMAP.md
+    ├── examples/
+    │   ├── 01_hello.abc
+    │   ├── 02_collections.abc
+    │   ├── 03_exceptions.abc
+    │   └── 04_statics.abc
+    ├── src/
+    │   ├── __init__.py
+    │   ├── alphabet_ast.py
+    │   ├── bytecode.py
+    │   ├── compiler.py
+    │   ├── lexer.py
+    │   ├── lsp.py
+    │   ├── main.py
+    │   ├── parser.py
+    │   └── vm.py
+    ├── tooling/
+    │   └── vscode/
+    │       └── alphabet-grammar.json
+    └── .github/
+        └── workflows/
+            └── build.yml
+
+================================================
+FILE: README.md
+================================================
+```text
+            d8b            d8b                 d8b                     
+           88P            ?88                 ?88                d8P  
+          d88              88b                 88b            d888888P
+ d888b8b  888  ?88,.d88b,  888888b  d888b8b    888888b  d8888b  ?88'  
+d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P   
+88b  ,88b  88b   88b  d8P d88   88P88b  ,88b  d88,  d8888b      88b   
+`?88P'`88b  88b  888888P'd88'   88b`?88P'`88bd88'`?88P'`?888P'  `?8b  
+                 88P'                                                 
+                d88                                                   
+                ?8P
+```
+
+# Alphabet Programming Language  
+**Developed by Fraol Teshome** (`fraolteshome444@gmail.com`)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://github.com/fraol163/alphabet/actions/workflows/build.yml/badge.svg)](https://github.com/fraol163/alphabet/actions)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey.svg)](#-global-installation)
+
+
+**Alphabet** is a minimalist, compiled programming language built for extreme code density and logical elegance. It features a custom **Bytecode Virtual Machine (VM)** and a **Recursive Descent Parser**, allowing developers to write complex logic with single-character keywords.
+
+[Documentation](docs/DOCUMENTATION.md) | [Examples](examples/) | [Roadmap](docs/ROADMAP.md)
+
+## 🛠 Project Architecture
+Alphabet is not just a script; it is a full language stack:
+- **Lexer/Parser:** Converts shorthand syntax into an Abstract Syntax Tree (AST).
+- **Compiler:** Translates AST into optimized Alphabet Bytecode.
+- **Virtual Machine (VM):** A stack-based execution engine for high-performance processing.
+- **LSP Support:** Includes a Language Server Protocol for VS Code syntax highlighting.
+  
+![Alphabet Architecture Diagram](docs/architecture.png)
+
+
+---
+
+## 📖 1. The Alphabet Dictionary (Keywords)
+Alphabet uses a strict one-character keyword system. Every letter has a specific structural purpose.
+
+| Letter | Name | Usage | Description |
+| :--- | :--- | :--- | :--- |
+| **`a`** | **Abstract** | `a c A { ... }` | Defines a class that cannot be created directly. |
+| **`b`** | **Break** | `b` | Exits the current loop immediately. |
+| **`c`** | **Class** | `c A { ... }` | Defines a new object blueprint. |
+| **`e`** | **Else** | `i (...) { } e { }` | The alternative path when an `i` check is false. |
+| **`h`** | **Handle** | `h (15 e) { }` | Catches and manages errors from a `t` block. |
+| **`i`** | **If** | `i (x > 0) { }` | Starts a conditional logic check. |
+| **`j`** | **Interface**| `j J { m 1 f() }` | Defines a method contract for classes to join. |
+| **`k`** | **Continue**| `k` | Skips the rest of the loop and starts the next cycle. |
+| **`l`** | **Loop** | `l (x > 0) { }` | Repeats code as long as the condition is true. |
+| **`m`** | **Method** | `v m 1 f() { }` | Defines a function or action inside a class. |
+| **`n`** | **New** | `15 o = n A()` | Instantiates a live object from a class. |
+| **`p`** | **Private** | `p 1 x = 10` | Restricts access to within the same class. |
+| **`r`** | **Return** | `r 10` | Exits a method and sends back a value. |
+| **`s`** | **Static** | `s 1 x = 5` | Defines a member shared by the entire class. |
+| **`t`** | **Try** | `t { ... }` | Monitors a block of code for potential errors. |
+| **`v`** | **Public** | `v m 1 f() { }` | Makes a member accessible from anywhere. |
+| **`z`** | **System** | `z.o("Hi")` | Gateway to built-in system powers (I/O, Files). |
+
+---
+
+## 🔢 2. The Numeric Type Map (1-50)
+Alphabet identifies data types by number to maximize density.
+
+| ID | Data Type | Usage Example |
+| :--- | :--- | :--- |
+| **1** | **i8** (8-bit Int) | `1 small = 10` |
+| **2** | **i16** (16-bit Int)| `2 medium = 1000` |
+| **3** | **i32** (32-bit Int)| `3 standard = 50000` |
+| **4** | **i64** (64-bit Int)| `4 large = 90000000` |
+| **5** | **int** (Generic)   | `5 x = 10` |
+| **6** | **f32** (Float)     | `6 p = 3.14` |
+| **7** | **f64** (Double)    | `7 d = 3.14159` |
+| **8** | **float** (Generic) | `8 f = 0.5` |
+| **9** | **dec** (Decimal)   | `9 money = 99.99` |
+| **10**| **cpx** (Complex)   | `10 num = 1+2j` |
+| **11**| **bool** (Boolean)  | `11 ok = (1 == 1)` |
+| **12**| **str** (String)    | `12 s = "Hello"` |
+| **13**| **list** (Array)    | `13 a = [1, 2, 3]` |
+| **14**| **map** (Hash)      | `14 m = {"id": 1}` |
+| **15-50**| **obj** (Custom) | `15 user = n Person()` |
+
+*Note: IDs 15-50 are assigned automatically to your custom classes in the order they are defined.*
+
+---
+
+## 📦 3. Acquiring Alphabet (The Cloud Pipeline)
+Alphabet is distributed as a high-performance native binary. You do not need to install source code or Python.
+
+### How to Download:
+1.  Go to the **[Actions](https://github.com/fraol163/alphabet/actions)** tab of this repository.
+2.  Select the **latest successful build** at the top of the list.
+3.  Scroll to the **"Artifacts"** section at the bottom.
+4.  Download the file for your system:
+    -   `alphabet-ubuntu-latest` (For Linux)
+    -   `alphabet-windows-latest` (For Windows `.exe`)
+
+---
+
+## 🛠 4. Global Installation
+
+### 🐧 For Linux / macOS
+1.  Unzip the artifact to find the `alphabet` binary.
+2.  Grant execution rights: `chmod +x alphabet`
+3.  Move to global bin: `sudo mv alphabet /usr/local/bin/alphabet`
+4.  **Test:** Type `alphabet -v` in your terminal.
+
+### 🪟 For Windows
+1.  Unzip the artifact to find `alphabet.exe`.
+2.  Create folder `C:\Alphabet` and move the `.exe` inside.
+3.  **Setup Path:**
+    -   Search Start for **"Environment Variables"** -> Click **Edit**.
+    -   Select **Path** -> Click **Edit** -> Click **New**.
+    -   Type `C:\Alphabet` and click **OK**.
+4.  **Test:** Open PowerShell and type `alphabet -v`.
+5.  Make sure you installed Python
+6.  after that run `& "C:\Alphabet\alphabet.exe"` in Powershell
+7.  also on cmd by navigating to ` cd "C:\Alphabet` and type alphabet then enter
+---
+
+## 🚀 5. Getting Started Examples
+
+### The Hello World
+```alphabet
+12 h = "Hello Alphabet!"
+z.o(h)
+```
+
+### Advanced OOP Logic
+```alphabet
+c A {
+  v m 1 g() { r 10 }
+}
+
+c B ^ A {
+  v m 1 g() { r 20 }
+}
+
+15 o = n B()
+z.o(o.g()) // Returns 20 (Polymorphism)
+```
+
+---
+
+## 🤝 Contact & Presentation
+Developed with ❤️ by **Fraol Teshome**.  
+For tech presentation inquiries or partnerships:  
+📧 **fraolteshome444@gmail.com**
+
+
+
+================================================
+FILE: alphabet.py
+================================================
+#!/usr/bin/env python3
+import sys
+import os
+
+script_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(script_dir, 'src'))
+from src.main import run
+from src.lexer import Lexer
+from src.parser import Parser
+from src.compiler import Compiler
+from src.vm import VM
+
+VERSION = "1.0.0"
+DEVELOPER = "Fraol Teshome (fraolteshome444@gmail.com)"
+
+LOGO = r"""
+            d8b            d8b                 d8b                     
+           88P            ?88                 ?88                d8P  
+          d88              88b                 88b            d888888P
+ d888b8b  888  ?88,.d88b,  888888b  d888b8b    888888b  d8888b  ?88'  
+d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P   
+88b  ,88b  88b   88b  d8P d88   88P88b  ,88b  d88,  d8888b      88b   
+`?88P'`88b  88b  888888P'd88'   88b`?88P'`88bd88'`?88P'`?888P'  `?8b  
+                 88P'                                                 
+                d88                                                   
+                ?8P
+"""
+
+def start_repl():
+    print(LOGO)
+    print(f"Alphabet Language [{VERSION}]")
+    print(f"Developed by {DEVELOPER}")
+    print("Type 'q' to exit.")
+    compiler = Compiler()
+    vm = VM()
+    
+    while True:
+        try:
+            line = input(">>> ")
+            if line.strip().lower() == 'q': break
+            if not line.strip(): continue
+            
+            lexer = Lexer(line)
+            tokens = lexer.scan_tokens()
+            parser = Parser(tokens)
+            statements = parser.parse()
+            
+            program = compiler.compile(statements)
+            vm.run(program)
+            
+        except EOFError:
+            print()
+            break
+        except Exception as e:
+            print(f"Error: {e}")
+
+def main():
+    if len(sys.argv) < 2:
+        start_repl()
+        sys.exit(0)
+    
+    arg = sys.argv[1]
+    
+    if arg in ["-v", "--version"]:
+        print(f"Alphabet {VERSION}")
+        print(f"Developer: {DEVELOPER}")
+        sys.exit(0)
+
+    if not os.path.exists(arg):
+        print(f"Error: File '{arg}' not found.")
+        sys.exit(1)
+        
+    with open(arg, 'r') as f:
+        source = f.read()
+        
+    try:            
+        run(source)
+    except Exception as e:
+        print(f"Runtime Error: {e}")
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+================================================
+FILE: pyproject.toml
+================================================
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alphabet-lang"
+version = "1.0.0"
+authors = [
+  { name="Fraol Teshome", email="fraolteshome444@gmail.com" },
+]
+description = "A professional programming language using single-character keywords."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Compilers",
+    "Intended Audience :: Developers",
+]
+
+[project.scripts]
+alphabet = "alphabet:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+
+
+================================================
+FILE: setup.py
+================================================
+from setuptools import setup, find_packages
+
+setup(
+    name="alphabet-lang",
+    version="1.0.0",
+    packages=find_packages(),
+    py_modules=['alphabet'],
+    install_requires=[],
+    entry_points={
+        'console_scripts': [
+            'alphabet=alphabet:main',
+        ],
+    },
+    author="Fraol Teshome",
+    author_email="fraolteshome444@gmail.com",
+    description="The Alphabet Programming Language",
+    python_requires='>=3.10',
+)
+
+
+
+================================================
+FILE: setup_dist.sh
+================================================
+#!/bin/bash
+# Alphabet Professional Release Script
+# Developed by Fraol Teshome
+
+echo "------------------------------------------------"
+echo "Preparing Production Binaries (Hidden Logic)"
+echo "------------------------------------------------"
+
+# Ensure Nuitka is installed
+pip install -U nuitka --break-system-packages
+
+# Function to compile
+compile_alphabet() {
+    local OS=$1
+    echo "Compiling for $OS..."
+    python3 -m nuitka \
+        --standalone \
+        --onefile \
+        --follow-imports \
+        --remove-output \
+        --output-filename=alphabet \
+        alphabet.py
+}
+
+# 1. Compile for the current machine
+compile_alphabet "Current OS"
+
+echo ""
+echo "------------------------------------------------"
+echo "HOW TO SHARE ON GITHUB (WITHOUT SHOWING CODE):"
+echo "1. Create a Public GitHub Repo."
+echo "2. Upload ONLY the 'docs' and 'examples' folders."
+echo "3. Go to the 'Releases' tab on GitHub."
+echo "4. Upload the compiled 'alphabet' file there."
+echo "5. Tell users: 'Download the binary from the Release tab'."
+echo "------------------------------------------------"
+
+
+
+================================================
+FILE: docs/COMPLETE_GUIDE.md
+================================================
+# Alphabet: The Complete Master Guide
+**By Fraol Teshome** (`fraolteshome444@gmail.com`)
+
+## 1. Professional Installation (Acquiring Binaries)
+Alphabet is distributed as a pre-compiled binary via **GitHub Actions**. This ensures source-code privacy and maximum performance.
+
+### Where to Download:
+1.  Visit the **[Actions Page](https://github.com/fraol163/alphabet/actions)**.
+2.  Click the top entry in the list (the latest successful build).
+3.  Look for the **Artifacts** section at the very bottom of the page.
+4.  Download the ZIP file matching your Operating System.
+
+---
+
+## 2. Windows Installation Guide
+1.  Download and unzip `alphabet-windows-latest.zip`.
+2.  Move the `alphabet.exe` file to `C:\Alphabet\`.
+3.  Add `C:\Alphabet` to your system **PATH** environment variable.
+4.  Verification: Open `PowerShell` and type `alphabet -v`.
+
+---
+
+## 3. Linux Installation Guide
+1.  Download and unzip `alphabet-ubuntu-latest.zip`.
+2.  Grant execution rights: `chmod +x alphabet`.
+3.  Move to your bin directory: `sudo mv alphabet /usr/local/bin/`.
+4.  Verification: Type `alphabet -v` in your terminal.
+
+---
+
+## 4. Language "Dictionary" (One-by-One)
+Every keyword in Alphabet is a single character.
+
+- **`a` (Abstract):** Defines a class that cannot be instantiated.
+- **`b` (Break):** Exits a loop immediately.
+- **`c` (Class):** Blueprint for objects.
+- **`e` (Else):** Alternative path for `i`.
+- **`h` (Handle):** Catch errors from `t`.
+- **`i` (If):** Conditional logic.
+- **`j` (Interface):** Method contract.
+- **`k` (Continue):** Next loop cycle.
+- **`l` (Loop):** Repetition tool.
+- **`m` (Method):** Class function.
+- **`n` (New):** Instantiate object.
+- **`p` (Private):** Restrict access.
+- **`r` (Return):** Send value back.
+- **`s` (Static):** Class-level data.
+- **`t` (Try):** Error monitor.
+- **`v` (Public):** Universal access.
+- **`z` (System):** Standard Library gateway.
+
+---
+Developed by **Fraol Teshome**. All rights reserved.
+
+
+
+================================================
+FILE: docs/DOCUMENTATION.md
+================================================
+# Alphabet: Language Quick Reference
+**By Fraol Teshome**
+
+| Letter | Keyword | ID | Type |
+| :--- | :--- | :--- | :--- |
+| **a** | Abstract | **1-5** | Integers (i8-int) |
+| **b** | Break | **6-10**| Floats (f32-cpx) |
+| **c** | Class | **11** | Boolean |
+| **e** | Else | **12** | String |
+| **h** | Handle | **13** | List |
+| **i** | If | **14** | Map |
+| **j** | Interface | **15+** | Custom Objects |
+| **k** | Continue | | |
+| **l** | Loop | | |
+| **m** | Method | | |
+| **n** | New | | |
+| **p** | Private | | |
+| **r** | Return | | |
+| **s** | Static | | |
+| **t** | Try | | |
+| **v** | Public | | |
+| **z** | System | | |
+
+## Standard Library
+- `z.o(x)` : Print
+- `z.i()`  : Input
+- `z.f(p)` : Read File
+- `z.t()`  : Test Error
+
+
+
+================================================
+FILE: docs/PRESENTATION.md
+================================================
+# Alphabet: High-Density Logic Evolution
+**Lead Architect: Fraol Teshome** (`fraolteshome444@gmail.com`)
+
+---
+
+## 1. Technical Infrastructure
+Alphabet utilizes a professional-grade engineering pipeline designed for enterprise scale.
+
+### A. The Engine Pipeline
+1.  **Lexical Engine:** High-speed tokenization.
+2.  **Structural Parser:** Hierarchical AST generation.
+3.  **Instruction Compiler:** Target-agnostic bytecode.
+4.  **Virtual Machine:** Scoped execution and dynamic dispatch.
+
+### B. Automated CI/CD (Professional Standards)
+We have implemented an **Enterprise CI/CD Pipeline** using GitHub Actions. This system provides:
+- **Cloud-Based Compilation:** Binaries are built on remote servers, not local machines.
+- **Universal Availability:** Simultaneous native builds for **Windows (PE)** and **Linux (ELF)** formats.
+- **Automated Artifact Generation:** Every version update is automatically packaged and ready for distribution.
+
+## 2. Security & IP Protection
+To protect the developer's intellectual property, Alphabet uses a **Machine-Code Distribution Model**. By compiling logic into native binaries, we ensure that the internal engine logic is non-readable, while providing users with a high-performance standalone tool.
+
+## 3. Competitive Advantage
+- **Zero-Boilerplate Logic:** Logic-to-syntax ratio is 1:1.
+- **Cloud-Native Deployment:** Automated build cycles for rapid release management.
+- **Encapsulated Engine:** Full source-code privacy.
+
+---
+© 2026 Developed by Fraol Teshome.
+
+
+
+================================================
+FILE: docs/ROADMAP.md
+================================================
+# Alphabet Project Roadmap - v1.0.0
+**Project Owner: Fraol Teshome**
+
+## Project Milestones ✅
+
+### 1. Engine Development
+- [x] Core Lexer, Parser, and Compiler.
+- [x] Stack-based Virtual Machine.
+
+### 2. Language Architecture
+- [x] OOP (Inheritance & Interfaces).
+- [x] Encapsulation (Private/Public).
+- [x] Exception Handling (Try/Handle).
+- [x] Numeric Type System (1-50).
+
+### 3. Professional Tooling
+- [x] CLI & Persistent REPL.
+- [x] **Source Protection:** C++ Machine-code compilation via Nuitka.
+- [x] Global Distribution (PyPI/Setup files).
+
+---
+*Status: All production goals met. Version 1.0.0 Released.*
+
+
+
+================================================
+FILE: examples/01_hello.abc
+================================================
+// Alphabet Language: Hello World & Basics
+12 h = "Hello Alphabet! i am Fraol"
+z.o(h)
+
+1 x = 5
+1 y = 10
+
+i (x < y) {
+  z.o("x is smaller")
+} e {
+  z.o("y is smaller")
+}
+
+1 c = 3
+l (c > 0) {
+  z.o(c)
+  c = c - 1
+}
+z.o("Done!")
+
+
+
+================================================
+FILE: examples/02_collections.abc
+================================================
+// Collections Test (Lists and Maps)
+
+// List
+13 a = [1, 2, 3]
+z.o("List a:")
+z.o(a)
+
+z.o("a[1]:")
+z.o(a[1])
+
+// Map
+14 m = {"k": 100, "x": 200}
+z.o("Map m:")
+z.o(m)
+
+z.o("m['k']:")
+z.o(m["k"])
+
+
+
+================================================
+FILE: examples/03_exceptions.abc
+================================================
+// Exception Handling Test
+t {
+  z.o("In try block")
+  z.t() // This is mapped in our VM to throw a "Custom Error 15"
+  z.o("This should not print")
+} h (15 e) {
+  z.o("Caught exception:")
+  z.o(e)
+}
+z.o("After try-handle")
+
+
+
+================================================
+FILE: examples/04_statics.abc
+================================================
+// Static Members Test
+c S {
+  s 1 x = 100
+  
+  s v m 1 f() {
+    z.o("Inside static method f")
+    r 500
+  }
+}
+
+// Access static field
+z.o("Initial S.x:")
+z.o(S.x)
+
+// Modify static field
+S.x = 200
+z.o("Modified S.x:")
+z.o(S.x)
+
+// Call static method
+1 y = S.f()
+z.o("Result of S.f():")
+z.o(y)
+
+
+
+================================================
+FILE: src/__init__.py
+================================================
+[Empty file]
+
+
+================================================
+FILE: src/alphabet_ast.py
+================================================
+from dataclasses import dataclass
+from typing import List, Optional, Any
+from src.lexer import Token
+
+@dataclass
+class Expr:
+    pass
+
+@dataclass
+class Stmt:
+    pass
+
+@dataclass
+class Binary(Expr):
+    left: Expr
+    operator: Token
+    right: Expr
+
+@dataclass
+class Unary(Expr):
+    operator: Token
+    right: Expr
+
+@dataclass
+class Literal(Expr):
+    value: Any
+
+@dataclass
+class Grouping(Expr):
+    expression: Expr
+
+@dataclass
+class Variable(Expr):
+    name: Token
+
+@dataclass
+class Assign(Expr):
+    name: Token
+    value: Expr
+
+@dataclass
+class Logical(Expr):
+    left: Expr
+    operator: Token
+    right: Expr
+
+@dataclass
+class Call(Expr):
+    callee: Expr
+    paren: Token
+    arguments: List[Expr]
+
+@dataclass
+class Get(Expr):
+    obj: Expr
+    name: Token
+
+@dataclass
+class Set(Expr):
+    obj: Expr
+    name: Token
+    value: Expr
+
+@dataclass
+class New(Expr):
+    name: Token
+    arguments: List[Expr]
+
+@dataclass
+class ListLiteral(Expr):
+    elements: List[Expr]
+
+@dataclass
+class MapLiteral(Expr):
+    keys: List[Expr]
+    values: List[Expr]
+
+@dataclass
+class IndexExpr(Expr):
+    obj: Expr
+    index: Expr
+
+@dataclass
+class ExpressionStmt(Stmt):
+    expression: Expr
+
+@dataclass
+class VarStmt(Stmt):
+    type_id: Token # The numeric type (1-50)
+    name: Token
+    initializer: Optional[Expr]
+    visibility: Optional[Token] # 'v' or 'p'
+    is_static: bool = False
+
+@dataclass
+class Block(Stmt):
+    statements: List[Stmt]
+
+@dataclass
+class IfStmt(Stmt):
+    condition: Expr
+    then_branch: Stmt
+    else_branch: Optional[Stmt]
+
+@dataclass
+class LoopStmt(Stmt):
+    condition: Expr
+    body: Stmt
+
+@dataclass
+class TryStmt(Stmt):
+    try_block: Block
+    exception_type: Token # Numeric type ID
+    exception_var: Token # Variable name to store exception
+    handle_block: Block
+
+@dataclass
+class ReturnStmt(Stmt):
+    keyword: Token
+    value: Optional[Expr]
+
+@dataclass
+class FunctionStmt(Stmt):
+    name: Token
+    params: List[VarStmt]
+    body: List[Stmt]
+    return_type: Token
+    visibility: Optional[Token]
+    is_static: bool = False
+
+@dataclass
+class ClassStmt(Stmt):
+    name: Token
+    superclass: Optional[Variable]
+    methods: List[FunctionStmt]
+    fields: List[VarStmt]
+    interfaces: List[Variable]
+    is_interface: bool = False
+
+
+
+================================================
+FILE: src/bytecode.py
+================================================
+import enum
+
+class OpCode(enum.IntEnum):
+    PUSH_CONST = 1
+    LOAD_VAR = 2
+    STORE_VAR = 3
+    LOAD_FIELD = 4
+    STORE_FIELD = 5
+    ADD = 6
+    SUB = 7
+    MUL = 8
+    DIV = 9
+    PERCENT = 10
+    EQ = 11
+    NE = 12
+    GT = 13
+    GE = 14
+    LT = 15
+    LE = 16
+    AND = 17
+    OR = 18
+    NOT = 19
+    JUMP = 20
+    JUMP_IF_FALSE = 21
+    CALL = 22
+    RET = 23
+    NEW = 24
+    POP = 25
+    PRINT = 26
+    HALT = 27
+    SETUP_TRY = 28
+    POP_TRY = 29
+    THROW = 30
+    GET_STATIC = 31
+    SET_STATIC = 32
+    BUILD_LIST = 33
+    BUILD_MAP = 34
+    LOAD_INDEX = 35
+    STORE_INDEX = 36
+
+# Instructions are typically (OpCode, operand)
+
+
+
+================================================
+FILE: src/compiler.py
+================================================
+from typing import List, Dict, Any, Optional
+from src.alphabet_ast import *
+from src.lexer import Token, TokenType
+from src.bytecode import OpCode
+
+class Compiler:
+    def __init__(self):
+        self.bytecode: List[tuple] = []
+        self.class_map: Dict[str, int] = {}
+        self.next_class_id = 15
+        self.globals: List[str] = []
+        
+    def compile(self, statements: List[Stmt]) -> dict:
+        for stmt in statements:
+            if isinstance(stmt, ClassStmt) and not stmt.is_interface:
+                if stmt.name.lexeme not in self.class_map:
+                    self.class_map[stmt.name.lexeme] = self.next_class_id
+                    self.next_class_id += 1
+        classes = {}
+        main_bytecode = []
+        self.bytecode = [] 
+        for stmt in statements:
+            if isinstance(stmt, ClassStmt):
+                if not stmt.is_interface:
+                    classes[stmt.name.lexeme] = self.compile_class(stmt)
+            else:
+                self.visit(stmt)
+        main_bytecode = self.bytecode
+        main_bytecode.append((OpCode.HALT, None))
+        return {"classes": classes, "main": main_bytecode}
+
+    def compile_class(self, stmt: ClassStmt):
+        methods = {}
+        static_methods = {}
+        method_nodes = {}
+        for method in stmt.methods:
+            method_nodes[method.name.lexeme] = method
+            if method.is_static:
+                static_methods[method.name.lexeme] = self.compile_method(method)
+            else:
+                methods[method.name.lexeme] = self.compile_method(method)
+        old_bytecode = self.bytecode
+        self.bytecode = []
+        for field in stmt.fields:
+            if field.is_static and field.initializer:
+                self.emit(OpCode.PUSH_CONST, self.class_map[stmt.name.lexeme]) 
+                self.visit(field.initializer) 
+                self.emit(OpCode.SET_STATIC, field.name.lexeme)
+                self.emit(OpCode.POP)
+        static_init = self.bytecode
+        self.bytecode = old_bytecode
+        return {
+            "name": stmt.name.lexeme,
+            "superclass": stmt.superclass.name.lexeme if stmt.superclass else None,
+            "methods": methods,
+            "method_nodes": method_nodes,
+            "static_methods": static_methods,
+            "static_init": static_init,
+            "id": self.class_map[stmt.name.lexeme],
+            "fields": {f.name.lexeme: f for f in stmt.fields if not f.is_static},
+            "static_fields": {f.name.lexeme: f for f in stmt.fields if f.is_static}
+        }
+
+    def compile_method(self, method: FunctionStmt):
+        old_bytecode = self.bytecode
+        self.bytecode = []
+        for stmt in method.body:
+            self.visit(stmt)
+        if not self.bytecode or self.bytecode[-1][0] != OpCode.RET:
+            self.emit(OpCode.PUSH_CONST, None)
+            self.emit(OpCode.RET)
+        method_bytecode = self.bytecode
+        self.bytecode = old_bytecode
+        return method_bytecode
+
+    def emit(self, opcode: OpCode, operand: Any = None):
+        self.bytecode.append((opcode, operand))
+
+    def visit(self, node: Any):
+        method_name = f"visit_{type(node).__name__}"
+        visitor = getattr(self, method_name, self.no_visit)
+        return visitor(node)
+
+    def no_visit(self, node):
+        raise Exception(f"No visitor for {type(node).__name__}")
+
+    def visit_ReturnStmt(self, stmt: ReturnStmt):
+        if stmt.value:
+            self.visit(stmt.value)
+        else:
+            self.emit(OpCode.PUSH_CONST, None)
+        self.emit(OpCode.RET)
+
+    def visit_VarStmt(self, stmt: VarStmt):
+        if stmt.initializer:
+            self.visit(stmt.initializer)
+        else:
+            self.emit(OpCode.PUSH_CONST, None)
+        if stmt.name.lexeme not in self.globals:
+            self.globals.append(stmt.name.lexeme)
+        idx = self.globals.index(stmt.name.lexeme)
+        self.emit(OpCode.STORE_VAR, idx)
+
+    def visit_ExpressionStmt(self, stmt: ExpressionStmt):
+        self.visit(stmt.expression)
+        self.emit(OpCode.POP)
+
+    def visit_IfStmt(self, stmt: IfStmt):
+        self.visit(stmt.condition)
+        false_jump = len(self.bytecode)
+        self.emit(OpCode.JUMP_IF_FALSE, 0)
+        self.visit(stmt.then_branch)
+        if stmt.else_branch:
+            exit_jump = len(self.bytecode)
+            self.emit(OpCode.JUMP, 0)
+            self.bytecode[false_jump] = (OpCode.JUMP_IF_FALSE, len(self.bytecode))
+            self.visit(stmt.else_branch)
+            self.bytecode[exit_jump] = (OpCode.JUMP, len(self.bytecode))
+        else:
+            self.bytecode[false_jump] = (OpCode.JUMP_IF_FALSE, len(self.bytecode))
+
+    def visit_LoopStmt(self, stmt: LoopStmt):
+        start_pos = len(self.bytecode)
+        self.visit(stmt.condition)
+        exit_jump = len(self.bytecode)
+        self.emit(OpCode.JUMP_IF_FALSE, 0)
+        self.visit(stmt.body)
+        self.emit(OpCode.JUMP, start_pos)
+        self.bytecode[exit_jump] = (OpCode.JUMP_IF_FALSE, len(self.bytecode))
+
+    def visit_TryStmt(self, stmt: TryStmt):
+        setup_try_idx = len(self.bytecode)
+        self.emit(OpCode.SETUP_TRY, 0)
+        self.visit(stmt.try_block)
+        self.emit(OpCode.POP_TRY)
+        exit_jump_idx = len(self.bytecode)
+        self.emit(OpCode.JUMP, 0)
+        self.bytecode[setup_try_idx] = (OpCode.SETUP_TRY, len(self.bytecode))
+        if stmt.exception_var.lexeme not in self.globals:
+            self.globals.append(stmt.exception_var.lexeme)
+        idx = self.globals.index(stmt.exception_var.lexeme)
+        self.emit(OpCode.STORE_VAR, idx)
+        self.emit(OpCode.POP)
+        self.visit(stmt.handle_block)
+        self.bytecode[exit_jump_idx] = (OpCode.JUMP, len(self.bytecode))
+
+    def visit_Block(self, stmt: Block):
+        for s in stmt.statements:
+            self.visit(s)
+
+    def visit_Binary(self, expr: Binary):
+        self.visit(expr.left)
+        self.visit(expr.right)
+        op_map = {
+            TokenType.PLUS: OpCode.ADD, TokenType.MINUS: OpCode.SUB,
+            TokenType.STAR: OpCode.MUL, TokenType.SLASH: OpCode.DIV,
+            TokenType.PERCENT: OpCode.PERCENT, TokenType.DOUBLE_EQUALS: OpCode.EQ,
+            TokenType.GREATER: OpCode.GT, TokenType.LESS: OpCode.LT,
+        }
+        self.emit(op_map[expr.operator.type])
+
+    def visit_Literal(self, expr: Literal):
+        self.emit(OpCode.PUSH_CONST, expr.value)
+
+    def visit_Variable(self, expr: Variable):
+        if expr.name.lexeme == 'z':
+            self.emit(OpCode.PUSH_CONST, 'SYSTEM_Z')
+            return
+        if expr.name.lexeme in self.globals:
+            idx = self.globals.index(expr.name.lexeme)
+            self.emit(OpCode.LOAD_VAR, idx)
+        elif expr.name.lexeme in self.class_map:
+            self.emit(OpCode.PUSH_CONST, self.class_map[expr.name.lexeme])
+        else:
+            self.emit(OpCode.LOAD_VAR, expr.name.lexeme)
+
+    def visit_Assign(self, expr: Assign):
+        self.visit(expr.value)
+        if expr.name.lexeme in self.globals:
+            idx = self.globals.index(expr.name.lexeme)
+            self.emit(OpCode.STORE_VAR, idx)
+        else:
+             self.emit(OpCode.STORE_VAR, expr.name.lexeme)
+
+    def visit_Set(self, expr: Set):
+        if isinstance(expr.obj, Variable) and expr.obj.name.lexeme in self.class_map:
+            self.visit(expr.obj)
+            self.visit(expr.value)
+            self.emit(OpCode.SET_STATIC, expr.name.lexeme)
+        else:
+            self.visit(expr.obj)
+            self.visit(expr.value)
+            self.emit(OpCode.STORE_FIELD, expr.name.lexeme)
+
+    def visit_New(self, expr: New):
+        for arg in expr.arguments:
+            self.visit(arg)
+        self.emit(OpCode.NEW, expr.name.lexeme)
+
+    def visit_Call(self, expr: Call):
+        if isinstance(expr.callee, Get):
+            self.visit(expr.callee.obj)
+            for arg in expr.arguments:
+                self.visit(arg)
+            if expr.callee.name.lexeme == 'o':
+                self.emit(OpCode.PRINT)
+            else:
+                self.emit(OpCode.CALL, (expr.callee.name.lexeme, len(expr.arguments)))
+        elif isinstance(expr.callee, Variable):
+            for arg in expr.arguments:
+                self.visit(arg)
+            self.emit(OpCode.CALL, (expr.callee.name.lexeme, len(expr.arguments)))
+
+    def visit_Get(self, expr: Get):
+        if isinstance(expr.obj, Variable) and expr.obj.name.lexeme in self.class_map:
+            self.visit(expr.obj)
+            self.emit(OpCode.GET_STATIC, expr.name.lexeme)
+        else:
+            self.visit(expr.obj)
+            self.emit(OpCode.LOAD_FIELD, expr.name.lexeme)
+
+    def visit_ListLiteral(self, expr: ListLiteral):
+        for element in expr.elements:
+            self.visit(element)
+        self.emit(OpCode.BUILD_LIST, len(expr.elements))
+
+    def visit_MapLiteral(self, expr: MapLiteral):
+        for i in range(len(expr.keys)):
+            self.visit(expr.keys[i])
+            self.visit(expr.values[i])
+        self.emit(OpCode.BUILD_MAP, len(expr.keys))
+
+    def visit_IndexExpr(self, expr: IndexExpr):
+        self.visit(expr.obj)
+        self.visit(expr.index)
+        self.emit(OpCode.LOAD_INDEX)
+
+
+
+================================================
+FILE: src/lexer.py
+================================================
+import enum
+from dataclasses import dataclass
+from typing import List, Optional
+
+class TokenType(enum.Enum):
+    IF = "i"
+    ELSE = "e"
+    LOOP = "l"
+    BREAK = "b"
+    CONTINUE = "k"
+    RETURN = "r"
+    CLASS = "c"
+    ABSTRACT = "a"
+    INTERFACE = "j"
+    NEW = "n"
+    EXTENDS = "^"
+    PUBLIC = "v"
+    PRIVATE = "p"
+    STATIC = "s"
+    METHOD = "m"
+    TRY = "t"
+    HANDLE = "h"
+    SYSTEM = "z"
+    IDENTIFIER = "IDENTIFIER"
+    NUMBER = "NUMBER"
+    STRING = "STRING"
+    PLUS = "+"
+    MINUS = "-"
+    STAR = "*"
+    SLASH = "/"
+    PERCENT = "%"
+    EQUALS = "="
+    DOUBLE_EQUALS = "=="
+    NOT_EQUALS = "!="
+    GREATER = ">"
+    LESS = "<"
+    GREATER_EQUALS = ">="
+    LESS_EQUALS = "<="
+    AND = "&&"
+    OR = "||"
+    NOT = "!"
+    DOT = "."
+    AT = "@" 
+    LBRACE = "{"
+    RBRACE = "}"
+    LPAREN = "("
+    RPAREN = ")"
+    LBRACKET = "["
+    RBRACKET = "]"
+    COMMA = ","
+    COLON = ":"
+    EOF = "EOF"
+
+@dataclass
+class Token:
+    type: TokenType
+    lexeme: str
+    literal: any
+    line: int
+
+class Lexer:
+    def __init__(self, source: str):
+        self.source = source
+        self.tokens: List[Token] = []
+        self.start = 0
+        self.current = 0
+        self.line = 1
+        self.keywords = {k.value: k for k in TokenType if len(k.value) == 1 and k.value.isalpha()}
+
+    def scan_tokens(self) -> List[Token]:
+        if self.source.startswith("#!"):
+            while self.peek() != '\n' and not self.is_at_end():
+                self.advance()
+        while not self.is_at_end():
+            self.start = self.current
+            self.scan_token()
+        self.tokens.append(Token(TokenType.EOF, "", None, self.line))
+        return self.tokens
+
+    def is_at_end(self) -> bool:
+        return self.current >= len(self.source)
+
+    def scan_token(self):
+        c = self.advance()
+        if c == '(': self.add_token(TokenType.LPAREN)
+        elif c == ')': self.add_token(TokenType.RPAREN)
+        elif c == '{': self.add_token(TokenType.LBRACE)
+        elif c == '}': self.add_token(TokenType.RBRACE)
+        elif c == '[': self.add_token(TokenType.LBRACKET)
+        elif c == ']': self.add_token(TokenType.RBRACKET)
+        elif c == ',': self.add_token(TokenType.COMMA)
+        elif c == ':': self.add_token(TokenType.COLON)
+        elif c == '.': self.add_token(TokenType.DOT)
+        elif c == '-': self.add_token(TokenType.MINUS)
+        elif c == '+': self.add_token(TokenType.PLUS)
+        elif c == '*': self.add_token(TokenType.STAR)
+        elif c == '%': self.add_token(TokenType.PERCENT)
+        elif c == '^': self.add_token(TokenType.EXTENDS)
+        elif c == '@': self.add_token(TokenType.AT)
+        elif c == '!':
+            self.add_token(TokenType.NOT_EQUALS if self.match('=') else TokenType.NOT)
+        elif c == '=':
+            self.add_token(TokenType.DOUBLE_EQUALS if self.match('=') else TokenType.EQUALS)
+        elif c == '<':
+            self.add_token(TokenType.LESS_EQUALS if self.match('=') else TokenType.LESS)
+        elif c == '>':
+            self.add_token(TokenType.GREATER_EQUALS if self.match('=') else TokenType.GREATER)
+        elif c == '/':
+            if self.match('/'):
+                while self.peek() != '\n' and not self.is_at_end():
+                    self.advance()
+            else:
+                self.add_token(TokenType.SLASH)
+        elif c == '&':
+            if self.match('&'): self.add_token(TokenType.AND)
+        elif c == '|':
+            if self.match('|'): self.add_token(TokenType.OR)
+        elif c in [' ', '\r', '\t']:
+            pass
+        elif c == '\n':
+            self.line += 1
+        elif c == '"':
+            self.string()
+        else:
+            if c.isdigit():
+                self.number()
+            elif c.isalpha():
+                self.identifier()
+            else:
+                print(f"Error: Unexpected character '{c}' at line {self.line}")
+
+    def identifier(self):
+        while self.peek().isalnum():
+            self.advance()
+        text = self.source[self.start:self.current]
+        type = self.keywords.get(text, TokenType.IDENTIFIER)
+        self.add_token(type)
+
+    def number(self):
+        while self.peek().isdigit():
+            self.advance()
+        if self.peek() == '.' and self.peek_next().isdigit():
+            self.advance()
+            while self.peek().isdigit():
+                self.advance()
+        val = float(self.source[self.start:self.current])
+        self.add_token(TokenType.NUMBER, val)
+
+    def string(self):
+        while self.peek() != '"' and not self.is_at_end():
+            if self.peek() == '\n': self.line += 1
+            self.advance()
+        if self.is_at_end():
+            return
+        self.advance()
+        value = self.source[self.start + 1:self.current - 1]
+        self.add_token(TokenType.STRING, value)
+
+    def advance(self) -> str:
+        self.current += 1
+        return self.source[self.current - 1]
+
+    def add_token(self, type: TokenType, literal: any = None):
+        text = self.source[self.start:self.current]
+        self.tokens.append(Token(type, text, literal, self.line))
+
+    def match(self, expected: str) -> bool:
+        if self.is_at_end(): return False
+        if self.source[self.current] != expected: return False
+        self.current += 1
+        return True
+
+    def peek(self) -> str:
+        if self.is_at_end(): return '\0'
+        return self.source[self.current]
+
+    def peek_next(self) -> str:
+        if self.current + 1 >= len(self.source): return '\0'
+        return self.source[self.current + 1]
+
+
+
+================================================
+FILE: src/lsp.py
+================================================
+import sys
+import json
+
+def start_lsp():
+    """A minimal LSP server for Alphabet"""
+    while True:
+        line = sys.stdin.readline()
+        if not line: break
+        
+        # In a real LSP, we would parse JSON-RPC messages here
+        # and provide autocompletion/diagnostics.
+        # For now, we acknowledge the connection.
+        if "initialize" in line:
+            response = {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "result": {
+                    "capabilities": {
+                        "textDocumentSync": 1,
+                        "completionProvider": {"resolveProvider": True}
+                    }
+                }
+            }
+            sys.stdout.write(f"Content-Length: {len(json.dumps(response))}
+
+{json.dumps(response)}")
+            sys.stdout.flush()
+
+if __name__ == "__main__":
+    start_lsp()
+
+
+
+================================================
+FILE: src/main.py
+================================================
+from src.lexer import Lexer
+from src.parser import Parser
+from src.compiler import Compiler
+from src.vm import VM
+
+def run(source: str):
+    lexer = Lexer(source)
+    tokens = lexer.scan_tokens()
+    parser = Parser(tokens)
+    statements = parser.parse()
+    compiler = Compiler()
+    program = compiler.compile(statements)
+    vm = VM(program)
+    vm.run()
+
+if __name__ == "__main__":
+    pass
+
+
+
+================================================
+FILE: src/parser.py
+================================================
+from typing import List, Optional
+from src.lexer import Token, TokenType
+from src.alphabet_ast import *
+
+class ParseError(RuntimeError):
+    pass
+
+class Parser:
+    def __init__(self, tokens: List[Token]):
+        self.tokens = tokens
+        self.current = 0
+
+    def parse(self) -> List[Stmt]:
+        statements = []
+        while not self.is_at_end():
+            stmt = self.declaration()
+            if stmt:
+                statements.append(stmt)
+        return statements
+
+    def declaration(self) -> Optional[Stmt]:
+        try:
+            if self.check(TokenType.INTERFACE):
+                self.advance()
+                return self.interface_declaration()
+            if self.check(TokenType.CLASS) and self.check_next_is_identifier():
+                self.advance()
+                return self.class_declaration()
+            return self.statement()
+        except ParseError:
+            self.synchronize()
+            return None
+
+    def interface_declaration(self) -> Stmt:
+        name = self.consume_identifier("Expect interface name.")
+        self.consume(TokenType.LBRACE, "Expect '{' before interface body.")
+        methods = []
+        while not self.check(TokenType.RBRACE) and not self.is_at_end():
+            if self.match(TokenType.METHOD):
+                return_type = self.consume(TokenType.NUMBER, "Expect return type ID.")
+                method_name = self.consume_identifier("Expect method name.")
+                self.consume(TokenType.LPAREN, "Expect '(' after method name.")
+                parameters = []
+                if not self.check(TokenType.RPAREN):
+                    while True:
+                        type_id = self.consume(TokenType.NUMBER, "Expect parameter type ID.")
+                        param_name = self.consume_identifier("Expect parameter name.")
+                        parameters.append(VarStmt(type_id, param_name, None, None))
+                        if not self.match(TokenType.COMMA): break
+                self.consume(TokenType.RPAREN, "Expect ')' after parameters.")
+                methods.append(FunctionStmt(method_name, parameters, [], return_type, None))
+            else:
+                raise self.error(self.peek(), "Interfaces can only contain methods.")
+        self.consume(TokenType.RBRACE, "Expect '}' after interface body.")
+        return ClassStmt(name, None, methods, [], [], is_interface=True)
+
+    def class_declaration(self) -> Stmt:
+        name = self.consume_identifier("Expect class name.")
+        superclass = None
+        interfaces = []
+        if self.match(TokenType.EXTENDS):
+            superclass_name = self.consume_identifier("Expect superclass or interface name.")
+            superclass = Variable(superclass_name)
+            while self.match(TokenType.COMMA):
+                if_name = self.consume_identifier("Expect interface name.")
+                interfaces.append(Variable(if_name))
+        self.consume(TokenType.LBRACE, "Expect '{' before class body.")
+        methods = []
+        fields = []
+        while not self.check(TokenType.RBRACE) and not self.is_at_end():
+            visibility = None
+            is_static = False
+            while True:
+                if self.check(TokenType.PUBLIC) or self.check(TokenType.PRIVATE):
+                    if visibility: break
+                    visibility = self.advance()
+                elif self.match(TokenType.STATIC):
+                    if is_static: break
+                    is_static = True
+                else:
+                    break
+            if self.match(TokenType.METHOD):
+                methods.append(self.method(visibility, is_static))
+            elif self.check(TokenType.NUMBER):
+                fields.append(self.var_declaration(visibility, is_static))
+            else:
+                raise self.error(self.peek(), "Expect method or field declaration.")
+        self.consume(TokenType.RBRACE, "Expect '}' after class body.")
+        return ClassStmt(name, superclass, methods, fields, interfaces)
+
+    def method(self, visibility: Optional[Token], is_static: bool = False) -> FunctionStmt:
+        return_type = self.consume(TokenType.NUMBER, "Expect return type ID.")
+        name = self.consume_identifier("Expect method name.")
+        self.consume(TokenType.LPAREN, "Expect '(' after method name.")
+        parameters = []
+        if not self.check(TokenType.RPAREN):
+            while True:
+                type_id = self.consume(TokenType.NUMBER, "Expect parameter type ID.")
+                param_name = self.consume_identifier("Expect parameter name.")
+                parameters.append(VarStmt(type_id, param_name, None, None))
+                if not self.match(TokenType.COMMA): break
+        self.consume(TokenType.RPAREN, "Expect ')' after parameters.")
+        self.consume(TokenType.LBRACE, "Expect '{' before method body.")
+        body = self.block()
+        return FunctionStmt(name, parameters, body, return_type, visibility, is_static)
+
+    def var_declaration(self, visibility: Optional[Token] = None, is_static: bool = False) -> Stmt:
+        type_id = self.consume(TokenType.NUMBER, "Expect type ID.")
+        name = self.consume_identifier("Expect variable name.")
+        initializer = None
+        if self.match(TokenType.EQUALS):
+            initializer = self.expression()
+        return VarStmt(type_id, name, initializer, visibility, is_static)
+
+    def statement(self) -> Stmt:
+        if self.match(TokenType.IF): return self.if_statement()
+        if self.match(TokenType.RETURN): return self.return_statement()
+        if self.match(TokenType.LOOP): return self.loop_statement()
+        if self.match(TokenType.TRY): return self.try_statement()
+        if self.match(TokenType.LBRACE): return Block(self.block())
+        if self.check(TokenType.NUMBER): return self.var_declaration()
+        return self.expression_statement()
+
+    def if_statement(self) -> Stmt:
+        self.consume(TokenType.LPAREN, "Expect '(' after 'i'.")
+        condition = self.expression()
+        self.consume(TokenType.RPAREN, "Expect ')' after if condition.")
+        then_branch = self.statement()
+        else_branch = None
+        if self.match(TokenType.ELSE):
+            else_branch = self.statement()
+        return IfStmt(condition, then_branch, else_branch)
+
+    def loop_statement(self) -> Stmt:
+        self.consume(TokenType.LPAREN, "Expect '(' after 'l'.")
+        condition = self.expression()
+        self.consume(TokenType.RPAREN, "Expect ')' after loop condition.")
+        body = self.statement()
+        return LoopStmt(condition, body)
+
+    def try_statement(self) -> Stmt:
+        self.consume(TokenType.LBRACE, "Expect '{' before try block.")
+        try_block = Block(self.block())
+        self.consume(TokenType.HANDLE, "Expect 'h' after try block.")
+        self.consume(TokenType.LPAREN, "Expect '(' after 'h'.")
+        exception_type = self.consume(TokenType.NUMBER, "Expect exception type ID.")
+        exception_var = self.consume_identifier("Expect exception variable name.")
+        self.consume(TokenType.RPAREN, "Expect ')' after exception catch details.")
+        self.consume(TokenType.LBRACE, "Expect '{' before handle block.")
+        handle_block = Block(self.block())
+        return TryStmt(try_block, exception_type, exception_var, handle_block)
+
+    def return_statement(self) -> Stmt:
+        keyword = self.previous()
+        value = None
+        if not self.check(TokenType.RBRACE):
+             try:
+                 value = self.expression()
+             except:
+                 value = None
+        return ReturnStmt(keyword, value)
+
+    def block(self) -> List[Stmt]:
+        statements = []
+        while not self.check(TokenType.RBRACE) and not self.is_at_end():
+            statements.append(self.declaration())
+        self.consume(TokenType.RBRACE, "Expect '}' after block.")
+        return statements
+
+    def expression_statement(self) -> Stmt:
+        expr = self.expression()
+        return ExpressionStmt(expr)
+
+    def expression(self) -> Expr:
+        return self.assignment()
+
+    def assignment(self) -> Expr:
+        expr = self.or_expr()
+        if self.match(TokenType.EQUALS):
+            equals = self.previous()
+            value = self.assignment()
+            if isinstance(expr, Variable):
+                name = expr.name
+                return Assign(name, value)
+            elif isinstance(expr, Get):
+                return Set(expr.obj, expr.name, value)
+            self.error(equals, "Invalid assignment target.")
+        return expr
+
+    def or_expr(self) -> Expr:
+        expr = self.and_expr()
+        while self.match(TokenType.OR):
+            operator = self.previous()
+            right = self.and_expr()
+            expr = Logical(expr, operator, right)
+        return expr
+
+    def and_expr(self) -> Expr:
+        expr = self.equality()
+        while self.match(TokenType.AND):
+            operator = self.previous()
+            right = self.equality()
+            expr = Logical(expr, operator, right)
+        return expr
+
+    def equality(self) -> Expr:
+        expr = self.comparison()
+        while self.match(TokenType.DOUBLE_EQUALS, TokenType.NOT_EQUALS):
+            operator = self.previous()
+            right = self.comparison()
+            expr = Binary(expr, operator, right)
+        return expr
+
+    def comparison(self) -> Expr:
+        expr = self.term()
+        while self.match(TokenType.GREATER, TokenType.GREATER_EQUALS, TokenType.LESS, TokenType.LESS_EQUALS):
+            operator = self.previous()
+            right = self.term()
+            expr = Binary(expr, operator, right)
+        return expr
+
+    def term(self) -> Expr:
+        expr = self.factor()
+        while self.match(TokenType.MINUS, TokenType.PLUS):
+            operator = self.previous()
+            right = self.factor()
+            expr = Binary(expr, operator, right)
+        return expr
+
+    def factor(self) -> Expr:
+        expr = self.unary()
+        while self.match(TokenType.SLASH, TokenType.STAR, TokenType.PERCENT):
+            operator = self.previous()
+            right = self.unary()
+            expr = Binary(expr, operator, right)
+        return expr
+
+    def unary(self) -> Expr:
+        if self.match(TokenType.NOT, TokenType.MINUS, TokenType.AT):
+            operator = self.previous()
+            right = self.unary()
+            return Unary(operator, right)
+        return self.call()
+
+    def call(self) -> Expr:
+        expr = self.primary()
+        while True:
+            if self.match(TokenType.LPAREN):
+                expr = self.finish_call(expr)
+            elif self.match(TokenType.DOT):
+                name = self.consume_identifier("Expect property name after '.'.")
+                expr = Get(expr, name)
+            elif self.match(TokenType.LBRACKET):
+                index = self.expression()
+                self.consume(TokenType.RBRACKET, "Expect ']' after index.")
+                expr = IndexExpr(expr, index)
+            else:
+                break
+        return expr
+
+    def finish_call(self, callee: Expr) -> Expr:
+        arguments = []
+        if not self.check(TokenType.RPAREN):
+            while True:
+                arguments.append(self.expression())
+                if not self.match(TokenType.COMMA): break
+        paren = self.consume(TokenType.RPAREN, "Expect ')' after arguments.")
+        return Call(callee, paren, arguments)
+
+    def primary(self) -> Expr:
+        if self.match(TokenType.NUMBER, TokenType.STRING):
+            return Literal(self.previous().literal)
+        if self.match(TokenType.SYSTEM):
+            return Variable(self.previous())
+        if self.match(TokenType.NEW):
+            name = self.consume_identifier("Expect class name after 'n'.")
+            arguments = []
+            if self.match(TokenType.LPAREN):
+                if not self.check(TokenType.RPAREN):
+                    while True:
+                        arguments.append(self.expression())
+                        if not self.match(TokenType.COMMA): break
+                self.consume(TokenType.RPAREN, "Expect ')' after arguments.")
+            return New(name, arguments)
+        if self.is_identifier():
+            return Variable(self.advance())
+        if self.match(TokenType.LBRACKET):
+            elements = []
+            if not self.check(TokenType.RBRACKET):
+                while True:
+                    elements.append(self.expression())
+                    if not self.match(TokenType.COMMA): break
+            self.consume(TokenType.RBRACKET, "Expect ']' after list elements.")
+            return ListLiteral(elements)
+        if self.match(TokenType.LBRACE):
+            keys = []
+            values = []
+            if not self.check(TokenType.RBRACE):
+                while True:
+                    keys.append(self.expression())
+                    self.consume(TokenType.COLON, "Expect ':' after map key.")
+                    values.append(self.expression())
+                    if not self.match(TokenType.COMMA): break
+            self.consume(TokenType.RBRACE, "Expect '}' after map elements.")
+            return MapLiteral(keys, values)
+        if self.match(TokenType.LPAREN):
+            expr = self.expression()
+            self.consume(TokenType.RPAREN, "Expect ')' after expression.")
+            return Grouping(expr)
+        raise self.error(self.peek(), "Expect expression.")
+
+    def is_identifier(self) -> bool:
+        if self.is_at_end(): return False
+        t = self.peek().type
+        return t == TokenType.IDENTIFIER or (len(self.peek().lexeme) == 1 and self.peek().lexeme.isalpha())
+
+    def consume_identifier(self, message: str) -> Token:
+        if self.is_identifier(): return self.advance()
+        raise self.error(self.peek(), message)
+
+    def match(self, *types: TokenType) -> bool:
+        for type in types:
+            if self.check(type):
+                self.advance()
+                return True
+        return False
+
+    def check(self, type: TokenType) -> bool:
+        if self.is_at_end(): return False
+        return self.peek().type == type
+
+    def check_next_is_identifier(self) -> bool:
+        if self.current + 1 >= len(self.tokens): return False
+        t = self.tokens[self.current + 1].type
+        if t == TokenType.IDENTIFIER: return True
+        lexeme = self.tokens[self.current + 1].lexeme
+        return len(lexeme) == 1 and lexeme.isalpha()
+
+    def advance(self) -> Token:
+        if not self.is_at_end(): self.current += 1
+        return self.previous()
+
+    def is_at_end(self) -> bool:
+        return self.peek().type == TokenType.EOF
+
+    def peek(self) -> Token:
+        return self.tokens[self.current]
+
+    def previous(self) -> Token:
+        return self.tokens[self.current - 1]
+
+    def consume(self, type: TokenType, message: str) -> Token:
+        if self.check(type): return self.advance()
+        raise self.error(self.peek(), message)
+
+    def error(self, token: Token, message: str) -> ParseError:
+        return ParseError()
+
+    def synchronize(self):
+        self.advance()
+        while not self.is_at_end():
+            if self.previous().type in [TokenType.CLASS, TokenType.METHOD, TokenType.IF, TokenType.LOOP, TokenType.RETURN]:
+                return
+            self.advance()
+
+
+
+================================================
+FILE: src/vm.py
+================================================
+import sys
+from src.bytecode import OpCode
+
+class AlphabetObject:
+    def __init__(self, class_info):
+        self.class_info = class_info
+        self.fields = {}
+
+class CallFrame:
+    def __init__(self, bytecode, ip=0, locals=None):
+        self.bytecode = bytecode
+        self.ip = ip
+        self.locals = locals if locals is not None else {}
+        self.try_stack = [] 
+
+class VM:
+    def __init__(self, program=None):
+        self.classes = program["classes"] if program else {}
+        self.stack = []
+        self.globals = {}
+        self.frames = []
+        if program:
+            self.init_program(program)
+
+    def init_program(self, program):
+        self.classes.update(program["classes"])
+        for class_name, class_info in program["classes"].items():
+            class_info["static_values"] = {field_name: 0 for field_name in class_info["static_fields"]}
+        for class_name, class_info in program["classes"].items():
+            if class_info["static_init"]:
+                init_frame = CallFrame(class_info["static_init"])
+                self.frames.append(init_frame)
+                self.run_loop()
+        if program["main"]:
+            self.frames.append(CallFrame(program["main"]))
+
+    def run(self, program=None):
+        if program:
+            self.init_program(program)
+        self.run_loop()
+
+    def run_loop(self):
+        start_frame_count = len(self.frames)
+        while self.frames:
+            frame = self.frames[-1]
+            if frame.ip >= len(frame.bytecode):
+                self.frames.pop()
+                if len(self.frames) < start_frame_count:
+                    break
+                continue
+            op, operand = frame.bytecode[frame.ip]
+            frame.ip += 1
+            if op == OpCode.PUSH_CONST:
+                self.stack.append(operand)
+            elif op == OpCode.LOAD_VAR:
+                if operand in frame.locals:
+                    self.stack.append(frame.locals[operand])
+                else:
+                    self.stack.append(self.globals.get(operand, 0))
+            elif op == OpCode.STORE_VAR:
+                val = self.stack[-1]
+                if operand in frame.locals:
+                    frame.locals[operand] = val
+                else:
+                    self.globals[operand] = val
+            elif op == OpCode.POP:
+                self.stack.pop()
+            elif op == OpCode.ADD:
+                b = self.stack.pop()
+                a = self.stack.pop()
+                self.stack.append(a + b)
+            elif op == OpCode.SUB:
+                b = self.stack.pop()
+                a = self.stack.pop()
+                self.stack.append(a - b)
+            elif op == OpCode.GT:
+                b = self.stack.pop()
+                a = self.stack.pop()
+                self.stack.append(a > b)
+            elif op == OpCode.JUMP_IF_FALSE:
+                cond = self.stack.pop()
+                if not cond: frame.ip = operand
+            elif op == OpCode.JUMP:
+                frame.ip = operand
+            elif op == OpCode.PRINT:
+                val = self.stack.pop()
+                _obj = self.stack.pop()
+                print(val)
+                self.stack.append(None)
+            elif op == OpCode.NEW:
+                class_name = operand
+                if class_name in self.classes:
+                    obj = AlphabetObject(self.classes[class_name])
+                    self.stack.append(obj)
+                else:
+                    raise Exception(f"Unknown class: {class_name}")
+            elif op == OpCode.CALL:
+                method_name, arg_count = operand
+                args = [self.stack.pop() for _ in range(arg_count)]
+                obj = self.stack.pop()
+                caller_class = None
+                if "this" in frame.locals:
+                    caller_class = frame.locals["this"].class_info["name"]
+                if isinstance(obj, AlphabetObject):
+                    method_bytecode = self.lookup_method(obj.class_info, method_name, caller_class)
+                    new_locals = {"this": obj}
+                    self.frames.append(CallFrame(method_bytecode, locals=new_locals))
+                elif isinstance(obj, int): 
+                    class_info = next((c for c in self.classes.values() if c["id"] == obj), None)
+                    if not class_info:
+                        raise Exception(f"Unknown class ID: {obj}")
+                    if method_name in class_info["static_methods"]:
+                        method_bytecode = class_info["static_methods"][method_name]
+                        self.frames.append(CallFrame(method_bytecode, locals={}))
+                    else:
+                        raise Exception(f"Static method {method_name} not found in {class_info['name']}")
+                else:
+                    if obj == 'SYSTEM_Z':
+                        if method_name == 'o': 
+                            val = args[0]
+                            print(val)
+                            self.stack.append(None)
+                        elif method_name == 'i': 
+                            val = input()
+                            try:
+                                val = float(val)
+                            except: pass
+                            self.stack.append(val)
+                        elif method_name == 't': 
+                            self.throw_exception("Custom Error 15")
+                        elif method_name == 'f': 
+                            with open(args[0], 'r') as f:
+                                self.stack.append(f.read())
+                        continue
+                    raise Exception(f"Cannot call method {method_name} on non-object {obj}")
+            elif op == OpCode.RET:
+                val = self.stack.pop()
+                self.frames.pop()
+                if self.frames:
+                    self.stack.append(val)
+            elif op == OpCode.SETUP_TRY:
+                frame.try_stack.append((operand, len(self.stack)))
+            elif op == OpCode.POP_TRY:
+                frame.try_stack.pop()
+            elif op == OpCode.THROW:
+                val = self.stack.pop()
+                self.throw_exception(val)
+            elif op == OpCode.HALT:
+                break
+            elif op == OpCode.GET_STATIC:
+                field_name = operand
+                class_id = self.stack.pop()
+                class_info = next((c for c in self.classes.values() if c["id"] == class_id), None)
+                if not class_info: raise Exception(f"Unknown class ID: {class_id}")
+                self.stack.append(class_info["static_values"].get(field_name, 0))
+            elif op == OpCode.SET_STATIC:
+                field_name = operand
+                val = self.stack.pop()
+                class_id = self.stack.pop()
+                class_info = next((c for c in self.classes.values() if c["id"] == class_id), None)
+                if not class_info: raise Exception(f"Unknown class ID: {class_id}")
+                class_info["static_values"][field_name] = val
+                self.stack.append(val)
+            elif op == OpCode.LOAD_FIELD:
+                field_name = operand
+                obj = self.stack.pop()
+                if not isinstance(obj, AlphabetObject): raise Exception("LOAD_FIELD on non-object")
+                field_node = obj.class_info["fields"].get(field_name)
+                if field_node and field_node.visibility and field_node.visibility.type == TokenType.PRIVATE:
+                    caller_class = frame.locals.get("this").class_info["name"] if "this" in frame.locals else None
+                    if caller_class != obj.class_info["name"]:
+                        raise Exception(f"Private field {field_name} is not accessible.")
+                self.stack.append(obj.fields.get(field_name, 0))
+            elif op == OpCode.STORE_FIELD:
+                field_name = operand
+                val = self.stack.pop()
+                obj = self.stack.pop()
+                if not isinstance(obj, AlphabetObject): raise Exception("STORE_FIELD on non-object")
+                field_node = obj.class_info["fields"].get(field_name)
+                if field_node and field_node.visibility and field_node.visibility.type == TokenType.PRIVATE:
+                    caller_class = frame.locals.get("this").class_info["name"] if "this" in frame.locals else None
+                    if caller_class != obj.class_info["name"]:
+                        raise Exception(f"Private field {field_name} is not accessible.")
+                obj.fields[field_name] = val
+                self.stack.append(val)
+            elif op == OpCode.BUILD_LIST:
+                count = operand
+                items = [self.stack.pop() for _ in range(count)]
+                items.reverse()
+                self.stack.append(items)
+            elif op == OpCode.BUILD_MAP:
+                count = operand
+                m = {}
+                for _ in range(count):
+                    v = self.stack.pop()
+                    k = self.stack.pop()
+                    m[k] = v
+                self.stack.append(m)
+            elif op == OpCode.LOAD_INDEX:
+                idx = self.stack.pop()
+                obj = self.stack.pop()
+                if isinstance(obj, list) and isinstance(idx, float):
+                    idx = int(idx)
+                self.stack.append(obj[idx])
+            elif op == OpCode.STORE_INDEX:
+                val = self.stack.pop()
+                idx = self.stack.pop()
+                obj = self.stack.pop()
+                if isinstance(obj, list) and isinstance(idx, float):
+                    idx = int(idx)
+                obj[idx] = val
+                self.stack.append(val)
+
+    def throw_exception(self, message):
+        while self.frames:
+            frame = self.frames[-1]
+            if frame.try_stack:
+                handler_ip, stack_depth = frame.try_stack.pop()
+                while len(self.stack) > stack_depth:
+                    self.stack.pop()
+                self.stack.append(message)
+                frame.ip = handler_ip
+                return
+            else:
+                self.frames.pop()
+        sys.exit(1)
+
+    def lookup_method(self, class_info, method_name, caller_class=None):
+        if method_name in class_info["methods"]:
+            method_node = class_info["method_nodes"][method_name]
+            if method_node.visibility and method_node.visibility.type == TokenType.PRIVATE:
+                if caller_class != class_info["name"]:
+                    raise Exception(f"Private method {method_name} not found.")
+            return class_info["methods"][method_name]
+        if class_info["superclass"]:
+            super_class = self.classes[class_info["superclass"]]
+            return self.lookup_method(super_class, method_name, caller_class)
+        raise Exception(f"Method {method_name} not found.")
+
+
+
+================================================
+FILE: tooling/vscode/alphabet-grammar.json
+================================================
+{
+  "name": "Alphabet",
+  "scopeName": "source.alphabet",
+  "patterns": [
+    {
+      "name": "comment.line.double-slash.alphabet",
+      "match": "//.*$"
+    },
+    {
+      "name": "keyword.control.alphabet",
+      "match": "\\b(i|e|l|b|k|r|t|h)\\b"
+    },
+    {
+      "name": "keyword.declaration.alphabet",
+      "match": "\\b(c|a|j|n|s|v|p|m)\\b"
+    },
+    {
+      "name": "string.quoted.double.alphabet",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.alphabet",
+          "match": "\\\\."
+        }
+      ]
+    },
+    {
+      "name": "constant.numeric.alphabet",
+      "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+    }
+  ]
+}
+
+
+
+================================================
+FILE: .github/workflows/build.yml
+================================================
+name: Build Alphabet
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install nuitka
+
+    - name: Build Binary (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        python3 -m nuitka --onefile --follow-imports --remove-output \
+          --output-filename=alphabet alphabet.py
+
+    - name: Build Binary (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: cmd
+      run: |
+        python -m nuitka --onefile --follow-imports --remove-output ^
+          --assume-yes-for-downloads --output-filename=alphabet.exe alphabet.py
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: alphabet-${{ matrix.os }}
+        path: |
+          alphabet.exe
+          alphabet
+
+
+

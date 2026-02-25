@@ -455,7 +455,7 @@ Output: `0`, `2`, `4`, `6`, `8`
 
 ## Examples in Multiple Languages
 
-Alphabet supports any language identifier in the magic header. Here are examples in different languages:
+**Important:** The language code in `#alphabet<lang>` is just a label - you can output text in ANY language regardless of the header!
 
 ### English (en)
 
@@ -483,11 +483,11 @@ Version:
 
 ```alphabet
 #alphabet<am>
-12 ሰላም = "ሰላም ዓለም!"
-z.o(ሰላም)
+12 msg = "ሰላም ዓለም!"
+z.o(msg)
 
-12 ስም = "አልፋቤት"
-z.o(ስም)
+12 app = "አልፋቤት"
+z.o(app)
 ```
 
 **Output:**
@@ -513,6 +513,31 @@ Hola, Mundo!
 Bienvenido a Alphabet
 ```
 
+### Mixed Language Example
+
+You can use `#alphabet<en>` and output ANY language:
+
+```alphabet
+#alphabet<en>
+12 amharic = "ሰላም"
+12 spanish = "Hola"
+12 chinese = "你好"
+12 english = "Hello"
+
+z.o(amharic)
+z.o(spanish)
+z.o(chinese)
+z.o(english)
+```
+
+**Output:**
+```
+ሰላም
+Hola
+你好
+Hello
+```
+
 ### More Complex Example (English)
 
 ```alphabet
@@ -536,24 +561,33 @@ Factorial of 5 is:
 120
 ```
 
-### Class Example (Amharic)
+### Class Example
+
+**Important:** Alphabet does **not** use semicolons (`;`) at the end of statements.
+
+**Recommended:** Use ASCII for class/variable names for maximum compatibility:
 
 ```alphabet
-#alphabet<am>
-c ሰው {
-  v m 12 ስም() {
+#alphabet<en>
+c Person {
+  v m 12 getName() {
     r "አበበ"
   }
 }
 
-15 ሰው1 = n ሰው()
-z.o(ሰው1.ስም())
+15 p1 = n Person()
+z.o(p1.getName())
 ```
 
 **Output:**
 ```
 አበበ
 ```
+
+**Unicode Identifiers Support:**
+- ✅ String literals: Always works (`"ሰላም"`, `"你好"`, `"こんにちは"`)
+- ✅ Variable names: Works (`12 መልእክት = "ሰላም"`)
+- ⚠️ Class/Method names: Use ASCII for best compatibility
 
 ### Arithmetic Example (Spanish)
 

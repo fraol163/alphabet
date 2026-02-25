@@ -134,6 +134,18 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
         return TypeManager::I32;
     }
 
+    if (auto* list = dynamic_cast<const ListLiteral*>(expr.get())) {
+        // List literal returns list type (13)
+        (void)list;  // Suppress unused warning
+        return TypeManager::LIST;
+    }
+
+    if (auto* map = dynamic_cast<const MapLiteral*>(expr.get())) {
+        // Map literal returns map type (14)
+        (void)map;  // Suppress unused warning
+        return TypeManager::MAP;
+    }
+
     return TypeManager::I32;
 }
 

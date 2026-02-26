@@ -85,7 +85,7 @@ target_include_directories(alphabet PRIVATE
 if(WIN32)
     target_link_libraries(alphabet PRIVATE)
     set_target_properties(alphabet PROPERTIES
-        WIN32_EXECUTABLE TRUE
+        WIN32_EXECUTABLE FALSE
         OUTPUT_NAME "alphabet"
     )
 elseif(APPLE)

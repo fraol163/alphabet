@@ -109,22 +109,31 @@ option(BUILD_TESTS "Build test suite" ON)
 
 if(BUILD_TESTS)
     enable_testing()
-    
+
     # Test executable for lexer
     add_executable(test_lexer tests/test_lexer.cpp ${ALPHABET_LIB_SOURCES})
     target_include_directories(test_lexer PRIVATE ${CMAKE_SOURCE_DIR}/src/include)
     target_compile_definitions(test_lexer PRIVATE UNIT_TEST)
+    if(WIN32)
+        set_target_properties(test_lexer PROPERTIES WIN32_EXECUTABLE FALSE)
+    endif()
 
     # Test executable for parser
     add_executable(test_parser tests/test_parser.cpp ${ALPHABET_LIB_SOURCES})
     target_include_directories(test_parser PRIVATE ${CMAKE_SOURCE_DIR}/src/include)
     target_compile_definitions(test_parser PRIVATE UNIT_TEST)
+    if(WIN32)
+        set_target_properties(test_parser PROPERTIES WIN32_EXECUTABLE FALSE)
+    endif()
 
     # Test executable for VM
     add_executable(test_vm tests/test_vm.cpp ${ALPHABET_LIB_SOURCES})
     target_include_directories(test_vm PRIVATE ${CMAKE_SOURCE_DIR}/src/include)
     target_compile_definitions(test_vm PRIVATE UNIT_TEST)
-    
+    if(WIN32)
+        set_target_properties(test_vm PROPERTIES WIN32_EXECUTABLE FALSE)
+    endif()
+
     # Add tests
     add_test(NAME LexerTests COMMAND test_lexer)
     add_test(NAME ParserTests COMMAND test_parser)

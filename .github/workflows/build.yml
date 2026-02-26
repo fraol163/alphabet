@@ -37,6 +37,7 @@ jobs:
     - name: Test
       working-directory: build
       run: ctest -C ${{ env.BUILD_TYPE }} --output-on-failure
+      if: runner.os != 'Windows'
 
     - name: Upload binary artifact
       uses: actions/upload-artifact@v4

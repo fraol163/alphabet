@@ -32,7 +32,7 @@ Alphabet is a high-performance, compiled programming language featuring extreme 
 - **Strong Static Typing** - Compile-time type validation
 - **Zero-Copy Lexing** - std::string_view for maximum speed
 - **Smart Memory** - Fixed-size stack, no heap fragmentation
-- **FFI Support** - Link external C/C++ libraries
+- **FFI (Foreign Function Interface) Support** - Link external C/C++ libraries
 - **LSP Integration** - VS Code real-time error highlighting
 
 ---

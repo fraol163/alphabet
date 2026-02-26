@@ -274,17 +274,17 @@ TEST(test_parser_block) {
 TEST(test_parser_return_with_value) {
     std::string source = "#alphabet<test>\nm 5 f() { r 10 }";
     auto statements = parse_source(source);
-    
+
     // Method declaration at top level is handled differently
     // This tests that return is parsed
-    ASSERT_TRUE(statements.size() >= 0);
+    ASSERT_TRUE(statements.size() > 0);
 }
 
 TEST(test_parser_return_without_value) {
     std::string source = "#alphabet<test>\nm 5 f() { r }";
     auto statements = parse_source(source);
-    
-    ASSERT_TRUE(statements.size() >= 0);
+
+    ASSERT_TRUE(statements.size() > 0);
 }
 
 // ============================================================================

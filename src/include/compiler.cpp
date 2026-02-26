@@ -219,54 +219,54 @@ size_t Compiler::get_global_index(const std::string& name) {
 }
 
 void Compiler::visit(const StmtPtr& stmt) {
-    if (auto* s = dynamic_cast<const ReturnStmt*>(stmt.get())) {
-        visit_return(*s);
-    } else if (auto* s = dynamic_cast<const VarStmt*>(stmt.get())) {
-        visit_var(*s);
-    } else if (auto* s = dynamic_cast<const ExpressionStmt*>(stmt.get())) {
-        visit_expression(*s);
-    } else if (auto* s = dynamic_cast<const IfStmt*>(stmt.get())) {
-        visit_if(*s);
-    } else if (auto* s = dynamic_cast<const LoopStmt*>(stmt.get())) {
-        visit_loop(*s);
-    } else if (auto* s = dynamic_cast<const TryStmt*>(stmt.get())) {
-        visit_try(*s);
-    } else if (auto* s = dynamic_cast<const Block*>(stmt.get())) {
-        visit_block(*s);
-    } else if (auto* s = dynamic_cast<const ClassStmt*>(stmt.get())) {
-        visit_class(*s);
+    if (auto* rs = dynamic_cast<const ReturnStmt*>(stmt.get())) {
+        visit_return(*rs);
+    } else if (auto* vs = dynamic_cast<const VarStmt*>(stmt.get())) {
+        visit_var(*vs);
+    } else if (auto* es = dynamic_cast<const ExpressionStmt*>(stmt.get())) {
+        visit_expression(*es);
+    } else if (auto* is = dynamic_cast<const IfStmt*>(stmt.get())) {
+        visit_if(*is);
+    } else if (auto* ls = dynamic_cast<const LoopStmt*>(stmt.get())) {
+        visit_loop(*ls);
+    } else if (auto* ts = dynamic_cast<const TryStmt*>(stmt.get())) {
+        visit_try(*ts);
+    } else if (auto* bs = dynamic_cast<const Block*>(stmt.get())) {
+        visit_block(*bs);
+    } else if (auto* cs = dynamic_cast<const ClassStmt*>(stmt.get())) {
+        visit_class(*cs);
     }
 }
 
 void Compiler::visit_expr(const ExprPtr& expr) {
-    if (auto* e = dynamic_cast<const Binary*>(expr.get())) {
-        visit_binary(*e);
-    } else if (auto* e = dynamic_cast<const Unary*>(expr.get())) {
-        visit_unary(*e);
-    } else if (auto* e = dynamic_cast<const Literal*>(expr.get())) {
-        visit_literal(*e);
-    } else if (auto* e = dynamic_cast<const Grouping*>(expr.get())) {
-        visit_grouping(*e);
-    } else if (auto* e = dynamic_cast<const Variable*>(expr.get())) {
-        visit_variable(*e);
-    } else if (auto* e = dynamic_cast<const Assign*>(expr.get())) {
-        visit_assign(*e);
-    } else if (auto* e = dynamic_cast<const Logical*>(expr.get())) {
-        visit_logical(*e);
-    } else if (auto* e = dynamic_cast<const Call*>(expr.get())) {
-        visit_call(*e);
-    } else if (auto* get = dynamic_cast<const Get*>(expr.get())) {
-        visit_get(*get);
-    } else if (auto* set = dynamic_cast<const Set*>(expr.get())) {
-        visit_set(*set);
-    } else if (auto* new_expr = dynamic_cast<const New*>(expr.get())) {
-        visit_new(*new_expr);
-    } else if (auto* list = dynamic_cast<const ListLiteral*>(expr.get())) {
-        visit_list(*list);
-    } else if (auto* map = dynamic_cast<const MapLiteral*>(expr.get())) {
-        visit_map(*map);
-    } else if (auto* index = dynamic_cast<const IndexExpr*>(expr.get())) {
-        visit_index(*index);
+    if (auto* be = dynamic_cast<const Binary*>(expr.get())) {
+        visit_binary(*be);
+    } else if (auto* ue = dynamic_cast<const Unary*>(expr.get())) {
+        visit_unary(*ue);
+    } else if (auto* le = dynamic_cast<const Literal*>(expr.get())) {
+        visit_literal(*le);
+    } else if (auto* ge = dynamic_cast<const Grouping*>(expr.get())) {
+        visit_grouping(*ge);
+    } else if (auto* ve = dynamic_cast<const Variable*>(expr.get())) {
+        visit_variable(*ve);
+    } else if (auto* ae = dynamic_cast<const Assign*>(expr.get())) {
+        visit_assign(*ae);
+    } else if (auto* loe = dynamic_cast<const Logical*>(expr.get())) {
+        visit_logical(*loe);
+    } else if (auto* ce = dynamic_cast<const Call*>(expr.get())) {
+        visit_call(*ce);
+    } else if (auto* gete = dynamic_cast<const Get*>(expr.get())) {
+        visit_get(*gete);
+    } else if (auto* sete = dynamic_cast<const Set*>(expr.get())) {
+        visit_set(*sete);
+    } else if (auto* ne = dynamic_cast<const New*>(expr.get())) {
+        visit_new(*ne);
+    } else if (auto* liste = dynamic_cast<const ListLiteral*>(expr.get())) {
+        visit_list(*liste);
+    } else if (auto* mape = dynamic_cast<const MapLiteral*>(expr.get())) {
+        visit_map(*mape);
+    } else if (auto* ie = dynamic_cast<const IndexExpr*>(expr.get())) {
+        visit_index(*ie);
     }
 }
 

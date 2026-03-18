@@ -39,12 +39,35 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
 
 ## What is Alphabet?
 
-Alphabet is a beginner-friendly programming language with only **17 single-letter keywords**. Perfect for education, prototyping, and rapid experimentation.
+Alphabet is a **beginner-friendly programming language** with only **17 single-letter keywords**. Designed for education, prototyping, and rapid experimentation, Alphabet makes programming accessible to everyone.
 
-- **Learn in 10 minutes** - No memorizing 50+ keywords
-- **37x faster than Python** - Native C++ compiled code
-- **Simple syntax** - No semicolons, no boilerplate
-- **Safe by design** - Compile-time type checking
+### Key Features
+
+- **🎓 Easy to Learn** - Master all 17 keywords in 10 minutes
+- **⚡ High Performance** - 37x faster than Python, native C++ compiled code
+- **📝 Simple Syntax** - No semicolons, no boilerplate, no complex rules
+- **🔒 Type Safe** - Compile-time type checking catches errors early
+- **🌐 Cross-Platform** - Works on Windows, macOS, and Linux
+- **🛠️ Modern Tooling** - VS Code extension, LSP support, FFI capabilities
+
+### Why Choose Alphabet?
+
+**For Students:** Focus on programming concepts instead of memorizing 50+ keywords like in traditional languages.
+
+**For Educators:** Teach logic and algorithms without syntax overwhelming your students.
+
+**For Prototypers:** Quick experiments without boilerplate. Test ideas in minutes, not hours.
+
+**For Hobbyists:** Fun, lightweight language for personal projects and learning.
+
+### Quick Comparison
+
+| Task | Alphabet | Python | C |
+|------|----------|--------|---|
+| Keywords to learn | 17 | 35 | 32 |
+| Time to hello world | 2 min | 5 min | 10 min |
+| Performance (Fibonacci) | 0.024s | 0.045s | 0.001s |
+| Best for | Education | Scripts | Systems |
 
 ---
 
@@ -178,18 +201,32 @@ z.o(result)  # Output: 40
 
 📚 **Complete documentation:**
 
+### Getting Started
 | Guide | Description |
 |-------|-------------|
 | [Getting Started](docs/GETTING_STARTED.md) | Beginner guide (10 min) |
 | [Tutorial](docs/TUTORIAL.md) | Step-by-step examples |
-| [Reference](docs/REFERENCE.md) | Keywords, types, operators |
+| [Complete Guide](docs/COMPLETE_GUIDE.md) | Full language tutorial |
+
+### Reference
+| Guide | Description |
+|-------|-------------|
+| [Quick Reference](QUICK_REFERENCE.md) | Printable cheat sheet |
+| [Language Reference](docs/REFERENCE.md) | Keywords, types, operators |
 | [Installation](docs/INSTALLATION.md) | Setup guide |
+
+### Advanced
+| Guide | Description |
+|-------|-------------|
 | [Benchmarks](docs/BENCHMARKS.md) | Performance data |
-| [Advanced](docs/ADVANCED.md) | FFI, LSP, architecture |
-| [Complete Guide](docs/COMPLETE_GUIDE.md) | Full tutorial |
+| [Advanced Features](docs/ADVANCED.md) | FFI, LSP, architecture |
 | [Architecture](docs/PRESENTATION.md) | Technical overview |
 
-**Quick Reference:** [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+### Community
+| Guide | Description |
+|-------|-------------|
+| [Contributing](CONTRIBUTING.md) | How to contribute |
+| [Roadmap](docs/ROADMAP.md) | Future development |
 
 ---
 

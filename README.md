@@ -21,6 +21,22 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
 
 ---
 
+## Table of Contents
+
+- [What is Alphabet?](#what-is-alphabet)
+- [Quick Install](#quick-install)
+- [Hello World](#hello-world)
+- [Why Alphabet?](#why-alphabet)
+- [Quick Examples](#quick-examples)
+- [Language Comparison](#language-comparison)
+- [Documentation](#documentation)
+- [Command Line](#command-line)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
 ## What is Alphabet?
 
 Alphabet is a beginner-friendly programming language with only **17 single-letter keywords**. Perfect for education, prototyping, and rapid experimentation.
@@ -170,13 +186,16 @@ z.o(result)  # Output: 40
 
 ## Documentation
 
+📚 **Complete documentation is available:**
+
 | Guide | Description |
 |-------|-------------|
-| [Getting Started](docs/GETTING_STARTED.md) | Complete beginner guide |
-| [Tutorial](docs/TUTORIAL.md) | Step-by-step examples |
-| [Language Reference](docs/REFERENCE.md) | Keywords, types, operators |
-| [Benchmarks](docs/BENCHMARKS.md) | Performance comparisons |
-| [Advanced Features](docs/ADVANCED.md) | FFI, LSP, architecture |
+| [Language Reference](docs/DOCUMENTATION.md) | Quick reference guide |
+| [Complete Guide](docs/COMPLETE_GUIDE.md) | Full language tutorial |
+| [Architecture](docs/PRESENTATION.md) | Technical overview |
+| [Roadmap](docs/ROADMAP.md) | Future development |
+
+**Source Code:** Browse [`src/`](src/) for implementation details.
 
 ---
 
@@ -273,4 +292,6 @@ GitHub: [@fraol163](https://github.com/fraol163)
 
 ---
 
-**Built with C++17** | [Full Documentation](docs/) | [Examples](examples/)
+**Built with C++17**
+
+**Resources:** [Documentation](docs/) · [Examples](examples/) · [Source Code](src/)

@@ -117,16 +117,6 @@ Alphabet compiles to native code with zero runtime overhead:
 | Loop 10M | 12.8s | 0.3s | **42x** |
 | Startup | 50ms | 2ms | **25x** |
 
-### 🌍 Accessible
-
-Non-English speakers can focus on logic instead of English keywords:
-
-```alphabet
-#alphabet<am>
-12 መልእክት = "ሰላም ዓለም!"
-z.o(መልእክት)
-```
-
 ---
 
 ## Quick Examples
@@ -186,16 +176,20 @@ z.o(result)  # Output: 40
 
 ## Documentation
 
-📚 **Complete documentation is available:**
+📚 **Complete documentation:**
 
 | Guide | Description |
 |-------|-------------|
-| [Language Reference](docs/DOCUMENTATION.md) | Quick reference guide |
-| [Complete Guide](docs/COMPLETE_GUIDE.md) | Full language tutorial |
+| [Getting Started](docs/GETTING_STARTED.md) | Beginner guide (10 min) |
+| [Tutorial](docs/TUTORIAL.md) | Step-by-step examples |
+| [Reference](docs/REFERENCE.md) | Keywords, types, operators |
+| [Installation](docs/INSTALLATION.md) | Setup guide |
+| [Benchmarks](docs/BENCHMARKS.md) | Performance data |
+| [Advanced](docs/ADVANCED.md) | FFI, LSP, architecture |
+| [Complete Guide](docs/COMPLETE_GUIDE.md) | Full tutorial |
 | [Architecture](docs/PRESENTATION.md) | Technical overview |
-| [Roadmap](docs/ROADMAP.md) | Future development |
 
-**Source Code:** Browse [`src/`](src/) for implementation details.
+**Quick Reference:** [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
 
 ---
 

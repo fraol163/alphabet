@@ -26,12 +26,12 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
 - [What is Alphabet?](#what-is-alphabet)
 - [Quick Install](#quick-install)
 - [Hello World](#hello-world)
-- [Why Alphabet?](#why-alphabet)
 - [Quick Examples](#quick-examples)
 - [Language Comparison](#language-comparison)
 - [Documentation](#documentation)
 - [Command Line](#command-line)
 - [Testing](#testing)
+- [What Problem Does Alphabet Solve?](#what-problem-does-alphabet-solve)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -114,31 +114,6 @@ z.o(greeting)
 ```
 Hello, Alphabet!
 ```
-
----
-
-## Why Alphabet?
-
-### 🎓 Perfect for Education
-
-Traditional languages overwhelm beginners with syntax. Alphabet lets students focus on **programming concepts** instead of memorizing keywords.
-
-| Language | Keywords | Time to Learn |
-|----------|----------|---------------|
-| C        | 32       | 2-3 weeks     |
-| Python   | 35       | 2-3 weeks     |
-| Java     | 50+      | 3-4 weeks     |
-| **Alphabet** | **17**   | **10 minutes** |
-
-### ⚡ High Performance
-
-Alphabet compiles to native code with zero runtime overhead:
-
-| Benchmark | Python | Alphabet | Speedup |
-|-----------|--------|----------|---------|
-| Fibonacci(40) | 45.2s | 1.2s | **37x** |
-| Loop 10M | 12.8s | 0.3s | **42x** |
-| Startup | 50ms | 2ms | **25x** |
 
 ---
 

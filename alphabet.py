@@ -11,8 +11,9 @@ from parser import Parser
 from compiler import Compiler
 from vm import VM
 
-VERSION = "1.0.0"
+VERSION = "2.0.0"  # Updated to match C++ version
 DEVELOPER = "Fraol Teshome (fraolteshome444@gmail.com)"
+IMPLEMENTATION = "Legacy Python (REPL mode only) - Use C++ binary for production"
 
 LOGO = r"""
             d8b            d8b                 d8b                     

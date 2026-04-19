@@ -15,7 +15,7 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
 
 **The fastest way to learn programming.**
 
-[![Build Status](https://github.com/fraol163/alphabet/actions/workflows/build.yml/badge.svg)](https://github.com/fraol163/alphabet/actions)
+[![Build Status](https://github.com/fraol163/alphabet/actions/workflows/ci.yml/badge.svg)](https://github.com/fraol163/alphabet/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)](#installation)
 
@@ -24,12 +24,13 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
 ## Table of Contents
 
 - [What is Alphabet?](#what-is-alphabet)
-- [Quick Install](#quick-install)
+- [Installation](#installation)
 - [Hello World](#hello-world)
-- [Quick Examples](#quick-examples)
+- [Language Features](#language-features)
+- [Standard Library](#standard-library)
 - [Language Comparison](#language-comparison)
-- [Documentation](#documentation)
 - [Command Line](#command-line)
+- [Documentation](#documentation)
 - [Testing](#testing)
 - [What Problem Does Alphabet Solve?](#what-problem-does-alphabet-solve)
 - [Contributing](#contributing)
@@ -43,12 +44,14 @@ Alphabet is a **beginner-friendly programming language** with only **17 single-l
 
 ### Key Features
 
-- **🎓 Easy to Learn** - Master all 17 keywords in 10 minutes
-- **⚡ High Performance** - 37x faster than Python, native C++ compiled code
-- **📝 Simple Syntax** - No semicolons, no boilerplate, no complex rules
-- **🔒 Type Safe** - Compile-time type checking catches errors early
-- **🌐 Cross-Platform** - Works on Windows, macOS, and Linux
-- **🛠️ Modern Tooling** - VS Code extension, LSP support, FFI capabilities
+- **17 Keywords** - Master the entire language in 10 minutes
+- **Bytecode VM** - Stack-based interpreter with compiled execution
+- **Simple Syntax** - No semicolons, no boilerplate, no complex rules
+- **Type System** - Compile-time type checking with numeric type IDs
+- **Multilingual** - Write code in English, Amharic, Spanish, French, or German
+- **LSP Support** - Works with VS Code and other editors
+- **FFI** - Call native C functions from Alphabet code
+- **Cross-Platform** - Works on Windows, Linux, and macOS
 
 ### Why Choose Alphabet?
 
@@ -66,25 +69,30 @@ Alphabet is a **beginner-friendly programming language** with only **17 single-l
 |------|----------|--------|---|
 | Keywords to learn | 17 | 35 | 32 |
 | Time to hello world | 2 min | 5 min | 10 min |
-| Performance (Fibonacci) | 0.024s | 0.045s | 0.001s |
 | Best for | Education | Scripts | Systems |
 
 ---
 
-## Quick Install
+## Installation
 
-### Download Pre-built Binary (Recommended)
+### One-Line Install (Linux/macOS)
 
-Visit **[GitHub Actions](https://github.com/fraol163/alphabet/actions)** → Click latest build → Download your OS:
-- **Linux:** `alphabet-linux`
-- **macOS:** `alphabet-macos`
-- **Windows:** `alphabet-windows.exe`
+```bash
+curl -fsSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh | sh
+```
 
-### Legacy Python Implementation
+### Uninstall
 
-The original Python implementation is available in the [`legacy-python`](https://github.com/fraol163/alphabet/tree/legacy-python) branch.
+```bash
+curl -fsSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh | sh -s -- --uninstall
+```
 
-**Note:** Python version is for educational purposes only. Use C++ for production.
+### Download Pre-built Binary
+
+Visit **[GitHub Releases](https://github.com/fraol163/alphabet/releases)** → Download your OS:
+- **Linux:** `alphabet-linux-amd64.tar.gz`
+- **macOS:** `alphabet-macos-arm64.tar.gz`
+- **Windows:** `alphabet-windows-amd64.zip`
 
 ### Build from Source
 
@@ -93,10 +101,10 @@ The original Python implementation is available in the [`legacy-python`](https:/
 ```bash
 git clone https://github.com/fraol163/alphabet.git
 cd alphabet
-mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j$(nproc)
-sudo make install
+cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
+cmake --build build -j$(nproc)
+cd build && ctest --output-on-failure
+sudo cmake --install build
 alphabet --version
 ```
 
@@ -117,16 +125,18 @@ Hello, Alphabet!
 
 ---
 
-## Quick Examples
+## Language Features
 
 ### Variables and Types
 
 ```alphabet
 #alphabet<en>
-5 x = 10          # int
-6 pi = 3.14       # float
+5 x = 10              # int
+6 pi = 3.14           # float
 12 name = "Alphabet"  # string
-11 ok = (1 == 1)  # bool
+11 ok = (1 == 1)      # bool
+13 nums = [1, 2, 3]   # list
+14 cfg = {"k": 100}   # map
 ```
 
 ### Control Flow
@@ -143,7 +153,39 @@ l (i < 10) {
 # Output: 0, 2, 4, 6, 8
 ```
 
-### Functions (Methods)
+### For Loop
+
+```alphabet
+#alphabet<en>
+l (5 j = 0 : j < 5 : j = j + 1) {
+  z.o(j)
+}
+# Output: 0, 1, 2, 3, 4
+```
+
+### Break and Continue
+
+```alphabet
+#alphabet<en>
+l (5 k = 0 : k < 10 : k = k + 1) {
+  i (k == 3) { b }      # break at 3
+  i (k % 2 == 0) { k }  # skip evens
+  z.o(k)
+}
+```
+
+### Functions
+
+```alphabet
+#alphabet<en>
+m 5 factorial(5 num) {
+  i (num <= 1) { r 1 }
+  r num * factorial(num - 1)
+}
+z.o(factorial(5))  # Output: 120
+```
+
+### Classes
 
 ```alphabet
 #alphabet<en>
@@ -158,6 +200,113 @@ c Calculator {
 z.o(result)  # Output: 40
 ```
 
+### Pattern Matching
+
+```alphabet
+#alphabet<en>
+5 x = 2
+q (x) {
+  1: z.o("one")
+  2: z.o("two")
+  e: z.o("other")
+}
+# Output: two
+```
+
+### Exception Handling
+
+```alphabet
+#alphabet<en>
+t {
+  z.o("in try")
+} h (12 e) {
+  z.o("caught: " + e)
+}
+```
+
+### Import Modules
+
+```alphabet
+#alphabet<en>
+x "path/to/module.abc"
+5 result = imported_function(10)
+```
+
+### String Escapes and Concatenation
+
+```alphabet
+#alphabet<en>
+z.o("Hello\nWorld")        # newline
+z.o("x=" + 5)              # x=5
+z.o(5 + " items")          # 5 items
+```
+
+### FFI - Call Native C Functions
+
+```alphabet
+#alphabet<en>
+5 result = z.dyn("/path/to/lib.so", "add", 10, 20)
+z.o(result)  # Output: 30
+```
+
+### Built-In Functions
+
+```alphabet
+#alphabet<en>
+z.o(z.sqrt(144))    # 12
+z.o(z.abs(-42))     # 42
+z.o(z.pow(2, 10))   # 1024
+z.o(z.len("hello")) # 5
+z.o(z.type(42))     # "number"
+```
+
+### Multilingual Keywords
+
+```alphabet
+#alphabet<am>    Amharic
+ክፍል አስላ {
+  ዘዴ 5 መጀመሪያ(5 ቁ) {
+    ተመለስ ቁ
+  }
+}
+
+#alphabet<es>    Spanish
+clase Calculadora {
+  metodo 5 iniciar(5 v) {
+    retornar v
+  }
+}
+```
+
+---
+
+## Standard Library
+
+Alphabet ships with a standard library in `stdlib/`:
+
+### math.abc
+
+```alphabet
+#alphabet<en>
+x "../stdlib/math.abc"
+z.o(factorial(5))      # 120
+z.o(gcd(48, 18))       # 6
+z.o(lcm(4, 6))         # 12
+z.o(max(10, 20))       # 20
+z.o(clamp(15, 0, 10))  # 10
+z.o(is_even(4))        # 1
+z.o(sign(-5))          # -1
+```
+
+### io.abc
+
+```alphabet
+#alphabet<en>
+x "../stdlib/io.abc"
+print("hello")
+12 content = read_file("data.txt")
+```
+
 ---
 
 ## Language Comparison
@@ -165,16 +314,40 @@ z.o(result)  # Output: 40
 | Feature | C | Python | Zig | **Alphabet** |
 |---------|---|--------|-----|--------------|
 | Keywords | 32 | 35 | 25 | **17** |
-| Type System | Manual | Dynamic | Static | Numeric IDs |
+| Type System | Manual | Dynamic | Static | **Numeric IDs** |
 | Learning Curve | Steep | Medium | Medium | **Flat** |
-| Performance | 1.0x | 0.03x | 0.9x | **0.7x** |
 | Best For | Systems | Scripts | Systems | **Education** |
 
 ---
 
-## Documentation
+## Command Line
 
-📚 **Complete documentation:**
+```bash
+# Run a program
+alphabet program.abc
+
+# Interactive REPL (state persists across lines)
+alphabet --repl
+
+# Start LSP server for editor integration
+alphabet --lsp
+
+# Show version
+alphabet --version
+
+# Show help
+alphabet --help
+```
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `ALPHABET_PATH` | Colon-separated directories to search for imports |
+
+---
+
+## Documentation
 
 ### Getting Started
 | Guide | Description |
@@ -205,42 +378,12 @@ z.o(result)  # Output: 40
 
 ---
 
-## Command Line
-
-```bash
-# Run a program
-alphabet program.abc
-
-# Interactive REPL
-alphabet --repl
-
-# Show version
-alphabet --version
-
-# Show help
-alphabet --help
-```
-
----
-
 ## Testing
 
 ```bash
-cd build
-ctest --output-on-failure
-```
-
-**Test Results:**
-```
-Test project /build
-    Start 1: LexerTests
-1/3 Test #1: LexerTests .....................   Passed    0.02 sec
-    Start 2: ParserTests
-2/3 Test #2: ParserTests ....................   Passed    0.05 sec
-    Start 3: VMTests
-3/3 Test #3: VMTests ........................   Passed    0.03 sec
-
-100% tests passed!
+cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
+cmake --build build -j$(nproc)
+cd build && ctest --output-on-failure
 ```
 
 ---
@@ -248,7 +391,7 @@ Test project /build
 ## What Problem Does Alphabet Solve?
 
 ### 1. Education Overload
-Beginners struggle with syntax before understanding concepts. Alphabet removes this barrier.
+Beginners struggle with syntax before understanding concepts. Alphabet removes this barrier with only 17 keywords.
 
 ### 2. Rapid Prototyping
 Quick experiments without boilerplate. Compare:
@@ -264,14 +407,17 @@ def factorial(n):
 **Alphabet:**
 ```alphabet
 #alphabet<en>
-5 m factorial(5 n) {
-  i (n <= 1) { r 1 }
-  r n * factorial(n - 1)
+m 5 factorial(5 num) {
+  i (num <= 1) { r 1 }
+  r num * factorial(num - 1)
 }
 ```
 
-### 3. Performance Without Complexity
-Get C-like performance without manual memory management or complex syntax.
+### 3. Multilingual Programming
+Write code in your native language. Alphabet supports English, Amharic, Spanish, French, and German keywords.
+
+### 4. Tooling Integration
+Built-in LSP server works with VS Code, Vim, Emacs, and any editor supporting the Language Server Protocol.
 
 ---
 
@@ -292,12 +438,12 @@ MIT License - See [LICENSE](LICENSE) file
 
 ## Contact
 
-**Fraol Teshome**  
-Email: fraolteshome444@gmail.com  
+**Fraol Teshome**
+Email: fraolteshome444@gmail.com
 GitHub: [@fraol163](https://github.com/fraol163)
 
 ---
 
 **Built with C++17**
 
-**Resources:** [Documentation](docs/) · [Examples](examples/) · [Source Code](src/)
+**Resources:** [Documentation](docs/) · [Examples](examples/) · [Source Code](src/) · [Standard Library](stdlib/)

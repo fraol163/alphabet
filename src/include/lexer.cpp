@@ -70,13 +70,22 @@ std::vector<Token> Lexer::scan_tokens() {
     }
 
     validate_header();
+    
+    // Pre-count escape sequences to reserve string_pool_ and prevent
+    // reallocation from invalidating string_view tokens
+    size_t escape_count = 0;
+    for (size_t i = current_; i < source_.size(); ++i) {
+        if (source_[i] == '\\') escape_count++;
+    }
+    string_pool_.reserve(escape_count);
 
     while (!is_at_end()) {
         start_ = current_;
+        start_column_ = column_;
         scan_token();
     }
 
-    tokens_.emplace_back(TokenType::EOF_TOKEN, std::string_view(), 0, line_);
+    tokens_.emplace_back(TokenType::EOF_TOKEN, std::string_view(), 0, line_, column_);
     return tokens_;
 }
 
@@ -97,11 +106,17 @@ void Lexer::validate_header() {
         throw MissingLanguageHeader();
     }
 
+    // Extract language code
+    size_t lang_start = prefix.size();
+    size_t lang_length = close_pos - lang_start;
+    language_ = std::string(header_source.substr(lang_start, lang_length));
+    
     size_t newline_pos = header_source.find('\n', close_pos);
     if (newline_pos != std::string_view::npos) {
         current_ = current_ + newline_pos + 1;
         start_ = current_;
         line_ = 2;
+        column_ = 0;
     }
 }
 
@@ -173,7 +188,6 @@ void Lexer::scan_token() {
             break;
 
         case '\n':
-            ++line_;
             break;
             
         case '"':
@@ -183,7 +197,8 @@ void Lexer::scan_token() {
         default:
             if (std::isdigit(static_cast<unsigned char>(c))) {
                 number();
-            } else if (std::isalpha(static_cast<unsigned char>(c))) {
+            } else if (std::isalpha(static_cast<unsigned char>(c)) || static_cast<unsigned char>(c) > 127) {
+                // ASCII letters or UTF-8 characters
                 identifier();
             }
             break;
@@ -191,7 +206,14 @@ void Lexer::scan_token() {
 }
 
 char Lexer::advance() {
-    return source_[current_++];
+    char c = source_[current_++];
+    if (c == '\n') {
+        ++line_;
+        column_ = 0;
+    } else {
+        ++column_;
+    }
+    return c;
 }
 
 char Lexer::peek() const {
@@ -213,21 +235,48 @@ bool Lexer::match(char expected) {
 
 void Lexer::add_token(TokenType type, double literal) {
     std::string_view lexeme = source_.substr(start_, current_ - start_);
-    tokens_.emplace_back(type, lexeme, literal, line_);
+    tokens_.emplace_back(type, lexeme, literal, line_, start_column_);
 }
 
 void Lexer::string() {
+    std::string processed;
+    bool has_escapes = false;
+    
     while (peek() != '"' && !is_at_end()) {
-        if (peek() == '\n') ++line_;
-        advance();
+        if (peek() == '\\') {
+            has_escapes = true;
+            advance(); // consume backslash
+            if (is_at_end()) return;
+            
+            char escaped = advance();
+            switch (escaped) {
+                case 'n': processed += '\n'; break;
+                case 't': processed += '\t'; break;
+                case '\\': processed += '\\'; break;
+                case '"': processed += '"'; break;
+                case '0': processed += '\0'; break;
+                default:
+                    // Unknown escape -- keep as-is
+                    processed += '\\';
+                    processed += escaped;
+                    break;
+            }
+        } else {
+            processed += advance();
+        }
     }
     
     if (is_at_end()) return;
-
-    advance();
-
-    std::string_view value = source_.substr(start_ + 1, current_ - start_ - 2);
-    tokens_.emplace_back(TokenType::STRING, value, 0, line_);
+    
+    advance(); // consume closing "
+    
+    if (has_escapes) {
+        string_pool_.push_back(std::move(processed));
+        tokens_.emplace_back(TokenType::STRING, string_pool_.back(), 0, line_, start_column_);
+    } else {
+        std::string_view value = source_.substr(start_ + 1, current_ - start_ - 2);
+        tokens_.emplace_back(TokenType::STRING, value, 0, line_, start_column_);
+    }
 }
 
 void Lexer::number() {
@@ -247,12 +296,64 @@ void Lexer::number() {
 }
 
 void Lexer::identifier() {
-    while (std::isalnum(static_cast<unsigned char>(peek())) || static_cast<unsigned char>(peek()) > 127) {
+    while (std::isalnum(static_cast<unsigned char>(peek())) || peek() == '_' || static_cast<unsigned char>(peek()) > 127) {
         advance();
     }
 
     std::string_view text = source_.substr(start_, current_ - start_);
+    std::string text_str(text);
 
+    // Check if this is a UTF-8 keyword
+    if (is_utf8_keyword(text_str)) {
+        std::string translated = translate_keyword(text_str, language_);
+        // If translation is different from original, it's a keyword
+        if (translated != text_str) {
+            // It's a translated keyword - process the translation
+            if (translated == "z") {
+                // Handle system functions - emit 'z' as SYSTEM token
+                tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
+                return;
+            }
+            if (translated == "z.i") {
+                // Handle system.input - emit 'z' as SYSTEM token
+                tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
+                return;
+            }
+            // For other translated keywords, check first char
+            if (translated.size() == 1 && is_keyword_char(translated[0])) {
+                add_token(keyword_type(translated[0]));
+                return;
+            }
+        }
+        // UTF-8 identifier (not a keyword)
+        add_token(TokenType::IDENTIFIER);
+        return;
+    }
+
+    // ASCII keyword handling - check for aliases first
+    std::string translated = translate_keyword(text_str, language_);
+    if (translated != text_str) {
+        // It's a translated ASCII keyword
+        if (translated == "z") {
+            tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
+            return;
+        }
+        if (translated == "z.i") {
+            tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
+            return;
+        }
+        // Handle multi-char translated keywords only (class->c, method->m, new->n, etc.)
+        // Single-char source keywords (like "n" as variable) are NOT translated to avoid ambiguity
+        if (translated.size() == 1 && text_str.size() > 1) {
+            char c = translated[0];
+            if (is_keyword_char(c)) {
+                add_token(keyword_type(c));
+                return;
+            }
+        }
+    }
+    
+    // Standard single-char keywords
     if (text.size() == 1 && is_keyword_char(text[0])) {
         add_token(keyword_type(text[0]));
     } else {
@@ -265,7 +366,7 @@ bool Lexer::is_keyword_char(char c) const {
         case 'i': case 'e': case 'l': case 'b': case 'k':
         case 'r': case 'c': case 'a': case 'j': case 'n':
         case 'v': case 'p': case 's': case 'm': case 't':
-        case 'h': case 'z':
+        case 'h': case 'z': case 'x': case 'q':
             return true;
         default:
             return false;
@@ -291,8 +392,15 @@ TokenType Lexer::keyword_type(char c) const {
         case 't': return TokenType::TRY;
         case 'h': return TokenType::HANDLE;
         case 'z': return TokenType::SYSTEM;
+        case 'x': return TokenType::IMPORT;
+        case 'q': return TokenType::MATCH;
         default: return TokenType::IDENTIFIER;
     }
+}
+
+TokenType Lexer::previous_token_type() const {
+    if (tokens_.empty()) return TokenType::EOF_TOKEN;
+    return tokens_.back().type;
 }
 
 }

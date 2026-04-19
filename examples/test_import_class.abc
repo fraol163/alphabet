@@ -1,0 +1,5 @@
+#alphabet<en>
+x "lib_greeter.abc"
+15 g = n Greeter()
+12 msg = g.greet("Fraol")
+z.o(msg)

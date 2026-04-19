@@ -1,0 +1,7 @@
+#alphabet<en>
+m 5 add(5 a, 5 b) {
+  r a + b
+}
+m 5 multiply(5 a, 5 b) {
+  r a * b
+}

@@ -1,6 +1,9 @@
 #include "compiler.h"
+#include "lexer.h"
+#include "parser.h"
 #include <algorithm>
 #include <sstream>
+#include <fstream>
 
 namespace alphabet {
 
@@ -44,25 +47,21 @@ void Compiler::validate_types(const std::vector<StmtPtr>& statements) {
 
 bool Compiler::types_compatible(uint16_t source, uint16_t target) {
     if (source == target) return true;
-
-    if (target == TypeManager::INT) {
+    
+    // INT(5) as source means "unknown/any type" from function calls
+    if (source == TypeManager::INT) return true;
+    
+    // All numeric types (I8-FLOAT, ids 1-8) are compatible with each other
+    bool source_is_numeric = (source >= TypeManager::I8 && source <= TypeManager::FLOAT);
+    bool target_is_numeric = (target >= TypeManager::I8 && target <= TypeManager::FLOAT);
+    
+    if (source_is_numeric && target_is_numeric) {
         return true;
     }
-
-    if (target >= TypeManager::I8 && target <= TypeManager::INT) {
-        if (source >= TypeManager::I8 && source <= TypeManager::F64) {
-            return true;
-        }
-    }
-
-    if (target >= TypeManager::F32 && target <= TypeManager::FLOAT) {
-        if (source >= TypeManager::I8 && source <= TypeManager::F64) {
-            return true;
-        }
-    }
     
+    // Custom types (id >= 15) are only compatible with same type or other custom types
     if (target >= 15) {
-        return source == target || source >= 15;
+        return source >= 15;
     }
 
     return false;
@@ -107,6 +106,9 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
         if (class_map_.find(name) != class_map_.end()) {
             return class_map_[name];
         }
+        // For variables, we don't know the type at inference time.
+        // Return I32 as a reasonable default -- the declaration already
+        // enforced the type when the variable was created.
         return TypeManager::I32;
     }
 
@@ -123,7 +125,10 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
             std::string method_name = sv_to_str(get->name.lexeme);
             if (method_name == "o") return TypeManager::I32;
         }
-        return TypeManager::I32;
+        // Return type of function/method calls unknown at inference time.
+        // Use the class_map_ entry if it's a known function, otherwise
+        // return INT which signals "any" to types_compatible.
+        return TypeManager::INT;
     }
 
     if (auto* list = dynamic_cast<const ListLiteral*>(expr.get())) {
@@ -164,6 +169,13 @@ Program Compiler::compile(const std::vector<StmtPtr>& statements) {
         }
     }
 
+    // Pre-pass: process imports to register their classes before type validation
+    for (const auto& stmt : statements) {
+        if (auto* imps = dynamic_cast<const ImportStmt*>(stmt.get())) {
+            load_module(imps->module_path);
+        }
+    }
+
     validate_types(statements);
 
     std::unordered_map<std::string, CompiledClass> classes;
@@ -193,14 +205,24 @@ Program Compiler::compile(const std::vector<StmtPtr>& statements) {
         }
         program.classes[cls.id] = cls;
     }
+    
+    // Merge classes loaded from imported modules
+    for (const auto& [name, cls] : pending_classes_) {
+        if (program.classes.find(cls.id) == program.classes.end()) {
+            program.classes[cls.id] = cls;
+        }
+    }
+    pending_classes_.clear();
 
     program.globals = globals_;
+    program.functions = std::move(pending_functions_);
+    pending_functions_.clear();
 
     return program;
 }
 
-void Compiler::emit(OpCode op, Operand operand) {
-    bytecode_.emplace_back(op, std::move(operand));
+void Compiler::emit(OpCode op, Operand operand, int line) {
+    bytecode_.emplace_back(op, std::move(operand), line);
 }
 
 void Compiler::patch_jump(size_t index, size_t target) {
@@ -229,12 +251,36 @@ void Compiler::visit(const StmtPtr& stmt) {
         visit_if(*is);
     } else if (auto* ls = dynamic_cast<const LoopStmt*>(stmt.get())) {
         visit_loop(*ls);
+    } else if (auto* fs = dynamic_cast<const ForStmt*>(stmt.get())) {
+        visit_for(*fs);
     } else if (auto* ts = dynamic_cast<const TryStmt*>(stmt.get())) {
         visit_try(*ts);
     } else if (auto* bs = dynamic_cast<const Block*>(stmt.get())) {
         visit_block(*bs);
     } else if (auto* cs = dynamic_cast<const ClassStmt*>(stmt.get())) {
         visit_class(*cs);
+    } else if (auto* imps = dynamic_cast<const ImportStmt*>(stmt.get())) {
+        imported_modules_.push_back(imps->module_path);
+        if (imps->alias) {
+            module_aliases_[*imps->alias] = imps->module_path;
+        }
+        // Load the module file and compile its symbols
+        load_module(imps->module_path);
+    } else if (auto* ms = dynamic_cast<const MatchStmt*>(stmt.get())) {
+        visit_match(*ms);
+    } else if (auto* bs = dynamic_cast<const BreakStmt*>(stmt.get())) {
+        visit_break(*bs);
+    } else if (auto* cs = dynamic_cast<const ContinueStmt*>(stmt.get())) {
+        visit_continue(*cs);
+    } else if (auto* fs = dynamic_cast<const FunctionStmt*>(stmt.get())) {
+        // Top-level function definition - compile and store
+        std::string func_name = sv_to_str(fs->name.lexeme);
+        CompiledMethod info;
+        info.bytecode = compile_method(*fs);
+        for (const auto& param : fs->params) {
+            info.param_names.push_back(sv_to_str(param.name.lexeme));
+        }
+        pending_functions_[func_name] = std::move(info);
     }
 }
 
@@ -274,20 +320,21 @@ void Compiler::visit_return(const ReturnStmt& stmt) {
     if (stmt.value) {
         visit_expr(stmt.value);
     } else {
-        emit(OpCode::PUSH_CONST, nullptr);
+        emit(OpCode::PUSH_CONST, nullptr, stmt.keyword.line);
     }
-    emit(OpCode::RET);
+    emit(OpCode::RET, std::monostate{}, stmt.keyword.line);
 }
 
 void Compiler::visit_var(const VarStmt& stmt) {
     if (stmt.initializer) {
         visit_expr(stmt.initializer);
     } else {
-        emit(OpCode::PUSH_CONST, nullptr);
+        emit(OpCode::PUSH_CONST, nullptr, stmt.name.line);
     }
 
     size_t idx = get_global_index(sv_to_str(stmt.name.lexeme));
-    emit(OpCode::STORE_VAR, static_cast<int64_t>(idx));
+    emit(OpCode::STORE_VAR, static_cast<int64_t>(idx), stmt.name.line);
+    emit(OpCode::POP);
 }
 
 void Compiler::visit_expression(const ExpressionStmt& stmt) {
@@ -319,15 +366,99 @@ void Compiler::visit_if(const IfStmt& stmt) {
 void Compiler::visit_loop(const LoopStmt& stmt) {
     size_t start_pos = bytecode_.size();
     
+    // Emit LOOP_START marker (VM uses this for continue)
+    emit(OpCode::LOOP_START, static_cast<int64_t>(start_pos));
+    
     visit_expr(stmt.condition);
     
     size_t exit_jump = bytecode_.size();
     emit(OpCode::JUMP_IF_FALSE, static_cast<int64_t>(0));
     
+    // Push loop context for break/continue
+    loop_stack_.push_back({start_pos, {}});
+    
     visit(stmt.body);
     
+    // Jump back to condition check
     emit(OpCode::JUMP, static_cast<int64_t>(start_pos));
+    
+    // Patch exit jump
     patch_jump(exit_jump, bytecode_.size());
+    
+    // Patch all break jumps to point after the loop
+    LoopContext ctx = loop_stack_.back();
+    loop_stack_.pop_back();
+    for (size_t break_idx : ctx.break_jumps) {
+        patch_jump(break_idx, bytecode_.size());
+    }
+}
+
+void Compiler::visit_break(const BreakStmt& stmt) {
+    if (loop_stack_.empty()) {
+        throw CompileError("'break' outside of loop at line " + std::to_string(stmt.keyword.line));
+    }
+    // Emit BREAK_JUMP with placeholder -- will be patched to after-loop
+    size_t idx = bytecode_.size();
+    emit(OpCode::BREAK_JUMP, static_cast<int64_t>(0), stmt.keyword.line);
+    loop_stack_.back().break_jumps.push_back(idx);
+}
+
+void Compiler::visit_continue(const ContinueStmt& stmt) {
+    if (loop_stack_.empty()) {
+        throw CompileError("'continue' outside of loop at line " + std::to_string(stmt.keyword.line));
+    }
+    // Emit CONTINUE_JUMP pointing to loop start
+    emit(OpCode::CONTINUE_JUMP, static_cast<int64_t>(loop_stack_.back().loop_start_ip), stmt.keyword.line);
+}
+
+void Compiler::visit_for(const ForStmt& stmt) {
+    // Compile: init; loop_start: cond; JUMP_IF_FALSE exit; body; incr; JUMP loop_start; exit:
+    
+    // Execute initializer
+    if (stmt.initializer) {
+        visit(stmt.initializer);
+        emit(OpCode::POP);  // Discard init result
+    }
+    
+    size_t loop_start = bytecode_.size();
+    emit(OpCode::LOOP_START, static_cast<int64_t>(loop_start));
+    
+    // Evaluate condition
+    if (stmt.condition) {
+        visit_expr(stmt.condition);
+    } else {
+        emit(OpCode::PUSH_CONST, 1.0);  // Infinite loop if no condition
+    }
+    
+    size_t exit_jump = bytecode_.size();
+    emit(OpCode::JUMP_IF_FALSE, static_cast<int64_t>(0));
+    
+    // Push loop context for break/continue
+    loop_stack_.push_back({loop_start, {}});
+    
+    // Execute body
+    if (stmt.body) {
+        visit(stmt.body);
+    }
+    
+    // Execute increment
+    if (stmt.increment) {
+        visit_expr(stmt.increment);
+        emit(OpCode::POP);  // Discard increment result
+    }
+    
+    // Jump back to condition
+    emit(OpCode::JUMP, static_cast<int64_t>(loop_start));
+    
+    // Patch exit jump
+    patch_jump(exit_jump, bytecode_.size());
+    
+    // Patch break jumps
+    LoopContext ctx = loop_stack_.back();
+    loop_stack_.pop_back();
+    for (size_t break_idx : ctx.break_jumps) {
+        patch_jump(break_idx, bytecode_.size());
+    }
 }
 
 void Compiler::visit_try(const TryStmt& stmt) {
@@ -357,6 +488,57 @@ void Compiler::visit_block(const Block& stmt) {
     }
 }
 
+void Compiler::visit_match(const MatchStmt& stmt) {
+    // Evaluate the match expression
+    visit_expr(stmt.expression);
+    
+    // Compile each case
+    std::vector<size_t> jump_patches;
+    
+    for (size_t i = 0; i < stmt.cases.size(); i++) {
+        const auto& case_stmt = stmt.cases[i];
+        
+        // Duplicate the value for comparison
+        emit(OpCode::DUP);
+        
+        // Compile pattern comparison
+        visit_expr(case_stmt.pattern);
+        emit(OpCode::EQ);
+        
+        // Jump to body if not equal (will patch later)
+        emit(OpCode::JUMP_IF_FALSE, static_cast<int64_t>(0));
+        jump_patches.push_back(bytecode_.size() - 1);
+        
+        // Pop the duplicated value
+        emit(OpCode::POP);
+        
+        // Compile case body
+        visit(case_stmt.body);
+        
+        // Jump to end after this case (will patch later)
+        if (i < stmt.cases.size() - 1 || stmt.default_case) {
+            emit(OpCode::JUMP, static_cast<int64_t>(0));
+            jump_patches.push_back(bytecode_.size() - 1);
+        }
+        
+        // Patch the JUMP_IF_FALSE to point to next case
+        patch_jump(jump_patches[jump_patches.size() - (i == stmt.cases.size() - 1 && !stmt.default_case ? 1 : 2)], 
+                   bytecode_.size());
+    }
+    
+    // Handle default case
+    if (stmt.default_case) {
+        // Pop the value
+        emit(OpCode::POP);
+        visit(stmt.default_case);
+    }
+    
+    // Patch final jumps
+    if (!jump_patches.empty()) {
+        patch_jump(jump_patches.back(), bytecode_.size());
+    }
+}
+
 void Compiler::visit_class(const ClassStmt& /*stmt*/) {
 }
 
@@ -371,8 +553,11 @@ void Compiler::visit_binary(const Binary& expr) {
         case TokenType::SLASH: emit(OpCode::DIV); break;
         case TokenType::PERCENT: emit(OpCode::PERCENT); break;
         case TokenType::DOUBLE_EQUALS: emit(OpCode::EQ); break;
+        case TokenType::NOT_EQUALS: emit(OpCode::NE); break;
         case TokenType::GREATER: emit(OpCode::GT); break;
+        case TokenType::GREATER_EQUALS: emit(OpCode::GE); break;
         case TokenType::LESS: emit(OpCode::LT); break;
+        case TokenType::LESS_EQUALS: emit(OpCode::LE); break;
         default: break;
     }
 }
@@ -480,14 +665,19 @@ void Compiler::visit_set(const Set& expr) {
 }
 
 void Compiler::visit_new(const New& expr) {
+    // Push constructor args
     for (const auto& arg : expr.arguments) {
         visit_expr(arg);
     }
-    emit(OpCode::NEW, sv_to_str(expr.name.lexeme));
+    // NEW creates object, inits fields, calls init with args, pushes result
+    emit(OpCode::NEW, std::make_pair(sv_to_str(expr.name.lexeme),
+                                      static_cast<int>(expr.arguments.size())));
 }
 
 void Compiler::visit_call(const Call& expr) {
     if (auto* get = dynamic_cast<const Get*>(expr.callee.get())) {
+        // Method call on object: obj.method(args)
+        // Stack order: [obj, arg1, arg2, ...] - VM pops args then obj
         visit_expr(get->obj);
         for (const auto& arg : expr.arguments) {
             visit_expr(arg);
@@ -501,13 +691,19 @@ void Compiler::visit_call(const Call& expr) {
                                               static_cast<int>(expr.arguments.size())));
         }
     } else if (auto* var = dynamic_cast<const Variable*>(expr.callee.get())) {
-        for (const auto& arg : expr.arguments) {
-            visit_expr(arg);
-        }
-
         std::string var_name = sv_to_str(var->name.lexeme);
+
+        // Push callee first, then args
+        // VM pops args (from top), then pops callee (below args)
         if (var_name == "z") {
             emit(OpCode::PUSH_CONST, std::string("SYSTEM_Z"));
+        } else {
+            // Top-level function call: push function name as callee
+            emit(OpCode::PUSH_CONST, var_name);
+        }
+
+        for (const auto& arg : expr.arguments) {
+            visit_expr(arg);
         }
 
         emit(OpCode::CALL, std::make_pair(var_name,
@@ -589,6 +785,25 @@ CompiledClass Compiler::compile_class_def(const ClassStmt& stmt) {
     }
 
     cls.static_init = std::move(bytecode_);
+    bytecode_.clear();
+
+    // Generate instance field initialization bytecode
+    for (const auto& field : stmt.fields) {
+        if (!field.is_static && field.initializer) {
+            // Load 'this' (the object being initialized)
+            emit(OpCode::LOAD_VAR, std::string("this"));
+            // Evaluate the initializer expression
+            visit_expr(field.initializer);
+            // Store as field
+            emit(OpCode::STORE_FIELD, sv_to_str(field.name.lexeme));
+            emit(OpCode::POP);
+        }
+    }
+    if (!bytecode_.empty()) {
+        emit(OpCode::PUSH_CONST, nullptr);
+        emit(OpCode::RET);
+    }
+    cls.field_init = std::move(bytecode_);
     bytecode_ = std::move(old_bytecode);
 
     return cls;
@@ -611,6 +826,105 @@ std::vector<Instruction> Compiler::compile_method(const FunctionStmt& method) {
     bytecode_ = std::move(old_bytecode);
     
     return result;
+}
+
+void Compiler::load_module(const std::string& path) {
+    // Avoid loading the same module twice
+    if (loaded_modules_.count(path)) return;
+    loaded_modules_.insert(path);
+    
+    // Resolve path relative to source file directory
+    std::string resolved_path = path;
+    if (!source_dir_.empty() && path.size() > 0 && path[0] != '/') {
+        resolved_path = source_dir_ + "/" + path;
+    }
+    
+    // If file not found, try ALPHABET_PATH environment variable
+    {
+        std::ifstream test(resolved_path);
+        if (!test.good()) {
+            const char* env_path = std::getenv("ALPHABET_PATH");
+            if (env_path) {
+                std::string env_str(env_path);
+                size_t start = 0;
+                while (start < env_str.size()) {
+                    size_t end = env_str.find(':', start);
+                    if (end == std::string::npos) end = env_str.size();
+                    std::string dir = env_str.substr(start, end - start);
+                    std::string candidate = dir + "/" + path;
+                    std::ifstream t2(candidate);
+                    if (t2.good()) { resolved_path = candidate; break; }
+                    start = end + 1;
+                }
+            }
+        }
+    }
+    
+    // Read the module file
+    std::ifstream file(resolved_path);
+    if (!file.is_open()) {
+        throw CompileError("Cannot import module: " + path);
+    }
+    std::ostringstream oss;
+    oss << file.rdbuf();
+    std::string source = oss.str();
+    
+    // Lex and parse the module
+    Lexer lexer(source);
+    auto tokens = lexer.scan_tokens();
+    Parser parser(tokens, source);
+    auto statements = parser.parse();
+    
+    if (parser.had_errors()) {
+        throw CompileError("Syntax errors in imported module: " + path);
+    }
+    
+    // Process the module's statements
+    // Register classes first
+    for (const auto& stmt : statements) {
+        if (auto* class_stmt = dynamic_cast<ClassStmt*>(stmt.get())) {
+            if (!class_stmt->is_interface) {
+                std::string name = sv_to_str(class_stmt->name.lexeme);
+                if (class_map_.find(name) == class_map_.end()) {
+                    class_map_[name] = next_class_id_++;
+                }
+            }
+        }
+    }
+    
+    // Compile classes and store them
+    for (const auto& stmt : statements) {
+        if (auto* class_stmt = dynamic_cast<ClassStmt*>(stmt.get())) {
+            if (!class_stmt->is_interface) {
+                std::string name = sv_to_str(class_stmt->name.lexeme);
+                CompiledClass cls = compile_class_def(*class_stmt);
+                pending_classes_[name] = cls;
+                // Emit static init into current bytecode
+                if (!cls.static_init.empty()) {
+                    for (const auto& instr : cls.static_init) {
+                        bytecode_.push_back(instr);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Compile top-level functions and variables (skip classes, already handled)
+    for (const auto& stmt : statements) {
+        if (dynamic_cast<ClassStmt*>(stmt.get())) continue;
+        
+        if (auto* fs = dynamic_cast<const FunctionStmt*>(stmt.get())) {
+            std::string func_name = sv_to_str(fs->name.lexeme);
+            CompiledMethod info;
+            info.bytecode = compile_method(*fs);
+            for (const auto& param : fs->params) {
+                info.param_names.push_back(sv_to_str(param.name.lexeme));
+            }
+            pending_functions_[func_name] = std::move(info);
+        } else if (auto* vs = dynamic_cast<const VarStmt*>(stmt.get())) {
+            visit_var(*vs);
+        }
+    }
 }
 
 }

@@ -1,0 +1,6 @@
+#alphabet<en>
+x "lib_math.abc"
+5 result = add(10, 20)
+z.o(result)
+5 product = multiply(6, 7)
+z.o(product)

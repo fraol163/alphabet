@@ -24,20 +24,38 @@ public:
     Compiler();
 
     Program compile(const std::vector<StmtPtr>& statements);
+    void set_source_dir(const std::string& dir) { source_dir_ = dir; }
 
 private:
     std::vector<Instruction> bytecode_;
     std::unordered_map<std::string, uint16_t> class_map_;
     uint16_t next_class_id_ = 15;
     std::vector<std::string> globals_;
+    std::unordered_map<std::string, CompiledMethod> pending_functions_;
+    std::unordered_map<std::string, CompiledClass> pending_classes_;  // Classes from imports
     TypeManager type_manager_;
+    
+    // Loop context tracking for break/continue
+    struct LoopContext {
+        size_t loop_start_ip;           // IP of the LOOP_START instruction
+        std::vector<size_t> break_jumps; // Indices of BREAK_JUMP instructions to patch
+    };
+    std::vector<LoopContext> loop_stack_;
+    
+    // Module system
+    std::vector<std::string> imported_modules_;
+    std::unordered_map<std::string, std::string> module_aliases_;
+    std::unordered_set<std::string> loaded_modules_;  // Track loaded modules to avoid duplicates
+    std::string source_dir_;  // Directory of the source file for resolving imports
+    
+    void load_module(const std::string& path);
 
     void validate_types(const std::vector<StmtPtr>& statements);
     void validate_expression_type(const ExprPtr& expr, uint16_t expected_type);
     uint16_t infer_expression_type(const ExprPtr& expr);
     bool types_compatible(uint16_t source, uint16_t target);
 
-    void emit(OpCode op, Operand operand = std::monostate{});
+    void emit(OpCode op, Operand operand = std::monostate{}, int line = 0);
 
     void patch_jump(size_t index, size_t target);
     size_t get_global_index(const std::string& name);
@@ -52,6 +70,10 @@ private:
     void visit_try(const TryStmt& stmt);
     void visit_block(const Block& stmt);
     void visit_return(const ReturnStmt& stmt);
+    void visit_match(const MatchStmt& stmt);
+    void visit_break(const BreakStmt& stmt);
+    void visit_continue(const ContinueStmt& stmt);
+    void visit_for(const ForStmt& stmt);
 
     void visit_binary(const Binary& expr);
     void visit_unary(const Unary& expr);

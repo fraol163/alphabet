@@ -1,23 +1,20 @@
-// Static Members Test
-c S {
-  s 1 x = 100
-  
-  s v m 1 f() {
-    z.o("Inside static method f")
-    r 500
-  }
+#alphabet<en>
+# Variables and Types
+
+5 x = 100
+z.o("Integer:")
+z.o(x)
+
+12 msg = "Hello Alphabet"
+z.o("String:")
+z.o(msg)
+
+5 result = x + 50
+z.o("Arithmetic 100 + 50:")
+z.o(result)
+
+i (x > 50) {
+  z.o("x is greater than 50")
+} e {
+  z.o("x is not greater than 50")
 }
-
-// Access static field
-z.o("Initial S.x:")
-z.o(S.x)
-
-// Modify static field
-S.x = 200
-z.o("Modified S.x:")
-z.o(S.x)
-
-// Call static method
-1 y = S.f()
-z.o("Result of S.f():")
-z.o(y)

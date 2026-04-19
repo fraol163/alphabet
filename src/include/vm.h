@@ -4,6 +4,7 @@
 #include <array>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 #include <variant>
 #include <cstdint>
@@ -13,9 +14,11 @@
 
 namespace alphabet {
 
+struct Value;  // Forward declaration
+
 struct AlphabetObject {
     uint16_t class_id;
-    std::unordered_map<std::string, std::shared_ptr<void>> fields;
+    std::unordered_map<std::string, std::shared_ptr<Value>> fields;
 
     explicit AlphabetObject(uint16_t id) : class_id(id) {}
 };
@@ -59,35 +62,31 @@ struct Value {
     }
     
     List& as_list() {
-        static List empty;
         if (auto* l = std::get_if<std::shared_ptr<List>>(&data)) {
             if (*l) return **l;
         }
-        return empty;
+        throw std::runtime_error("Value is not a list");
     }
     
     const List& as_list() const {
-        static List empty;
         if (auto* l = std::get_if<std::shared_ptr<List>>(&data)) {
             if (*l) return **l;
         }
-        return empty;
+        throw std::runtime_error("Value is not a list");
     }
     
     Map& as_map() {
-        static Map empty;
         if (auto* m = std::get_if<std::shared_ptr<Map>>(&data)) {
             if (*m) return **m;
         }
-        return empty;
+        throw std::runtime_error("Value is not a map");
     }
     
     const Map& as_map() const {
-        static Map empty;
         if (auto* m = std::get_if<std::shared_ptr<Map>>(&data)) {
             if (*m) return **m;
         }
-        return empty;
+        throw std::runtime_error("Value is not a map");
     }
     
     ObjectPtr as_object() const {
@@ -109,6 +108,8 @@ struct CallFrame {
     size_t ip = 0;
     std::unordered_map<std::string, Value> locals;
     std::vector<std::pair<size_t, size_t>> try_stack;
+    Value post_action_value;  // Value to push after frame completes (for constructor init)
+    bool push_post_action_on_return = false;
 
     CallFrame() : bytecode(nullptr) {}
     explicit CallFrame(const std::vector<Instruction>* bc) : bytecode(bc) {}
@@ -127,6 +128,15 @@ public:
     void run();
     void init(const Program& program);
 
+    // REPL state persistence
+    std::unordered_map<std::string, Value> get_globals() const { return globals_; }
+    void set_globals(const std::unordered_map<std::string, Value>& g) { globals_ = g; }
+
+    // Debugger API
+    void set_debug_mode(bool enabled) { debug_mode_ = enabled; }
+    void add_breakpoint(int line) { breakpoints_.insert(line); }
+    void remove_breakpoint(int line) { breakpoints_.erase(line); }
+
 private:
     std::array<Value, 65536> stack_;
     size_t stack_top_ = 0;
@@ -135,6 +145,12 @@ private:
     std::vector<std::string> globals_by_index_;
     std::vector<CallFrame> frames_;
     std::unordered_map<uint16_t, CompiledClass> classes_;
+    std::unordered_map<std::string, CompiledMethod> global_functions_;
+
+    // Debug State
+    bool debug_mode_ = false;
+    std::unordered_set<int> breakpoints_;
+    bool step_over_ = false;
 
     void push(const Value& value);
     Value pop();
@@ -146,6 +162,12 @@ private:
                                                    const std::string& caller_class);
     void throw_exception(const Value& value);
     void system_call(const std::string& method, int arg_count);
+    
+    // Debugger Helpers
+    void check_breakpoints(const Instruction& instr);
+    void wait_for_debugger_command();
+    std::string get_stack_trace();
+    std::string get_locals_json(const CallFrame& frame);
 };
 
 std::string value_to_string(const Value& value);

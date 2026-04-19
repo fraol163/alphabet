@@ -45,7 +45,11 @@ enum class OpCode : uint8_t {
     BUILD_LIST = 33,
     BUILD_MAP = 34,
     LOAD_INDEX = 35,
-    STORE_INDEX = 36
+    STORE_INDEX = 36,
+    DUP = 37,
+    LOOP_START = 38,
+    BREAK_JUMP = 39,
+    CONTINUE_JUMP = 40
 };
 
 using Operand = std::variant<std::monostate, int64_t, double, std::string,
@@ -54,10 +58,11 @@ using Operand = std::variant<std::monostate, int64_t, double, std::string,
 struct Instruction {
     OpCode op;
     Operand operand;
+    int line;
 
-    Instruction() : op(OpCode::HALT), operand(std::monostate{}) {}
-    Instruction(OpCode opcode) : op(opcode), operand(std::monostate{}) {}
-    Instruction(OpCode opcode, Operand opnd) : op(opcode), operand(std::move(opnd)) {}
+    Instruction() : op(OpCode::HALT), operand(std::monostate{}), line(0) {}
+    Instruction(OpCode opcode, int l = 0) : op(opcode), operand(std::monostate{}), line(l) {}
+    Instruction(OpCode opcode, Operand opnd, int l = 0) : op(opcode), operand(std::move(opnd)), line(l) {}
 };
 
 struct CompiledMethod {
@@ -72,12 +77,14 @@ struct CompiledClass {
     std::unordered_map<std::string, CompiledMethod> methods;
     std::unordered_map<std::string, CompiledMethod> static_methods;
     std::vector<Instruction> static_init;
+    std::vector<Instruction> field_init;  // Bytecode to initialize instance fields
 };
 
 struct Program {
     std::vector<Instruction> main;
     std::vector<Instruction> static_init;
     std::unordered_map<uint16_t, CompiledClass> classes;
+    std::unordered_map<std::string, CompiledMethod> functions;
     std::vector<std::string> globals;
 };
 
@@ -119,6 +126,10 @@ inline const char* opcode_to_string(OpCode op) {
         case OpCode::BUILD_MAP: return "BUILD_MAP";
         case OpCode::LOAD_INDEX: return "LOAD_INDEX";
         case OpCode::STORE_INDEX: return "STORE_INDEX";
+        case OpCode::DUP: return "DUP";
+        case OpCode::LOOP_START: return "LOOP_START";
+        case OpCode::BREAK_JUMP: return "BREAK_JUMP";
+        case OpCode::CONTINUE_JUMP: return "CONTINUE_JUMP";
         default: return "UNKNOWN";
     }
 }

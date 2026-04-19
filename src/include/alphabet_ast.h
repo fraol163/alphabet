@@ -177,6 +177,17 @@ struct LoopStmt : Stmt {
         : condition(std::move(cond)), body(std::move(b)) {}
 };
 
+struct ForStmt : Stmt {
+    StmtPtr initializer;  // Variable declaration or expression
+    ExprPtr condition;
+    ExprPtr increment;
+    StmtPtr body;
+
+    ForStmt(StmtPtr init, ExprPtr cond, ExprPtr incr, StmtPtr b)
+        : initializer(std::move(init)), condition(std::move(cond)),
+          increment(std::move(incr)), body(std::move(b)) {}
+};
+
 struct TryStmt : Stmt {
     Block try_block;
     Token exception_type;
@@ -193,6 +204,16 @@ struct ReturnStmt : Stmt {
     ExprPtr value;
 
     ReturnStmt(Token kw, ExprPtr v) : keyword(kw), value(std::move(v)) {}
+};
+
+struct BreakStmt : Stmt {
+    Token keyword;
+    explicit BreakStmt(Token kw) : keyword(kw) {}
+};
+
+struct ContinueStmt : Stmt {
+    Token keyword;
+    explicit ContinueStmt(Token kw) : keyword(kw) {}
 };
 
 struct FunctionStmt : Stmt {
@@ -223,6 +244,38 @@ struct ClassStmt : Stmt {
         : name(n), superclass(std::move(sup)), methods(std::move(meth)),
           fields(std::move(fld)), interfaces(std::move(intf)),
           is_interface(is_intf) {}
+};
+
+// Module system statements
+struct ImportStmt : Stmt {
+    std::string module_path;      // e.g., "std/io"
+    std::optional<std::string> alias;  // optional alias: "x io"
+    
+    ImportStmt(std::string path, std::optional<std::string> a = std::nullopt)
+        : module_path(std::move(path)), alias(std::move(a)) {}
+};
+
+struct ExportStmt : Stmt {
+    std::vector<Token> names;  // Names to export
+    
+    explicit ExportStmt(std::vector<Token> n) : names(std::move(n)) {}
+};
+
+// Pattern matching
+struct Case {
+    ExprPtr pattern;
+    StmtPtr body;
+    
+    Case(ExprPtr p, StmtPtr b) : pattern(std::move(p)), body(std::move(b)) {}
+};
+
+struct MatchStmt : Stmt {
+    ExprPtr expression;
+    std::vector<Case> cases;
+    StmtPtr default_case;
+    
+    MatchStmt(ExprPtr expr, std::vector<Case> c, StmtPtr def = nullptr)
+        : expression(std::move(expr)), cases(std::move(c)), default_case(std::move(def)) {}
 };
 
 }

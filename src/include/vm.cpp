@@ -4,6 +4,11 @@
 #include <fstream>
 #include <cmath>
 #include <algorithm>
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <dlfcn.h>
+#endif
 
 namespace alphabet {
 
@@ -58,6 +63,7 @@ VM::VM(const Program& program) {
 void VM::init(const Program& program) {
     classes_ = program.classes;
     globals_by_index_ = program.globals;
+    global_functions_ = program.functions;
 
     if (!program.static_init.empty()) {
         frames_.emplace_back(&program.static_init);
@@ -101,6 +107,9 @@ void VM::run_loop() {
         CallFrame& frame = frames_.back();
 
         if (frame.ip >= frame.bytecode->size()) {
+            // Frame ended without RET (e.g., break jumped past bytecode)
+            // Push default return value so caller's stack stays balanced
+            push(Value(nullptr));
             frames_.pop_back();
             if (frames_.size() < start_frame_count) {
                 break;
@@ -113,7 +122,13 @@ void VM::run_loop() {
 }
 
 void VM::execute_instruction(CallFrame& frame) {
-    const Instruction& instr = (*frame.bytecode)[frame.ip++];
+    const Instruction& instr = (*frame.bytecode)[frame.ip];
+
+    if (debug_mode_) {
+        check_breakpoints(instr);
+    }
+
+    frame.ip++;
 
     switch (instr.op) {
         case OpCode::PUSH_CONST: {
@@ -121,12 +136,16 @@ void VM::execute_instruction(CallFrame& frame) {
                 push(Value(*d));
             } else if (auto* s = std::get_if<std::string>(&instr.operand)) {
                 push(Value(*s));
+            } else if (auto* i = std::get_if<int64_t>(&instr.operand)) {
+                push(Value(static_cast<double>(*i)));
             } else if (std::holds_alternative<std::monostate>(instr.operand) ||
                        std::holds_alternative<std::nullptr_t>(instr.operand)) {
                 push(Value(nullptr));
             }
             break;
         }
+        
+        // ... (rest of cases)
         
         case OpCode::LOAD_VAR: {
             std::visit([this, &frame](const auto& op) {
@@ -155,9 +174,20 @@ void VM::execute_instruction(CallFrame& frame) {
                     auto it = globals_.find(op);
                     if (it != globals_.end()) {
                         push(it->second);
-                    } else {
-                        push(Value(nullptr));
+                        return;
                     }
+                    // Check if we're in a method and 'this' has the field
+                    auto this_it = frame.locals.find("this");
+                    if (this_it != frame.locals.end() && this_it->second.is_object()) {
+                        ObjectPtr obj = this_it->second.as_object();
+                        auto field_it = obj->fields.find(op);
+                        if (field_it != obj->fields.end()) {
+                            auto field_ptr = field_it->second;
+                            push(*field_ptr);
+                            return;
+                        }
+                    }
+                    push(Value(nullptr));
                 }
             }, instr.operand);
             break;
@@ -165,15 +195,32 @@ void VM::execute_instruction(CallFrame& frame) {
 
         case OpCode::STORE_VAR: {
             Value val = peek();
-            std::visit([this, &val](const auto& op) {
+            std::visit([this, &val, &frame](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, int64_t>) {
                     if (static_cast<size_t>(op) < globals_by_index_.size()) {
                         const std::string& name = globals_by_index_[op];
-                        globals_[name] = val;
+                        auto local_it = frame.locals.find(name);
+                        if (local_it != frame.locals.end()) {
+                            local_it->second = val;
+                        } else {
+                            globals_[name] = val;
+                        }
                     }
                 } else if constexpr (std::is_same_v<T, std::string>) {
-                    globals_[op] = val;
+                    auto local_it = frame.locals.find(op);
+                    if (local_it != frame.locals.end()) {
+                        local_it->second = val;
+                    } else {
+                        // Check if we're in a method and 'this' has the field
+                        auto this_it = frame.locals.find("this");
+                        if (this_it != frame.locals.end() && this_it->second.is_object()) {
+                            ObjectPtr obj = this_it->second.as_object();
+                            obj->fields[op] = std::make_shared<Value>(val);
+                        } else {
+                            globals_[op] = val;
+                        }
+                    }
                 }
             }, instr.operand);
             break;
@@ -182,6 +229,27 @@ void VM::execute_instruction(CallFrame& frame) {
         case OpCode::POP:
             pop();
             break;
+        
+        case OpCode::DUP:
+            push(peek());
+            break;
+            
+        case OpCode::LOOP_START:
+            // Marker instruction -- no-op in VM, operand is loop start IP
+            break;
+            
+        case OpCode::BREAK_JUMP:
+        case OpCode::CONTINUE_JUMP: {
+            // Jump unconditionally -- frame.ip is pre-incremented at top of
+            // execute_instruction, so setting frame.ip = target means the
+            // instruction at target is skipped. For BREAK_JUMP (patched to
+            // bytecode_.size()), this correctly exits the loop. For CONTINUE_JUMP
+            // (loop start), LOOP_START is a no-op so skipping it is fine.
+            if (auto* target = std::get_if<int64_t>(&instr.operand)) {
+                frame.ip = static_cast<size_t>(*target);
+            }
+            break;
+        }
             
         case OpCode::ADD: {
             Value b = pop();
@@ -190,6 +258,10 @@ void VM::execute_instruction(CallFrame& frame) {
                 push(Value(a.as_number() + b.as_number()));
             } else if (a.is_string() && b.is_string()) {
                 push(Value(a.as_string() + b.as_string()));
+            } else if (a.is_string() && b.is_number()) {
+                push(Value(a.as_string() + value_to_string(b)));
+            } else if (a.is_number() && b.is_string()) {
+                push(Value(value_to_string(a) + b.as_string()));
             } else {
                 push(Value(nullptr));
             }
@@ -273,6 +345,35 @@ void VM::execute_instruction(CallFrame& frame) {
             break;
         }
         
+        case OpCode::NE: {
+            Value b = pop();
+            Value a = pop();
+            push(Value(a != b ? 1.0 : 0.0));
+            break;
+        }
+        
+        case OpCode::GE: {
+            Value b = pop();
+            Value a = pop();
+            if (a.is_number() && b.is_number()) {
+                push(Value(a.as_number() >= b.as_number() ? 1.0 : 0.0));
+            } else {
+                push(Value(nullptr));
+            }
+            break;
+        }
+        
+        case OpCode::LE: {
+            Value b = pop();
+            Value a = pop();
+            if (a.is_number() && b.is_number()) {
+                push(Value(a.as_number() <= b.as_number() ? 1.0 : 0.0));
+            } else {
+                push(Value(nullptr));
+            }
+            break;
+        }
+        
         case OpCode::NOT: {
             Value a = pop();
             bool is_false = a.is_null() || 
@@ -304,9 +405,15 @@ void VM::execute_instruction(CallFrame& frame) {
         
         case OpCode::RET: {
             Value ret_val = pop();
+            CallFrame finished_frame = frames_.back();
             frames_.pop_back();
             if (!frames_.empty()) {
-                push(ret_val);
+                // If this frame had a post-action value (e.g., constructor init), push it
+                if (finished_frame.push_post_action_on_return) {
+                    push(finished_frame.post_action_value);
+                } else {
+                    push(ret_val);
+                }
             }
             break;
         }
@@ -326,11 +433,98 @@ void VM::execute_instruction(CallFrame& frame) {
                     Value callee = pop();
 
                     if (callee.is_string() && callee.as_string() == "SYSTEM_Z") {
+                        // Handle FFI dyn call directly (needs args in correct order)
+                        if (method_name == "dyn" && args.size() >= 2) {
+                            // args: [lib_path, func_name, arg0, arg1, ...]
+                            if (!args[0].is_string() || !args[1].is_string()) {
+                                throw RuntimeError("z.dyn requires string library path and function name");
+                            }
+                            std::string lib_path = args[0].as_string();
+                            std::string func_name_str = args[1].as_string();
+                            
+#ifdef _WIN32
+                            HMODULE handle = LoadLibraryA(lib_path.c_str());
+                            if (!handle) {
+                                throw RuntimeError("FFI: Cannot load library " + lib_path);
+                            }
+                            FARPROC raw_func = GetProcAddress(handle, func_name_str.c_str());
+#else
+                            void* handle = dlopen(lib_path.c_str(), RTLD_NOW);
+                            if (!handle) {
+                                throw RuntimeError("FFI: Cannot load library " + lib_path + ": " + dlerror());
+                            }
+                            void* raw_func = dlsym(handle, func_name_str.c_str());
+#endif
+                            if (!raw_func) {
+#ifndef _WIN32
+                                std::string err = dlerror();
+                                dlclose(handle);
+                                throw RuntimeError("FFI: Function '" + func_name_str + "' not found: " + err);
+#else
+                                FreeLibrary(handle);
+                                throw RuntimeError("FFI: Function '" + func_name_str + "' not found");
+#endif
+                            }
+                            
+                            int ffi_arg_count = static_cast<int>(args.size()) - 2;
+                            int64_t result = 0;
+                            if (ffi_arg_count == 0) {
+                                typedef int64_t (*Func0)();
+                                result = reinterpret_cast<Func0>(raw_func)();
+                            } else if (ffi_arg_count == 1) {
+                                typedef int64_t (*Func1)(int64_t);
+                                int64_t a0 = args[2].is_number() ? static_cast<int64_t>(args[2].as_number()) : 0;
+                                result = reinterpret_cast<Func1>(raw_func)(a0);
+                            } else if (ffi_arg_count == 2) {
+                                typedef int64_t (*Func2)(int64_t, int64_t);
+                                int64_t a0 = args[2].is_number() ? static_cast<int64_t>(args[2].as_number()) : 0;
+                                int64_t a1 = args[3].is_number() ? static_cast<int64_t>(args[3].as_number()) : 0;
+                                result = reinterpret_cast<Func2>(raw_func)(a0, a1);
+                            } else if (ffi_arg_count == 3) {
+                                typedef int64_t (*Func3)(int64_t, int64_t, int64_t);
+                                int64_t a0 = args[2].is_number() ? static_cast<int64_t>(args[2].as_number()) : 0;
+                                int64_t a1 = args[3].is_number() ? static_cast<int64_t>(args[3].as_number()) : 0;
+                                int64_t a2 = args[4].is_number() ? static_cast<int64_t>(args[4].as_number()) : 0;
+                                result = reinterpret_cast<Func3>(raw_func)(a0, a1, a2);
+                            } else if (ffi_arg_count == 4) {
+                                typedef int64_t (*Func4)(int64_t, int64_t, int64_t, int64_t);
+                                int64_t a0 = args[2].is_number() ? static_cast<int64_t>(args[2].as_number()) : 0;
+                                int64_t a1 = args[3].is_number() ? static_cast<int64_t>(args[3].as_number()) : 0;
+                                int64_t a2 = args[4].is_number() ? static_cast<int64_t>(args[4].as_number()) : 0;
+                                int64_t a3 = args[5].is_number() ? static_cast<int64_t>(args[5].as_number()) : 0;
+                                result = reinterpret_cast<Func4>(raw_func)(a0, a1, a2, a3);
+                            } else {
+                                throw RuntimeError("FFI: z.dyn supports up to 4 arguments");
+                            }
+                            
+                            push(Value(static_cast<double>(result)));
+#ifndef _WIN32
+                            dlclose(handle);
+#else
+                            FreeLibrary(handle);
+#endif
+                            return;
+                        }
+                        // Other system calls: push args back and dispatch
                         for (auto& arg : args) {
                             push(arg);
                         }
                         system_call(method_name, arg_count);
                         return;
+                    }
+
+                    // Top-level function call (callee is the function name string)
+                    if (callee.is_string()) {
+                        auto func_it = global_functions_.find(callee.as_string());
+                        if (func_it != global_functions_.end()) {
+                            const CompiledMethod& method_info = func_it->second;
+                            CallFrame new_frame(&method_info.bytecode);
+                            for (size_t i = 0; i < args.size() && i < method_info.param_names.size(); ++i) {
+                                new_frame.locals[method_info.param_names[i]] = args[i];
+                            }
+                            frames_.push_back(std::move(new_frame));
+                            return;
+                        }
                     }
 
                     if (callee.is_object()) {
@@ -345,6 +539,11 @@ void VM::execute_instruction(CallFrame& frame) {
 
                         auto method_it = cls.methods.find(method_name);
                         if (method_it == cls.methods.end()) {
+                            // If init is called and doesn't exist, just return the object
+                            if (method_name == "init") {
+                                push(callee);
+                                return;
+                            }
                             throw RuntimeError("Method '" + method_name + "' not found in class '" + cls.name + "'");
                         }
 
@@ -369,7 +568,84 @@ void VM::execute_instruction(CallFrame& frame) {
         case OpCode::NEW: {
             std::visit([this](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
-                if constexpr (std::is_same_v<T, std::string>) {
+                if constexpr (std::is_same_v<T, std::pair<std::string, int>>) {
+                    const auto& [class_name, arg_count] = op;
+                    uint16_t class_id = 0;
+                    for (const auto& [id, cls] : classes_) {
+                        if (cls.name == class_name) {
+                            class_id = id;
+                            break;
+                        }
+                    }
+                    ObjectPtr obj = std::make_shared<AlphabetObject>(class_id);
+
+                    // Collect constructor arguments
+                    std::vector<Value> args;
+                    for (int i = 0; i < arg_count; ++i) {
+                        args.push_back(pop());
+                    }
+                    std::reverse(args.begin(), args.end());
+
+                    auto class_it = classes_.find(class_id);
+                    if (class_it != classes_.end()) {
+                        // Initialize default field values from field_init bytecode
+                        if (!class_it->second.field_init.empty()) {
+                            const auto& fi = class_it->second.field_init;
+                            for (size_t ip = 0; ip < fi.size(); ) {
+                                const auto& instr = fi[ip];
+                                if (instr.op == OpCode::RET) break;
+                                if (instr.op == OpCode::LOAD_VAR) {
+                                    push(Value(obj));
+                                } else if (instr.op == OpCode::PUSH_CONST) {
+                                    if (auto* d = std::get_if<double>(&instr.operand)) {
+                                        push(Value(*d));
+                                    } else if (auto* s = std::get_if<std::string>(&instr.operand)) {
+                                        push(Value(*s));
+                                    } else {
+                                        push(Value(nullptr));
+                                    }
+                                } else if (instr.op == OpCode::STORE_FIELD) {
+                                    Value val = pop();
+                                    Value obj_val = pop();
+                                    if (obj_val.is_object()) {
+                                        auto o = obj_val.as_object();
+                                        std::visit([&](const auto& f) {
+                                            if constexpr (std::is_same_v<std::decay_t<decltype(f)>, std::string>) {
+                                                o->fields[f] = std::make_shared<Value>(val);
+                                            }
+                                        }, instr.operand);
+                                    }
+                                    push(val);
+                                } else if (instr.op == OpCode::POP) {
+                                    pop();
+                                }
+                                ip++;
+                            }
+                        }
+
+                        // Call init method if it exists
+                        auto init_it = class_it->second.methods.find("init");
+                        if (init_it != class_it->second.methods.end()) {
+                            CallFrame init_frame(&init_it->second.bytecode);
+                            init_frame.locals["this"] = Value(obj);
+                            
+                            // Pass arguments if provided
+                            if (arg_count > 0) {
+                                for (size_t i = 0; i < args.size() && i < init_it->second.param_names.size(); ++i) {
+                                    init_frame.locals[init_it->second.param_names[i]] = args[i];
+                                }
+                            }
+                            
+                            // Set post-action to push the object after init completes
+                            init_frame.post_action_value = Value(obj);
+                            init_frame.push_post_action_on_return = true;
+                            frames_.push_back(std::move(init_frame));
+                            return;
+                        }
+                    }
+
+                    push(Value(obj));
+                } else if constexpr (std::is_same_v<T, std::string>) {
                     uint16_t class_id = 0;
                     for (const auto& [id, cls] : classes_) {
                         if (cls.name == op) {
@@ -378,6 +654,43 @@ void VM::execute_instruction(CallFrame& frame) {
                         }
                     }
                     ObjectPtr obj = std::make_shared<AlphabetObject>(class_id);
+
+                    // Initialize default field values
+                    auto class_it = classes_.find(class_id);
+                    if (class_it != classes_.end() && !class_it->second.field_init.empty()) {
+                        const auto& fi = class_it->second.field_init;
+                        for (size_t ip = 0; ip < fi.size(); ) {
+                            const auto& instr = fi[ip];
+                            if (instr.op == OpCode::RET) break;
+                            if (instr.op == OpCode::LOAD_VAR) {
+                                push(Value(obj));
+                            } else if (instr.op == OpCode::PUSH_CONST) {
+                                if (auto* d = std::get_if<double>(&instr.operand)) {
+                                    push(Value(*d));
+                                } else if (auto* s = std::get_if<std::string>(&instr.operand)) {
+                                    push(Value(*s));
+                                } else {
+                                    push(Value(nullptr));
+                                }
+                            } else if (instr.op == OpCode::STORE_FIELD) {
+                                Value val = pop();
+                                Value obj_val = pop();
+                                if (obj_val.is_object()) {
+                                    auto o = obj_val.as_object();
+                                    std::visit([&](const auto& f) {
+                                        if constexpr (std::is_same_v<std::decay_t<decltype(f)>, std::string>) {
+                                            o->fields[f] = std::make_shared<Value>(val);
+                                        }
+                                    }, instr.operand);
+                                }
+                                push(val);
+                            } else if (instr.op == OpCode::POP) {
+                                pop();
+                            }
+                            ip++;
+                        }
+                    }
+
                     push(Value(obj));
                 } else if constexpr (std::is_same_v<T, int64_t>) {
                     ObjectPtr obj = std::make_shared<AlphabetObject>(static_cast<uint16_t>(op));
@@ -424,6 +737,26 @@ void VM::execute_instruction(CallFrame& frame) {
             std::visit([this](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, std::string>) {
+                    Value class_val = pop();
+                    // class_val is the class ID (a double from PUSH_CONST)
+                    std::string key;
+                    if (class_val.is_number()) {
+                        // Look up class name from ID
+                        uint16_t class_id = static_cast<uint16_t>(class_val.as_number());
+                        for (const auto& [id, cls] : classes_) {
+                            if (id == class_id) {
+                                key = cls.name + "." + std::string(op);
+                                break;
+                            }
+                        }
+                    }
+                    if (!key.empty()) {
+                        auto it = globals_.find(key);
+                        if (it != globals_.end()) {
+                            push(it->second);
+                            return;
+                        }
+                    }
                     push(Value(nullptr));
                 }
             }, instr.operand);
@@ -435,7 +768,21 @@ void VM::execute_instruction(CallFrame& frame) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, std::string>) {
                     Value val = pop();
-                    Value class_id = pop();
+                    Value class_val = pop();
+                    std::string key;
+                    if (class_val.is_number()) {
+                        uint16_t class_id = static_cast<uint16_t>(class_val.as_number());
+                        for (const auto& [id, cls] : classes_) {
+                            if (id == class_id) {
+                                key = cls.name + "." + std::string(op);
+                                break;
+                            }
+                        }
+                    }
+                    if (!key.empty()) {
+                        globals_[key] = val;
+                    }
+                    push(val);
                 }
             }, instr.operand);
             break;
@@ -450,8 +797,11 @@ void VM::execute_instruction(CallFrame& frame) {
                         ObjectPtr obj = obj_val.as_object();
                         auto it = obj->fields.find(op);
                         if (it != obj->fields.end()) {
+                            auto field_ptr = it->second;
+                            push(*field_ptr);
+                        } else {
+                            push(Value(nullptr));
                         }
-                        push(Value(nullptr));
                     } else {
                         push(Value(nullptr));
                     }
@@ -468,6 +818,7 @@ void VM::execute_instruction(CallFrame& frame) {
                     Value obj_val = pop();
                     if (obj_val.is_object()) {
                         ObjectPtr obj = obj_val.as_object();
+                        obj->fields[op] = std::make_shared<Value>(val); // Store
                     }
                 }
             }, instr.operand);
@@ -554,6 +905,65 @@ void VM::execute_instruction(CallFrame& frame) {
     }
 }
 
+void VM::check_breakpoints(const Instruction& instr) {
+    if (step_over_ || (breakpoints_.find(instr.line) != breakpoints_.end())) {
+        std::cout << "BREAKPOINT_HIT " << instr.line << std::endl;
+        step_over_ = false;
+        wait_for_debugger_command();
+    }
+}
+
+void VM::wait_for_debugger_command() {
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        if (line == "continue") {
+            break;
+        } else if (line == "step") {
+            step_over_ = true;
+            break;
+        } else if (line == "locals") {
+            if (!frames_.empty()) {
+                std::cout << get_locals_json(frames_.back()) << std::endl;
+            } else {
+                std::cout << "{}" << std::endl;
+            }
+        } else if (line == "stack") {
+            std::cout << get_stack_trace() << std::endl;
+        } else if (line.find("add_break ") == 0) {
+            int l = std::stoi(line.substr(10));
+            add_breakpoint(l);
+        } else if (line.find("del_break ") == 0) {
+            int l = std::stoi(line.substr(10));
+            remove_breakpoint(l);
+        }
+    }
+}
+
+std::string VM::get_stack_trace() {
+    std::ostringstream oss;
+    oss << "[";
+    for (size_t i = 0; i < frames_.size(); ++i) {
+        if (i > 0) oss << ",";
+        // In a real implementation, we'd have method names here
+        oss << "\"Frame " << i << "\"";
+    }
+    oss << "]";
+    return oss.str();
+}
+
+std::string VM::get_locals_json(const CallFrame& frame) {
+    std::ostringstream oss;
+    oss << "{";
+    bool first = true;
+    for (const auto& [name, val] : frame.locals) {
+        if (!first) oss << ",";
+        oss << "\"" << name << "\": \"" << value_to_string(val) << "\"";
+        first = false;
+    }
+    oss << "}";
+    return oss.str();
+}
+
 void VM::system_call(const std::string& method, int arg_count) {
     if (method == "o" && arg_count >= 1) {
         Value val = pop();
@@ -582,6 +992,40 @@ void VM::system_call(const std::string& method, int arg_count) {
                 push(Value(std::string("")));
             }
         }
+    } else if (method == "sqrt" && arg_count >= 1) {
+        Value v = pop(); push(Value(v.is_number() ? std::sqrt(v.as_number()) : 0.0));
+    } else if (method == "sin" && arg_count >= 1) {
+        Value v = pop(); push(Value(v.is_number() ? std::sin(v.as_number()) : 0.0));
+    } else if (method == "cos" && arg_count >= 1) {
+        Value v = pop(); push(Value(v.is_number() ? std::cos(v.as_number()) : 0.0));
+    } else if (method == "abs" && arg_count >= 1) {
+        Value v = pop(); push(Value(v.is_number() ? std::fabs(v.as_number()) : 0.0));
+    } else if (method == "floor" && arg_count >= 1) {
+        Value v = pop(); push(Value(v.is_number() ? std::floor(v.as_number()) : 0.0));
+    } else if (method == "ceil" && arg_count >= 1) {
+        Value v = pop(); push(Value(v.is_number() ? std::ceil(v.as_number()) : 0.0));
+    } else if (method == "pow" && arg_count >= 2) {
+        Value b = pop(); Value a = pop();
+        push(Value(a.is_number() && b.is_number() ? std::pow(a.as_number(), b.as_number()) : 0.0));
+    } else if (method == "len" && arg_count >= 1) {
+        Value v = pop();
+        if (v.is_string()) push(Value(static_cast<double>(v.as_string().size())));
+        else if (v.is_list()) push(Value(static_cast<double>(v.as_list().size())));
+        else push(Value(0.0));
+    } else if (method == "tostr" && arg_count >= 1) {
+        Value v = pop(); push(Value(value_to_string(v)));
+    } else if (method == "tonum" && arg_count >= 1) {
+        Value v = pop();
+        if (v.is_number()) { push(v); }
+        else if (v.is_string()) {
+            try { push(Value(std::stod(v.as_string()))); } catch (...) { push(Value(0.0)); }
+        } else { push(Value(0.0)); }
+    } else if (method == "type" && arg_count >= 1) {
+        Value v = pop();
+        if (v.is_null()) push(Value(std::string("null")));
+        else if (v.is_number()) push(Value(std::string("number")));
+        else if (v.is_string()) push(Value(std::string("string")));
+        else push(Value(std::string("unknown")));
     }
 }
 

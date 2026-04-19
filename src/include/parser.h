@@ -16,14 +16,20 @@ public:
 
 class Parser {
 public:
-    explicit Parser(std::vector<Token> tokens);
+    explicit Parser(std::vector<Token> tokens, std::string_view source = "");
     
     std::vector<StmtPtr> parse();
+    
+    [[nodiscard]] bool had_errors() const { return had_errors_; }
+    [[nodiscard]] const std::string& first_error() const { return first_error_; }
 
 private:
     std::vector<Token> tokens_;
+    std::string_view source_;  // Original source for error context
     size_t current_ = 0;
-
+    bool had_errors_ = false;
+    std::string first_error_;  // Store first error for reporting
+    
     [[nodiscard]] bool is_at_end() const;
     [[nodiscard]] const Token& peek() const;
     [[nodiscard]] const Token& previous() const;
@@ -49,6 +55,9 @@ private:
     StmtPtr loop_statement();
     StmtPtr try_statement();
     StmtPtr return_statement();
+    StmtPtr import_statement();
+    StmtPtr match_statement();
+    StmtPtr top_level_function();
     std::vector<StmtPtr> block();
     StmtPtr expression_statement();
 

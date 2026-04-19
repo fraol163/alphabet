@@ -1,0 +1,7 @@
+#alphabet<en>
+c Greeter {
+  12 greeting = "Hello"
+  v m 12 greet(12 name) {
+    r greeting + " " + name + "!"
+  }
+}

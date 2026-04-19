@@ -276,20 +276,67 @@ z.o(z.type(42))     # "number"
 
 ### Multilingual Keywords
 
+Write code in your native language. Alphabet supports **5 languages** with full UTF-8 variable names.
+
+#### How It Works
+
+Change the header to your language:
+
 ```alphabet
 #alphabet<am>    Amharic
+#alphabet<es>    Spanish
+#alphabet<fr>    French
+#alphabet<de>    German
+#alphabet<en>    English (default)
+```
+
+#### Keyword Mapping
+
+| English | Amharic | Spanish | French | German |
+|---------|---------|---------|--------|--------|
+| `c` class | ክፍል | clase | classe | klasse |
+| `m` method | ዘዴ | metodo | methode | methode |
+| `i` if | ከሆነ | si | si | wenn |
+| `e` else | አለበለዚህ | sino | sinon | sonst |
+| `l` loop | ሉፕ | bucle | boucle | schleife |
+| `r` return | ተመለስ | retornar | retour | zuruck |
+| `b` break | ስበር | romper | rompre | brechen |
+| `k` continue | ቀጥል | continuar | continuer | fortsetzen |
+| `n` new | አዲስ | nuevo | nouveau | neu |
+| `v` public | ግልጽ | publico | public | offentlich |
+| `p` private | ግል | privado | prive | privat |
+| `s` static | ቋሚ | estatico | statique | statisch |
+| `t` try | ሞክር | intentar | essayer | versuchen |
+| `h` handle | ይዝ | capturar | attraper | fangen |
+| `z` output | ውጤት | imprimir | afficher | ausgeben |
+| `x` import | አስገባ | importar | importer | importieren |
+| `q` match | ምረጥ | coincidir | correspondre | ubereinstimmen |
+
+#### Example: Amharic
+
+```alphabet
+#alphabet<am>
 ክፍል አስላ {
+  5 ውጤት = 0
   ዘዴ 5 መጀመሪያ(5 ቁ) {
+    ውጤት = ቁ
     ተመለስ ቁ
   }
 }
+አስላ አ = አዲስ አስላ(42)
+ውጤት.o(አ.ውጤት)  # Output: 42
+```
 
-#alphabet<es>    Spanish
-clase Calculadora {
-  metodo 5 iniciar(5 v) {
-    retornar v
-  }
-}
+#### UTF-8 Variable Names
+
+Variable names can use any UTF-8 script:
+
+```alphabet
+#alphabet<en>
+5 ቁጥር = 100        # Amharic variable name
+5 数字 = 200         # Chinese variable name
+5 число = 300       # Russian variable name
+z.o(ቁጥር + 数字 + число)  # Output: 600
 ```
 
 ---

@@ -60,7 +60,7 @@ alphabet --version
 
 **Expected:**
 ```
-Alphabet 2.0.0 (Native C++)
+Alphabet 2.1.0 (Native C++)
 Developer: Fraol Teshome (fraolteshome444@gmail.com)
 ```
 

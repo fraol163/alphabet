@@ -15,9 +15,15 @@ LIB_DIR="$INSTALL_DIR/share/alphabet"
 # Uninstall
 if [ "$1" = "--uninstall" ]; then
     echo "Uninstalling Alphabet..."
-    sudo rm -f "$BIN_DIR/alphabet"
-    sudo rm -rf "$LIB_DIR"
-    echo "Done."
+    # Remove from known locations
+    sudo rm -f "$BIN_DIR/alphabet" /usr/local/bin/alphabet /usr/bin/alphabet
+    sudo rm -rf "$LIB_DIR" /usr/local/share/alphabet
+    # Also remove if found via command -v
+    FOUND=$(command -v alphabet 2>/dev/null || true)
+    if [ -n "$FOUND" ] && [ "$FOUND" != "$BIN_DIR/alphabet" ]; then
+        sudo rm -f "$FOUND"
+    fi
+    echo "Alphabet uninstalled."
     exit 0
 fi
 
@@ -52,6 +58,14 @@ start_repl() {
 
 echo "Installing Alphabet Language ($PLATFORM)..."
 echo ""
+
+# Check if already installed
+if command -v alphabet >/dev/null 2>&1; then
+    CURRENT=$(alphabet --version 2>/dev/null | head -1 || echo "unknown")
+    echo "  Already installed: $CURRENT"
+    echo "  Updating to latest..."
+    echo ""
+fi
 
 # Try pre-built release first
 LATEST=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4 || true)

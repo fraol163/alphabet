@@ -75,7 +75,21 @@ Alphabet is a **beginner-friendly programming language** with only **17 single-l
 
 ## Installation
 
-### One-Line Install (Linux/macOS)
+### Install (one command, Linux/macOS)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh | sh
+```
+
+This automatically:
+- Downloads the pre-built binary from GitHub Releases (if available)
+- Falls back to building from source if no release exists yet
+- Installs to `/usr/local/bin/alphabet`
+- Starts the REPL immediately
+
+### Update
+
+Same command as install. It downloads and replaces with the latest version:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh | sh
@@ -87,7 +101,7 @@ curl -fsSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh |
 curl -fsSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh | sh -s -- --uninstall
 ```
 
-### Download Pre-built Binary
+### Manual Download
 
 Visit **[GitHub Releases](https://github.com/fraol163/alphabet/releases)** → Download your OS:
 - **Linux:** `alphabet-linux-amd64.tar.gz`

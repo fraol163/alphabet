@@ -245,7 +245,7 @@ JsonValue LanguageServer::handle_initialize(int /*id*/, const JsonValue& /*param
 
     JsonValue server_info = JsonValue::object();
     server_info.set("name", JsonValue::string("alphabet-lsp"));
-    server_info.set("version", JsonValue::string("2.0.0"));
+    server_info.set("version", JsonValue::string("2.1.0"));
     result.set("serverInfo", server_info);
 
     return result;

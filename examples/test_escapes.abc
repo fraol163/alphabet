@@ -1,0 +1,7 @@
+#alphabet<en>
+12 msg = "Hello\nWorld\t!"
+z.o(msg)
+12 path = "C:\\Users\\test"
+z.o(path)
+12 quote = "She said \"hi\""
+z.o(quote)

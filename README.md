@@ -94,11 +94,11 @@ Alphabet is a **beginner-friendly programming language** with only **17 single-l
 curl -fsSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh | sh
 ```
 
-This automatically:
-- Downloads the pre-built binary from GitHub Releases (if available)
-- Falls back to building from source if no release exists yet
-- Installs to `/usr/local/bin/alphabet`
-- Starts the REPL immediately
+This installs to `~/.local/bin` (no sudo needed) and:
+- Downloads the pre-built binary from GitHub Releases
+- Falls back to building from source if no release exists
+- Adds `~/.local/bin` to your PATH
+- Shows version and usage instructions
 
 ### Update
 

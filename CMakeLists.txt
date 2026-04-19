@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(Alphabet VERSION 2.0.0 LANGUAGES CXX)
+project(Alphabet VERSION 2.1.0 LANGUAGES CXX)
 
 # C++17 standard required for std::variant, std::string_view, etc.
 set(CMAKE_CXX_STANDARD 17)

@@ -15,7 +15,7 @@
 
 namespace {
 
-constexpr const char* VERSION = "2.0.0";
+constexpr const char* VERSION = "2.1.0";
 constexpr const char* DEVELOPER = "Fraol Teshome (fraolteshome444@gmail.com)";
 
 constexpr const char* LOGO = R"(

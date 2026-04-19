@@ -16,6 +16,7 @@ if [ "$1" = "--uninstall" ]; then
     echo "Uninstalling Alphabet..."
     rm -f "$BIN_DIR/alphabet"
     rm -rf "$LIB_DIR"
+    hash -r 2>/dev/null || true
     echo "Alphabet uninstalled."
     exit 0
 fi
@@ -52,6 +53,9 @@ install_binary() {
 
 # Ensure ~/.local/bin is in PATH
 ensure_path() {
+    # Clear bash command cache
+    hash -r 2>/dev/null || true
+
     if ! echo "$PATH" | grep -q "$BIN_DIR"; then
         for PROFILE in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile" "$HOME/.bash_profile"; do
             if [ -f "$PROFILE" ]; then

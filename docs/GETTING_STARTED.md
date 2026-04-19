@@ -4,34 +4,23 @@
 
 ---
 
-## Prerequisites
-
-- A computer (Windows, macOS, or Linux)
-- No programming experience required!
-
----
-
 ## Step 1: Install Alphabet
 
-### Option A: Download Pre-built Binary (Recommended)
+### One Command (Linux/macOS)
 
-1. Visit [GitHub Actions](https://github.com/fraol163/alphabet/actions)
-2. Click the **latest build** at the top
-3. Scroll to **Artifacts** section
-4. Download your OS:
-   - **Linux:** `alphabet-linux`
-   - **macOS:** `alphabet-macos`
-   - **Windows:** `alphabet-windows.exe`
+```bash
+curl -fsSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh | sh
+```
 
-### Option B: Build from Source
+This downloads, installs, and starts the REPL automatically.
 
-See [INSTALLATION.md](INSTALLATION.md) for detailed build instructions.
+### Windows
+
+Download from [GitHub Releases](https://github.com/fraol163/alphabet/releases/latest).
 
 ---
 
 ## Step 2: Verify Installation
-
-Open a terminal/command prompt and run:
 
 ```bash
 alphabet --version
@@ -48,9 +37,7 @@ Compiled with C++17
 
 ## Step 3: Your First Program
 
-### Hello World
-
-1. Create a file named `hello.abc`:
+Create a file named `hello.abc`:
 
 ```alphabet
 #alphabet<en>
@@ -58,7 +45,7 @@ Compiled with C++17
 z.o(greeting)
 ```
 
-2. Run it:
+Run it:
 
 ```bash
 alphabet hello.abc
@@ -68,8 +55,6 @@ alphabet hello.abc
 ```
 Hello, World!
 ```
-
-**Congratulations! You just wrote your first Alphabet program! 🎉**
 
 ---
 
@@ -85,16 +70,18 @@ Every `.abc` file must start with:
 
 This identifies the file as Alphabet code.
 
-### Variables
+### Variables and Types
 
 Alphabet uses **numeric type IDs**:
 
 ```alphabet
 #alphabet<en>
-5 x = 10          # int
-6 pi = 3.14       # float
-12 name = "Alphabet"  # string
-11 ok = (1 == 1)  # bool
+5 x = 10              # int (type 5)
+6 pi = 3.14           # float (type 6)
+12 name = "Alphabet"  # string (type 12)
+11 ok = (1 == 1)      # bool (type 11)
+13 nums = [1, 2, 3]   # list (type 13)
+14 cfg = {"k": 100}   # map (type 14)
 ```
 
 ### Output
@@ -102,25 +89,34 @@ Alphabet uses **numeric type IDs**:
 Use `z.o()` to print:
 
 ```alphabet
-z.o(msg)      # Print variable
+z.o(x)        # Print variable
 z.o("Hello")  # Print string
+z.o(10 + 5)   # Print expression
+```
+
+### String Concatenation
+
+```alphabet
+z.o("x=" + 5)      # Output: x=5
+z.o(5 + " items")  # Output: 5 items
 ```
 
 ---
 
 ## Step 5: Control Flow
 
-### If Statements
+### If-Else
 
 ```alphabet
+5 x = 10
 i (x > 5) {
-  z.o("x is greater")
+  z.o("big")
 } e {
-  z.o("x is 5 or less")
+  z.o("small")
 }
 ```
 
-### Loops
+### While Loop
 
 ```alphabet
 5 i = 0
@@ -130,14 +126,81 @@ l (i < 5) {
 }
 ```
 
+### For Loop
+
+```alphabet
+l (5 j = 0 : j < 5 : j = j + 1) {
+  z.o(j)
+}
+```
+
+### Break and Continue
+
+```alphabet
+5 k = 0
+l (k < 10) {
+  5 k = k + 1
+  i (k == 3) { b }      # break out of loop
+  i (k % 2 == 0) { k }  # skip to next iteration
+  z.o(k)
+}
+```
+
 ---
 
-## Step 6: Next Steps
+## Step 6: Functions
 
-- [Tutorial](TUTORIAL.md) - Step-by-step examples
-- [Reference](REFERENCE.md) - Complete syntax
-- [Installation](INSTALLATION.md) - Detailed setup
+```alphabet
+#alphabet<en>
+m 5 factorial(5 num) {
+  i (num <= 1) { r 1 }
+  r num * factorial(num - 1)
+}
+
+z.o(factorial(5))  # Output: 120
+```
 
 ---
 
-**Happy Coding! 🚀**
+## Step 7: Classes
+
+```alphabet
+#alphabet<en>
+c Calculator {
+  5 value = 0
+
+  v m 5 add(5 x) {
+    value = value + x
+    r value
+  }
+}
+
+15 calc = n Calculator()
+z.o(calc.add(10))  # Output: 10
+z.o(calc.add(5))   # Output: 15
+```
+
+---
+
+## Step 8: Built-In Functions
+
+```alphabet
+#alphabet<en>
+z.o(z.sqrt(144))    # 12
+z.o(z.abs(-42))     # 42
+z.o(z.pow(2, 10))   # 1024
+z.o(z.len("hello")) # 5
+```
+
+---
+
+## Next Steps
+
+- [Complete Guide](COMPLETE_GUIDE.md) - Full language tutorial
+- [Quick Reference](../QUICK_REFERENCE.md) - Cheat sheet
+- [Standard Library](../stdlib/) - math.abc, io.abc
+- [Examples](../examples/) - Example programs
+
+---
+
+**Happy Coding!**

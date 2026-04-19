@@ -1,6 +1,6 @@
 # Alphabet Language - Complete Guide
 
-**Comprehensive tutorial for Alphabet Programming Language v2.0**
+**Comprehensive tutorial for Alphabet Programming Language v2.1**
 
 ---
 
@@ -44,7 +44,7 @@ Alphabet uses only **17 single letters**, making it possible to learn the entire
 ### Design Philosophy
 
 1. **Simplicity First** - Easy to learn, easy to use
-2. **Performance Matters** - Native compilation, not interpreted
+2. **Bytecode VM** - Compiled to bytecode, faster than tree-walk interpreters
 3. **Type Safety** - Catch errors at compile time
 4. **Minimal Boilerplate** - No semicolons, no complex syntax
 
@@ -69,10 +69,10 @@ brew install cmake               # macOS
 
 # Clone and build
 git clone https://github.com/fraol163/alphabet.git
-cd alphabet/build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j$(nproc)
-sudo make install
+cd alphabet
+cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
+cmake --build build -j$(nproc)
+sudo cmake --install build
 ```
 
 ### Verify Installation
@@ -195,6 +195,14 @@ l (i < 10) {
 }
 ```
 
+### For Loop
+
+```alphabet
+l (5 j = 0 : j < 10 : j = j + 1) {
+  z.o(j)
+}
+```
+
 ### Break and Continue
 
 ```alphabet
@@ -297,6 +305,14 @@ t {
 | `z.i()` | Input | `5 x = z.i()` |
 | `z.f(p)` | Read file | `12 data = z.f("file.txt")` |
 | `z.t()` | Throw error | `z.t()` |
+| `z.dyn(lib, func, ...)` | FFI call | `z.dyn("lib.so", "add", 1, 2)` |
+| `z.sqrt(x)` | Square root | `z.sqrt(144)` = 12 |
+| `z.abs(x)` | Absolute value | `z.abs(-42)` = 42 |
+| `z.pow(x, y)` | Power | `z.pow(2, 10)` = 1024 |
+| `z.len(x)` | Length | `z.len("hi")` = 2 |
+| `z.type(x)` | Type name | `z.type(42)` = "number" |
+| `z.tostr(x)` | To string | `z.tostr(42)` = "42" |
+| `z.tonum(x)` | To number | `z.tonum("42")` = 42 |
 
 ---
 
@@ -305,8 +321,8 @@ t {
 ### Foreign Function Interface (FFI)
 
 ```alphabet
-15 libc = z.load_lib("libc.so.6")
-libc.call("printf", "Hello from C!\n")
+5 result = z.dyn("/path/to/lib.so", "add", 10, 20)
+z.o(result)  # Output: 30
 ```
 
 ### Language Server Protocol (LSP)
@@ -331,7 +347,7 @@ Enables real-time error highlighting in VS Code.
 - Comment complex logic
 
 ❌ **Don't:**
-- Use Unicode identifiers (not supported)
+- Use single-letter keywords as variable names (e.g., `5 b = 10` breaks because `b` is BREAK)
 - Forget the magic header
 - Use semicolons (not needed)
 - Deep recursion (>1000 levels)

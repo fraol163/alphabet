@@ -3,7 +3,6 @@
 # One command: curl -fsSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh | sh
 #
 # Tries pre-built release first. If not available, clones and builds from source.
-# Always ends by starting the REPL.
 
 set -e
 
@@ -15,14 +14,10 @@ LIB_DIR="$INSTALL_DIR/share/alphabet"
 # Uninstall
 if [ "$1" = "--uninstall" ]; then
     echo "Uninstalling Alphabet..."
-    # Remove from known locations
     sudo rm -f "$BIN_DIR/alphabet" /usr/local/bin/alphabet /usr/bin/alphabet
     sudo rm -rf "$LIB_DIR" /usr/local/share/alphabet
-    # Also remove if found via command -v
     FOUND=$(command -v alphabet 2>/dev/null || true)
-    if [ -n "$FOUND" ] && [ "$FOUND" != "$BIN_DIR/alphabet" ]; then
-        sudo rm -f "$FOUND"
-    fi
+    [ -n "$FOUND" ] && sudo rm -f "$FOUND"
     echo "Alphabet uninstalled."
     exit 0
 fi
@@ -41,24 +36,6 @@ esac
 TMPDIR=$(mktemp -d)
 trap "rm -rf $TMPDIR" EXIT
 
-install_binary() {
-    echo "  Installing to $BIN_DIR ..."
-    sudo mkdir -p "$BIN_DIR" "$LIB_DIR"
-    sudo cp "$1" "$BIN_DIR/alphabet"
-    sudo chmod +x "$BIN_DIR/alphabet"
-    [ -d "$2/stdlib" ] && sudo cp -r "$2/stdlib/"* "$LIB_DIR/" 2>/dev/null || true
-}
-
-start_repl() {
-    echo ""
-    echo "Alphabet is ready! Starting REPL..."
-    echo ""
-    exec "$BIN_DIR/alphabet" --repl
-}
-
-echo "Installing Alphabet Language ($PLATFORM)..."
-echo ""
-
 # Check if already installed
 if command -v alphabet >/dev/null 2>&1; then
     CURRENT=$(alphabet --version 2>/dev/null | head -1 || echo "unknown")
@@ -66,6 +43,35 @@ if command -v alphabet >/dev/null 2>&1; then
     echo "  Updating to latest..."
     echo ""
 fi
+
+install_binary() {
+    echo "  Installing to $BIN_DIR ..."
+    sudo mkdir -p "$BIN_DIR" "$LIB_DIR"
+    sudo cp "$1" "$BIN_DIR/alphabet"
+    sudo chmod 755 "$BIN_DIR/alphabet"
+    [ -d "$2/stdlib" ] && sudo cp -r "$2/stdlib/"* "$LIB_DIR/" 2>/dev/null || true
+}
+
+# Make sure bin dir is in PATH
+ensure_path() {
+    if ! echo "$PATH" | grep -q "$BIN_DIR"; then
+        # Try common shell profiles
+        for PROFILE in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.profile"; do
+            if [ -f "$PROFILE" ]; then
+                if ! grep -q "$BIN_DIR" "$PROFILE" 2>/dev/null; then
+                    echo "" >> "$PROFILE"
+                    echo "# Alphabet Language" >> "$PROFILE"
+                    echo "export PATH=\"$BIN_DIR:\$PATH\"" >> "$PROFILE"
+                    echo "  Added $BIN_DIR to PATH in $PROFILE"
+                fi
+                break
+            fi
+        done
+    fi
+}
+
+echo "Installing Alphabet Language ($PLATFORM)..."
+echo ""
 
 # Try pre-built release first
 LATEST=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4 || true)
@@ -77,7 +83,25 @@ if [ -n "$LATEST" ]; then
         cd "$TMPDIR"
         tar xzf alphabet.tar.gz
         install_binary "$TMPDIR/alphabet" "$TMPDIR"
-        start_repl
+        ensure_path
+        echo ""
+        echo "Alphabet $LATEST installed to $BIN_DIR/alphabet"
+        echo ""
+        # Verify
+        if "$BIN_DIR/alphabet" --version >/dev/null 2>&1; then
+            "$BIN_DIR/alphabet" --version
+        fi
+        echo ""
+        echo "Usage:"
+        echo "  alphabet program.abc     Run a program"
+        echo "  alphabet --repl          Interactive mode"
+        echo "  alphabet --help          Show help"
+        echo ""
+        echo "To update:  curl -fsSL https://raw.githubusercontent.com/$REPO/main/install.sh | sh"
+        echo "To remove:  curl -fsSL https://raw.githubusercontent.com/$REPO/main/install.sh | sh -s -- --uninstall"
+        echo ""
+        echo "Starting REPL..."
+        exec "$BIN_DIR/alphabet" --repl
     fi
 fi
 
@@ -101,4 +125,10 @@ echo "Testing..."
 cd build && ctest --output-on-failure --no-tests=error && cd ..
 
 install_binary "$TMPDIR/alphabet/build/alphabet" "$TMPDIR/alphabet"
-start_repl
+ensure_path
+echo ""
+echo "Alphabet installed to $BIN_DIR/alphabet"
+"$BIN_DIR/alphabet" --version
+echo ""
+echo "Starting REPL..."
+exec "$BIN_DIR/alphabet" --repl

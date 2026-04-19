@@ -51,20 +51,33 @@ void print_help() {
     std::cout << "  alphabet -c program.abc       Compile only\n";
     std::cout << "  alphabet --repl               Interactive mode\n";
     std::cout << "  alphabet --lsp                LSP server for VS Code\n";
+    std::cout << "  alphabet --debug              Run in debug mode\n";
 }
 
-void run_source(const std::string& source) {
+void run_source(const std::string& source, bool debug_mode = false, const std::string& source_dir = "") {
     try {
         alphabet::Lexer lexer(source);
         std::vector<alphabet::Token> tokens = lexer.scan_tokens();
 
-        alphabet::Parser parser(tokens);
+        alphabet::Parser parser(tokens, source);
         std::vector<alphabet::StmtPtr> statements = parser.parse();
+        
+        if (parser.had_errors()) {
+            std::string msg = parser.first_error().empty() ? "Syntax errors in source code" : parser.first_error();
+            throw alphabet::ParseError(msg);
+        }
 
         alphabet::Compiler compiler;
+        if (!source_dir.empty()) {
+            compiler.set_source_dir(source_dir);
+        }
         alphabet::Program program = compiler.compile(statements);
 
         alphabet::VM vm(program);
+        vm.set_debug_mode(debug_mode);
+        if (debug_mode) {
+             std::cout << "DEBUG_READY" << std::endl;
+        }
         vm.run();
 
     } catch (const alphabet::MissingLanguageHeader& e) {
@@ -87,19 +100,16 @@ void start_repl() {
     std::cout << "Developed by " << DEVELOPER << "\n";
     std::cout << "Type 'q' to exit.\n\n";
     std::cout << "Multi-line mode: Type '{' to start a block, then continue on next lines.\n";
-    std::cout << "Example:\n";
-    std::cout << "  >>> c MyClass {\n";
-    std::cout << "  ...   v m 1 getValue() {\n";
-    std::cout << "  ...     r 42\n";
-    std::cout << "  ...   }\n";
-    std::cout << "  ... }\n\n";
 
-    alphabet::TypeManager type_manager;
     ffi_init();
 
     std::string line;
     std::string buffer;
     int brace_depth = 0;
+
+    // REPL state: accumulate source and persist globals
+    std::string all_source;  // All previously entered code
+    std::unordered_map<std::string, alphabet::Value> saved_globals;
 
     while (true) {
         if (buffer.empty()) {
@@ -131,8 +141,47 @@ void start_repl() {
         buffer += line;
 
         if (brace_depth == 0) {
-            std::string full_source = "#alphabet<repl>\n" + buffer;
-            run_source(full_source);
+            // Append new code to accumulated source
+            all_source += buffer + "\n";
+            
+            try {
+                std::string full_source = "#alphabet<repl>\n" + all_source;
+                alphabet::Lexer lexer(full_source);
+                auto tokens = lexer.scan_tokens();
+                alphabet::Parser parser(tokens, full_source);
+                auto statements = parser.parse();
+                
+                if (parser.had_errors()) {
+                    // Show error but don't clear state
+                    if (!parser.first_error().empty()) {
+                        std::cerr << parser.first_error() << "\n";
+                    }
+                    // Remove the bad line from accumulated source
+                    size_t last_newline = all_source.rfind('\n', all_source.size() - 2);
+                    if (last_newline != std::string::npos) {
+                        all_source = all_source.substr(0, last_newline + 1);
+                    } else {
+                        all_source.clear();
+                    }
+                } else {
+                    alphabet::Compiler compiler;
+                    alphabet::Program program = compiler.compile(statements);
+                    
+                    alphabet::VM vm(program);
+                    vm.set_globals(saved_globals);
+                    vm.run();
+                    saved_globals = vm.get_globals();
+                }
+            } catch (const alphabet::MissingLanguageHeader&) {
+                std::cerr << "Error: Missing header\n";
+            } catch (const alphabet::ParseError& e) {
+                std::cerr << "Parse Error: " << e.what() << "\n";
+            } catch (const alphabet::CompileError& e) {
+                std::cerr << "Compile Error: " << e.what() << "\n";
+            } catch (const alphabet::RuntimeError& e) {
+                std::cerr << "Runtime Error: " << e.what() << "\n";
+            }
+            
             buffer.clear();
             brace_depth = 0;
         }
@@ -158,6 +207,7 @@ int main(int argc, char* argv[]) {
     bool compile_only = false;
     bool repl_mode = false;
     bool lsp_mode = false;
+    bool debug_mode = false;
     std::string output_file;
     std::string input_file;
 
@@ -186,6 +236,11 @@ int main(int argc, char* argv[]) {
 
         if (arg == "--lsp") {
             lsp_mode = true;
+            continue;
+        }
+
+        if (arg == "--debug") {
+            debug_mode = true;
             continue;
         }
 
@@ -231,11 +286,22 @@ int main(int argc, char* argv[]) {
         if (compile_only) {
             alphabet::Lexer lexer(source);
             std::vector<alphabet::Token> tokens = lexer.scan_tokens();
-            
-            alphabet::Parser parser(tokens);
+
+            alphabet::Parser parser(tokens, source);
             std::vector<alphabet::StmtPtr> statements = parser.parse();
             
+            // Check for parse errors
+            if (parser.had_errors()) {
+                std::string msg = parser.first_error().empty() ? "Syntax errors in source code" : parser.first_error();
+            throw alphabet::ParseError(msg);
+            }
+
             alphabet::Compiler compiler;
+            // Extract source file directory for resolving relative imports
+            size_t last_sl = input_file.find_last_of("/\\");
+            if (last_sl != std::string::npos) {
+                compiler.set_source_dir(input_file.substr(0, last_sl));
+            }
             alphabet::Program program = compiler.compile(statements);
             
             if (!output_file.empty()) {
@@ -244,16 +310,54 @@ int main(int argc, char* argv[]) {
                     std::cerr << "Error: Cannot write to " << output_file << "\n";
                     return 1;
                 }
-
+                
+                // Header: magic + version + instruction count
                 const char magic[] = "ALPH";
                 out.write(magic, 4);
-
+                uint32_t version = 2;
+                out.write(reinterpret_cast<const char*>(&version), sizeof(version));
                 uint32_t count = static_cast<uint32_t>(program.main.size());
                 out.write(reinterpret_cast<const char*>(&count), sizeof(count));
-
+                
+                // Write each instruction with its operand
                 for (const auto& instr : program.main) {
                     uint8_t op = static_cast<uint8_t>(instr.op);
                     out.write(reinterpret_cast<const char*>(&op), sizeof(op));
+                    
+                    // Operand type tag
+                    uint8_t tag;
+                    if (std::holds_alternative<std::monostate>(instr.operand)) {
+                        tag = 0;
+                        out.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
+                    } else if (auto* i = std::get_if<int64_t>(&instr.operand)) {
+                        tag = 1;
+                        out.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
+                        out.write(reinterpret_cast<const char*>(i), sizeof(*i));
+                    } else if (auto* d = std::get_if<double>(&instr.operand)) {
+                        tag = 2;
+                        out.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
+                        out.write(reinterpret_cast<const char*>(d), sizeof(*d));
+                    } else if (auto* s = std::get_if<std::string>(&instr.operand)) {
+                        tag = 3;
+                        out.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
+                        uint32_t len = static_cast<uint32_t>(s->size());
+                        out.write(reinterpret_cast<const char*>(&len), sizeof(len));
+                        out.write(s->data(), len);
+                    } else if (std::holds_alternative<std::nullptr_t>(instr.operand)) {
+                        tag = 4;
+                        out.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
+                    } else if (auto* p = std::get_if<std::pair<std::string, int>>(&instr.operand)) {
+                        tag = 5;
+                        out.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
+                        uint32_t len = static_cast<uint32_t>(p->first.size());
+                        out.write(reinterpret_cast<const char*>(&len), sizeof(len));
+                        out.write(p->first.data(), len);
+                        int32_t second = p->second;
+                        out.write(reinterpret_cast<const char*>(&second), sizeof(second));
+                    } else {
+                        tag = 0;
+                        out.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
+                    }
                 }
                 
                 std::cout << "Compiled " << program.main.size() 
@@ -263,7 +367,13 @@ int main(int argc, char* argv[]) {
                           << program.main.size() << " instructions\n";
             }
         } else {
-            run_source(source);
+            // Extract source file directory for resolving relative imports
+            std::string source_dir;
+            size_t last_slash = input_file.find_last_of("/\\");
+            if (last_slash != std::string::npos) {
+                source_dir = input_file.substr(0, last_slash);
+            }
+            run_source(source, debug_mode, source_dir);
         }
         
     } catch (const std::exception& e) {

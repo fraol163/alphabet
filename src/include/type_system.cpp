@@ -3,6 +3,7 @@
 namespace alphabet {
 
 TypeManager::TypeManager() {
+    register_primitive(VOID, "void");
     register_primitive(I8, "i8");
     register_primitive(I16, "i16");
     register_primitive(I32, "i32");
@@ -25,10 +26,10 @@ void TypeManager::register_primitive(uint16_t id, const std::string& name) {
 }
 
 const TypeInfo* TypeManager::get_type(uint16_t id) const {
-    if (id == 0 || id > types_.size()) {
+    if (id >= types_.size()) {
         return nullptr;
     }
-    return &types_[id - 1];
+    return &types_[id];
 }
 
 uint16_t TypeManager::register_type(const std::string& name,

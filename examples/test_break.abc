@@ -1,0 +1,10 @@
+#alphabet<en>
+5 i = 0
+l (i < 10) {
+  i (i == 3) {
+    b
+  }
+  z.o(i)
+  5 i = i + 1
+}
+z.o("done")

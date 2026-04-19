@@ -1,0 +1,9 @@
+#alphabet<en>
+x "../stdlib/math.abc"
+z.o(factorial(5))
+z.o(gcd(48, 18))
+z.o(lcm(4, 6))
+z.o(max(10, 20))
+z.o(min(10, 20))
+z.o(clamp(15, 0, 10))
+z.o(is_even(4))

@@ -1,0 +1,50 @@
+#alphabet<en>
+// Standard Math Library for Alphabet
+
+m 5 max(5 a, 5 bb) {
+  i (a > bb) { r a }
+  r bb
+}
+
+m 5 min(5 a, 5 bb) {
+  i (a < bb) { r a }
+  r bb
+}
+
+m 5 clamp(5 val, 5 lo, 5 hi) {
+  i (val < lo) { r lo }
+  i (val > hi) { r hi }
+  r val
+}
+
+m 5 sign(5 xx) {
+  i (xx > 0) { r 1 }
+  i (xx < 0) { r -1 }
+  r 0
+}
+
+m 5 is_even(5 num) {
+  r num % 2 == 0
+}
+
+m 5 is_odd(5 num) {
+  r num % 2 != 0
+}
+
+m 5 factorial(5 num) {
+  i (num <= 1) { r 1 }
+  r num * factorial(num - 1)
+}
+
+m 5 gcd(5 aa, 5 bb) {
+  l (bb != 0) {
+    5 tmp = bb
+    bb = aa % bb
+    aa = tmp
+  }
+  r aa
+}
+
+m 5 lcm(5 aa, 5 bb) {
+  r aa / gcd(aa, bb) * bb
+}

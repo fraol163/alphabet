@@ -405,7 +405,7 @@ TEST(test_parser_property_access) {
 }
 
 TEST(test_parser_assignment) {
-    std::string source = "#alphabet<test>\nx = 10";
+    std::string source = "#alphabet<test>\nfoo = 10";
     auto statements = parse_source(source);
     
     auto* expr = dynamic_cast<ExpressionStmt*>(statements[0].get());

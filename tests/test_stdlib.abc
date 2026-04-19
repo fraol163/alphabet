@@ -1,0 +1,75 @@
+#alphabet<en>
+// Test math stdlib
+x "../stdlib/math.abc"
+
+5 pass = 1
+
+// Test factorial
+5 f = factorial(5)
+i (f != 120) {
+  z.o("FAIL: factorial(5) expected 120 got " + f)
+  pass = 0
+}
+
+// Test gcd
+5 g = gcd(48, 18)
+i (g != 6) {
+  z.o("FAIL: gcd(48,18) expected 6 got " + g)
+  pass = 0
+}
+
+// Test lcm
+5 l = lcm(4, 6)
+i (l != 12) {
+  z.o("FAIL: lcm(4,6) expected 12 got " + l)
+  pass = 0
+}
+
+// Test max
+5 m = max(10, 20)
+i (m != 20) {
+  z.o("FAIL: max(10,20) expected 20 got " + m)
+  pass = 0
+}
+
+// Test min
+5 mn = min(10, 20)
+i (mn != 10) {
+  z.o("FAIL: min(10,20) expected 10 got " + mn)
+  pass = 0
+}
+
+// Test clamp
+5 c = clamp(15, 0, 10)
+i (c != 10) {
+  z.o("FAIL: clamp(15,0,10) expected 10 got " + c)
+  pass = 0
+}
+
+// Test is_even
+i (is_even(4) != 1) {
+  z.o("FAIL: is_even(4) expected 1")
+  pass = 0
+}
+i (is_even(3) != 0) {
+  z.o("FAIL: is_even(3) expected 0")
+  pass = 0
+}
+
+// Test sign
+i (sign(5) != 1) {
+  z.o("FAIL: sign(5) expected 1")
+  pass = 0
+}
+i (sign(-3) != -1) {
+  z.o("FAIL: sign(-3) expected -1")
+  pass = 0
+}
+i (sign(0) != 0) {
+  z.o("FAIL: sign(0) expected 0")
+  pass = 0
+}
+
+i (pass == 1) {
+  z.o("ALL STDLIB TESTS PASSED")
+}

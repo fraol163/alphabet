@@ -455,6 +455,9 @@ void VM::execute_instruction(CallFrame& frame) {
                         // Handle FFI dyn call directly (needs args in correct order)
                         if (method_name == "dyn" && args.size() >= 2) {
                             // args: [lib_path, func_name, arg0, arg1, ...]
+                            if (sandbox_mode_) {
+                                throw RuntimeError("FFI: z.dyn blocked in sandbox mode");
+                            }
                             if (!args[0].is_string() || !args[1].is_string()) {
                                 throw RuntimeError("z.dyn requires string library path and function name");
                             }
@@ -1030,7 +1033,11 @@ void VM::system_call(const std::string& method, int arg_count) {
             throw_exception(Value("Custom Error"));
         }
     } else if (method == "f" && arg_count >= 1) {
-        Value path_val = pop();
+        if (sandbox_mode_) {
+            pop(); // discard path arg
+            push(Value(std::string("")));
+        } else {
+            Value path_val = pop();
         if (path_val.is_string()) {
             std::string path = path_val.as_string();
             // Block directory traversal
@@ -1049,6 +1056,7 @@ void VM::system_call(const std::string& method, int arg_count) {
         } else {
             push(Value(std::string("")));
         }
+        } // close else (non-sandbox)
     } else if (method == "sqrt" && arg_count >= 1) {
         Value v = pop(); push(Value(v.is_number() ? std::sqrt(v.as_number()) : 0.0));
     } else if (method == "sin" && arg_count >= 1) {

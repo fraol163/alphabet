@@ -134,6 +134,7 @@ public:
 
     // Debugger API
     void set_debug_mode(bool enabled) { debug_mode_ = enabled; }
+    void set_sandbox_mode(bool enabled) { sandbox_mode_ = enabled; }
     void add_breakpoint(int line) { breakpoints_.insert(line); }
     void remove_breakpoint(int line) { breakpoints_.erase(line); }
 
@@ -150,6 +151,7 @@ private:
 
     // Debug State
     bool debug_mode_ = false;
+    bool sandbox_mode_ = false;
     std::unordered_set<int> breakpoints_;
     bool step_over_ = false;
 

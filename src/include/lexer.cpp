@@ -165,6 +165,16 @@ void Lexer::scan_token() {
                 while (peek() != '\n' && !is_at_end()) {
                     advance();
                 }
+            } else if (match('*')) {
+                // Multi-line comment: consume until */
+                while (!is_at_end()) {
+                    if (peek() == '*' && peek_next() == '/') {
+                        advance(); // consume *
+                        advance(); // consume /
+                        break;
+                    }
+                    advance();
+                }
             } else {
                 add_token(TokenType::SLASH);
             }
@@ -303,6 +313,12 @@ void Lexer::identifier() {
 
     std::string_view text = source_.substr(start_, current_ - start_);
     std::string text_str(text);
+
+    // Check for true/false literals
+    if (text == "true" || text == "false") {
+        add_token(TokenType::NUMBER, (text == "true") ? 1.0 : 0.0);
+        return;
+    }
 
     // Check if this is a UTF-8 keyword
     if (is_utf8_keyword(text_str)) {

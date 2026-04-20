@@ -51,10 +51,11 @@ void print_help() {
     std::cout << "  alphabet -c program.abc       Compile only\n";
     std::cout << "  alphabet --repl               Interactive mode\n";
     std::cout << "  alphabet --lsp                LSP server for VS Code\n";
-    std::cout << "  alphabet --debug              Run in debug mode\n";
+    std::cout << "  --debug              Run in debug mode\n";
+    std::cout << "  --sandbox            Sandbox mode: block FFI and file access\n";
 }
 
-void run_source(const std::string& source, bool debug_mode = false, const std::string& source_dir = "") {
+void run_source(const std::string& source, bool debug_mode = false, const std::string& source_dir = "", bool sandbox_mode = false) {
     try {
         alphabet::Lexer lexer(source);
         std::vector<alphabet::Token> tokens = lexer.scan_tokens();
@@ -75,6 +76,7 @@ void run_source(const std::string& source, bool debug_mode = false, const std::s
 
         alphabet::VM vm(program);
         vm.set_debug_mode(debug_mode);
+        vm.set_sandbox_mode(sandbox_mode);
         if (debug_mode) {
              std::cout << "DEBUG_READY" << std::endl;
         }
@@ -208,6 +210,7 @@ int main(int argc, char* argv[]) {
     bool repl_mode = false;
     bool lsp_mode = false;
     bool debug_mode = false;
+    bool sandbox_mode = false;
     std::string output_file;
     std::string input_file;
 
@@ -241,6 +244,11 @@ int main(int argc, char* argv[]) {
 
         if (arg == "--debug") {
             debug_mode = true;
+            continue;
+        }
+
+        if (arg == "--sandbox") {
+            sandbox_mode = true;
             continue;
         }
 
@@ -373,7 +381,7 @@ int main(int argc, char* argv[]) {
             if (last_slash != std::string::npos) {
                 source_dir = input_file.substr(0, last_slash);
             }
-            run_source(source, debug_mode, source_dir);
+            run_source(source, debug_mode, source_dir, sandbox_mode);
         }
         
     } catch (const std::exception& e) {

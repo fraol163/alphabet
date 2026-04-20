@@ -1,193 +1,140 @@
 #!/bin/sh
 # Alphabet Language Installer
-# curl -fsSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh | sh
-#
-# Installs to ~/.local/bin (no sudo needed, works when piped)
-# Supports: Linux (x86_64), macOS (arm64/x86_64)
+# Usage: curl -sSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh | sh
 
 set -e
 
 REPO="fraol163/alphabet"
-INSTALL_DIR="$HOME/.local"
-BIN_DIR="$INSTALL_DIR/bin"
-LIB_DIR="$INSTALL_DIR/share/alphabet"
+INSTALL_DIR="${ALPHABET_DIR:-$HOME/.local/bin}"
 
-# Uninstall
-if [ "$1" = "--uninstall" ]; then
-    echo "Uninstalling Alphabet..."
-    rm -f "$BIN_DIR/alphabet"
-    rm -rf "$LIB_DIR"
-    hash -r 2>/dev/null || true
-    echo "Alphabet uninstalled."
-    exit 0
-fi
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+NC='\033[0m'
 
-# Detect platform and architecture
-OS="$(uname -s)"
-ARCH="$(uname -m)"
+info() { printf "${CYAN}▸${NC} %s\n" "$1"; }
+success() { printf "${GREEN}✓${NC} %s\n" "$1"; }
+error() { printf "${RED}✗${NC} %s\n" "$1"; exit 1; }
 
-case "$OS" in
-    Linux*)
-        case "$ARCH" in
-            x86_64|amd64)  PLATFORM="linux"; ARCHIVE="alphabet-linux-amd64.tar.gz" ;;
-            *) echo "Unsupported Linux architecture: $ARCH (only x86_64 supported)"; exit 1 ;;
-        esac
-        ;;
-    Darwin*)
-        case "$ARCH" in
-            arm64|aarch64) PLATFORM="macos"; ARCHIVE="alphabet-macos-arm64.tar.gz" ;;
-            x86_64)        PLATFORM="macos"; ARCHIVE="alphabet-macos-arm64.tar.gz" ;;  # Rosetta
-            *) echo "Unsupported macOS architecture: $ARCH"; exit 1 ;;
-        esac
-        ;;
-    MINGW*|MSYS*|CYGWIN*)
-        echo "Windows detected."
-        echo "Download from: https://github.com/$REPO/releases/latest"
-        exit 0 ;;
-    *)
-        echo "Unsupported OS: $OS"
-        echo "Supported: Linux (x86_64), macOS (arm64/x86_64)"
-        exit 1 ;;
-esac
+# Detect OS
+detect_os() {
+    case "$(uname -s)" in
+        Linux*)  echo "linux" ;;
+        Darwin*) echo "macos" ;;
+        *)       error "Unsupported OS: $(uname -s)" ;;
+    esac
+}
 
-TMPDIR=$(mktemp -d)
-trap 'rm -rf "$TMPDIR"' EXIT
+# Detect architecture
+detect_arch() {
+    case "$(uname -m)" in
+        x86_64|amd64)  echo "amd64" ;;
+        aarch64|arm64) echo "arm64" ;;
+        armv7l)        echo "arm" ;;
+        *)             error "Unsupported architecture: $(uname -m)" ;;
+    esac
+}
 
-# Check if already installed
-if command -v alphabet >/dev/null 2>&1; then
-    CURRENT=$(alphabet --version 2>/dev/null | head -1 || echo "unknown")
-    echo "  Already installed: $CURRENT"
-    echo "  Updating..."
+# Get latest version from GitHub
+get_latest_version() {
+    local version
+    version=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" \
+        | grep '"tag_name"' \
+        | sed -E 's/.*"v?([^"]+)".*/\1/')
+    
+    if [ -z "$version" ]; then
+        error "Could not fetch latest version. Check your internet connection."
+    fi
+    echo "$version"
+}
+
+# Check if command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Main
+main() {
     echo ""
-fi
+    printf "${CYAN}   ╔══════════════════════════════╗${NC}\n"
+    printf "${CYAN}   ║   Alphabet Language Installer ║${NC}\n"
+    printf "${CYAN}   ╚══════════════════════════════╝${NC}\n"
+    echo ""
 
-install_binary() {
-    echo "  Installing to $BIN_DIR/alphabet"
-    mkdir -p "$BIN_DIR" "$LIB_DIR"
-    cp "$1" "$BIN_DIR/alphabet"
-    chmod 755 "$BIN_DIR/alphabet"
-    if [ -d "$2/stdlib" ]; then
-        cp -r "$2/stdlib/"* "$LIB_DIR/" 2>/dev/null || true
-    fi
-}
-
-# Ensure ~/.local/bin is in PATH
-ensure_path() {
-    hash -r 2>/dev/null || true
-
-    if echo "$PATH" | grep -q "$BIN_DIR"; then
-        return
+    # Check dependencies
+    if ! command_exists curl; then
+        error "curl is required but not installed."
     fi
 
-    # macOS default shell is zsh, Linux is usually bash
-    if [ "$OS" = "Darwin" ]; then
-        PROFILES="$HOME/.zshrc $HOME/.bash_profile $HOME/.profile"
+    OS=$(detect_os)
+    ARCH=$(detect_arch)
+    info "Detected: $OS-$ARCH"
+
+    # Check for existing installation
+    if command_exists alphabet; then
+        CURRENT=$(alphabet --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
+        info "Found existing Alphabet v$CURRENT"
     else
-        PROFILES="$HOME/.bashrc $HOME/.bash_profile $HOME/.zshrc $HOME/.profile"
+        CURRENT="none"
     fi
 
-    for PROFILE in $PROFILES; do
-        if [ -f "$PROFILE" ]; then
-            if ! grep -q "$BIN_DIR" "$PROFILE" 2>/dev/null; then
-                echo "" >> "$PROFILE"
-                echo "# Alphabet Language" >> "$PROFILE"
-                echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" >> "$PROFILE"
-                echo "  Added ~/.local/bin to PATH in $(basename "$PROFILE")"
-            fi
-            return
-        fi
-    done
+    # Get latest version
+    info "Fetching latest version..."
+    LATEST=$(get_latest_version)
+    info "Latest version: v$LATEST"
 
-    # No profile found, create one based on OS
-    if [ "$OS" = "Darwin" ]; then
-        PROFILE="$HOME/.zshrc"
-    else
-        PROFILE="$HOME/.profile"
-    fi
-    echo "export PATH=\"\$HOME/.local/bin:\$PATH\"" > "$PROFILE"
-    echo "  Created $(basename "$PROFILE") with PATH"
-}
-
-echo "Installing Alphabet Language ($PLATFORM $ARCH)..."
-echo ""
-
-# Try pre-built release
-LATEST=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null \
-    | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4 || true)
-
-if [ -n "$LATEST" ]; then
-    echo "Downloading $LATEST..."
-    URL="https://github.com/$REPO/releases/download/$LATEST/$ARCHIVE"
-
-    if curl -fsSL "$URL" -o "$TMPDIR/alphabet.tar.gz" 2>/dev/null; then
-        cd "$TMPDIR"
-        tar xzf alphabet.tar.gz
-        install_binary "$TMPDIR/alphabet" "$TMPDIR"
-        ensure_path
-        echo ""
-        echo "Alphabet $LATEST installed!"
-        "$BIN_DIR/alphabet" --version 2>/dev/null || true
-        echo ""
-        echo "Binary: $BIN_DIR/alphabet"
-        echo ""
-        echo "Open a new terminal, or in this terminal run:"
-        echo "  hash -r && source ~/.bashrc"
-        echo "  alphabet --repl"
-        echo ""
-        echo "Update:  curl -fsSL https://raw.githubusercontent.com/$REPO/main/install.sh | sh"
-        echo "Remove:  curl -fsSL https://raw.githubusercontent.com/$REPO/main/install.sh | sh -s -- --uninstall"
+    # Compare
+    if [ "$CURRENT" = "$LATEST" ]; then
+        success "Already up to date!"
         exit 0
     fi
-fi
 
-# Fallback: build from source
-echo "No pre-built release available. Building from source..."
-echo ""
+    # Build download URL
+    BINARY_NAME="alphabet-${OS}-${ARCH}"
+    DOWNLOAD_URL="https://github.com/$REPO/releases/download/v${LATEST}/${BINARY_NAME}"
+    
+    info "Downloading from: $DOWNLOAD_URL"
 
-# Check dependencies
-MISSING=""
-for cmd in git cmake make; do
-    command -v "$cmd" >/dev/null 2>&1 || MISSING="$MISSING $cmd"
-done
+    # Create install directory
+    mkdir -p "$INSTALL_DIR"
 
-# Check for C++ compiler (g++ or clang++)
-if ! command -v g++ >/dev/null 2>&1 && ! command -v clang++ >/dev/null 2>&1; then
-    MISSING="$MISSING g++ (or clang++)"
-fi
-
-if [ -n "$MISSING" ]; then
-    echo "Missing dependencies:$MISSING"
-    if [ "$OS" = "Darwin" ]; then
-        echo "Install: xcode-select --install && brew install cmake"
-    else
-        echo "Install: sudo apt install cmake g++ make"
+    # Download
+    TMP_FILE=$(mktemp)
+    if ! curl -L -o "$TMP_FILE" "$DOWNLOAD_URL" 2>/dev/null; then
+        rm -f "$TMP_FILE"
+        error "Download failed. Check: $DOWNLOAD_URL"
     fi
-    exit 1
-fi
 
-cd "$TMPDIR"
-git clone --depth 1 "https://github.com/$REPO.git" alphabet
-cd alphabet
+    # Install
+    chmod +x "$TMP_FILE"
+    mv "$TMP_FILE" "$INSTALL_DIR/alphabet"
+    success "Installed to $INSTALL_DIR/alphabet"
 
-echo "Compiling..."
-cmake -DCMAKE_BUILD_TYPE=Release -S . -B build -DCMAKE_MESSAGE_LOG_LEVEL=ERROR
+    # Check PATH
+    case ":$PATH:" in
+        *":$INSTALL_DIR:"*)
+            ;;
+        *)
+            echo ""
+            info "Add $INSTALL_DIR to your PATH:"
+            echo ""
+            echo "  echo 'export PATH=\"$INSTALL_DIR:\$PATH\"' >> ~/.bashrc"
+            echo "  source ~/.bashrc"
+            echo ""
+            ;;
+    esac
 
-# Get core count (works on Linux and macOS)
-JOBS=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
-cmake --build build -j"$JOBS"
+    # Verify
+    if command_exists alphabet; then
+        success "Alphabet v$LATEST installed successfully!"
+        echo ""
+        alphabet --version
+        echo ""
+        info "Run 'alphabet --help' to get started."
+    else
+        info "Installed! Run: $INSTALL_DIR/alphabet --help"
+    fi
+}
 
-echo "Testing..."
-cd build && ctest --output-on-failure --no-tests=error && cd ..
-
-install_binary "$TMPDIR/alphabet/build/alphabet" "$TMPDIR/alphabet"
-ensure_path
-
-echo ""
-echo "Alphabet installed!"
-"$BIN_DIR/alphabet" --version 2>/dev/null || true
-echo ""
-echo "Binary: $BIN_DIR/alphabet"
-echo ""
-echo "Open a new terminal, or in this terminal run:"
-echo "  hash -r && source ~/.bashrc"
-echo "  alphabet --repl"
+main "$@"

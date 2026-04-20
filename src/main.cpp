@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <cstdlib>
+#include <unistd.h>
+#include <sys/stat.h>
 
 #include "lexer.h"
 #include "parser.h"
@@ -15,7 +18,7 @@
 
 namespace {
 
-constexpr const char* VERSION = "2.1.0";
+constexpr const char* VERSION = "2.2.0";
 constexpr const char* DEVELOPER = "Fraol Teshome (fraolteshome444@gmail.com)";
 
 constexpr const char* LOGO = R"(
@@ -53,6 +56,7 @@ void print_help() {
     std::cout << "  alphabet --lsp                LSP server for VS Code\n";
     std::cout << "  --debug              Run in debug mode\n";
     std::cout << "  --sandbox            Sandbox mode: block FFI and file access\n";
+    std::cout << "  alphabet update      Self-update to latest version\n";
 }
 
 void run_source(const std::string& source, bool debug_mode = false, const std::string& source_dir = "", bool sandbox_mode = false) {
@@ -232,6 +236,126 @@ void start_repl() {
     ffi_cleanup();
 }
 
+void do_update() {
+    std::cout << "Checking for updates...\n";
+
+    // Get latest release info from GitHub
+    std::string api_cmd = "curl -s https://api.github.com/repos/fraol163/alphabet/releases/latest";
+    FILE* pipe = popen(api_cmd.c_str(), "r");
+    if (!pipe) {
+        std::cerr << "Error: Failed to check for updates\n";
+        return;
+    }
+
+    std::string response;
+    char buffer[256];
+    while (fgets(buffer, sizeof(buffer), pipe)) {
+        response += buffer;
+    }
+    int status = pclose(pipe);
+
+    if (status != 0) {
+        std::cerr << "Error: Could not reach GitHub\n";
+        return;
+    }
+
+    // Parse tag_name from JSON (simple extraction)
+    std::string latest_version;
+    size_t tag_pos = response.find("\"tag_name\"");
+    if (tag_pos != std::string::npos) {
+        size_t quote_start = response.find('"', tag_pos + 10);
+        if (quote_start != std::string::npos) {
+            quote_start++;
+            // Skip whitespace and "v" prefix
+            while (quote_start < response.size() && (response[quote_start] == '"' || response[quote_start] == 'v'))
+                quote_start++;
+            // Actually, find the value between quotes
+            size_t val_start = response.find('"', tag_pos + 10);
+            if (val_start != std::string::npos) {
+                val_start++;
+                size_t val_end = response.find('"', val_start);
+                if (val_end != std::string::npos) {
+                    latest_version = response.substr(val_start, val_end - val_start);
+                    // Strip leading 'v'
+                    if (!latest_version.empty() && latest_version[0] == 'v')
+                        latest_version = latest_version.substr(1);
+                }
+            }
+        }
+    }
+
+    if (latest_version.empty()) {
+        std::cerr << "Error: Could not parse latest version\n";
+        return;
+    }
+
+    std::cout << "Current version: " << VERSION << "\n";
+    std::cout << "Latest version:  " << latest_version << "\n";
+
+    // Simple version comparison: split on '.'
+    auto version_tuple = [](const std::string& v) -> std::tuple<int,int,int> {
+        int a = 0, b = 0, c = 0;
+        sscanf(v.c_str(), "%d.%d.%d", &a, &b, &c);
+        return {a, b, c};
+    };
+
+    if (version_tuple(latest_version) <= version_tuple(VERSION)) {
+        std::cout << "Already up to date!\n";
+        return;
+    }
+
+    // Determine OS and arch
+    std::string os = "linux";
+    std::string arch = "amd64";
+#ifdef __aarch64__
+    arch = "arm64";
+#endif
+
+    // Download URL
+    std::string download_url =
+        "https://github.com/fraol163/alphabet/releases/download/v" +
+        latest_version + "/alphabet-" + os + "-" + arch;
+
+    std::cout << "Downloading " << download_url << "...\n";
+
+    // Get current binary path
+    std::string self_path;
+    char self_buf[4096];
+    ssize_t len = readlink("/proc/self/exe", self_buf, sizeof(self_buf) - 1);
+    if (len > 0) {
+        self_buf[len] = '\0';
+        self_path = self_buf;
+    } else {
+        self_path = "/usr/local/bin/alphabet";
+    }
+
+    std::string tmp_path = self_path + ".tmp";
+
+    // Download to temp file
+    std::string dl_cmd = "curl -sL -o \"" + tmp_path + "\" \"" + download_url + "\"";
+    int dl_status = system(dl_cmd.c_str());
+    if (dl_status != 0) {
+        std::cerr << "Error: Download failed\n";
+        unlink(tmp_path.c_str());
+        return;
+    }
+
+    // Make executable
+    chmod(tmp_path.c_str(), 0755);
+
+    // Replace self (use a shell wrapper since we can't replace running binary)
+    std::cout << "Installing update...\n";
+    std::string mv_cmd = "mv \"" + tmp_path + "\" \"" + self_path + "\"";
+    int mv_status = system(mv_cmd.c_str());
+    if (mv_status != 0) {
+        std::cerr << "Error: Could not install update (try running as root)\n";
+        unlink(tmp_path.c_str());
+        return;
+    }
+
+    std::cout << "Updated to v" << latest_version << "!\n";
+}
+
 std::string read_file(const std::string& path) {
     std::ifstream file(path);
     if (!file.is_open()) {
@@ -306,6 +430,12 @@ int main(int argc, char* argv[]) {
             std::cerr << "Unknown option: " << arg << "\n";
             std::cerr << "Use --help for usage information\n";
             return 1;
+        }
+
+        // Subcommands
+        if (arg == "update") {
+            do_update();
+            return 0;
         }
 
         input_file = arg;

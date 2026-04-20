@@ -614,19 +614,31 @@ void Compiler::visit_logical(const Logical& expr) {
     visit_expr(expr.left);
 
     if (expr.op.type == TokenType::AND) {
+        // AND: left is falsy → result 0; left truthy → result = right
+        // [left] JUMP_IF_FALSE→push_0 [right] JUMP→end push_0: 0 end:
         size_t false_jump = bytecode_.size();
         emit(OpCode::JUMP_IF_FALSE, static_cast<int64_t>(0));
+        // Left truthy: evaluate right (replaces left on stack)
         visit_expr(expr.right);
-        patch_jump(false_jump, bytecode_.size());
-    } else if (expr.op.type == TokenType::OR) {
-        size_t true_jump = bytecode_.size();
-        emit(OpCode::JUMP_IF_FALSE, static_cast<int64_t>(0));
-        emit(OpCode::NOT);
-        size_t skip = bytecode_.size();
+        size_t to_end = bytecode_.size();
         emit(OpCode::JUMP, static_cast<int64_t>(0));
-        patch_jump(true_jump, bytecode_.size());
+        // Left falsy: push 0
+        patch_jump(false_jump, bytecode_.size());
+        emit(OpCode::PUSH_CONST, 0.0);
+        patch_jump(to_end, bytecode_.size());
+    } else if (expr.op.type == TokenType::OR) {
+        // OR: left is truthy → result 1; left falsy → result = right
+        // [left] JUMP_IF_TRUE→push_1 [right] JUMP→end push_1: 1 end:
+        size_t true_jump = bytecode_.size();
+        emit(OpCode::JUMP_IF_TRUE, static_cast<int64_t>(0));
+        // Left falsy: evaluate right (replaces left on stack)
         visit_expr(expr.right);
-        patch_jump(skip, bytecode_.size());
+        size_t to_end = bytecode_.size();
+        emit(OpCode::JUMP, static_cast<int64_t>(0));
+        // Left truthy: push 1
+        patch_jump(true_jump, bytecode_.size());
+        emit(OpCode::PUSH_CONST, 1.0);
+        patch_jump(to_end, bytecode_.size());
     }
 }
 

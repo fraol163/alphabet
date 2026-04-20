@@ -408,6 +408,19 @@ void VM::execute_instruction(CallFrame& frame) {
             }
             break;
         }
+
+        case OpCode::JUMP_IF_TRUE: {
+            Value cond = pop();
+            bool is_true = !cond.is_null() &&
+                          !(cond.is_number() && cond.as_number() == 0) &&
+                          !(cond.is_string() && cond.as_string().empty());
+            if (is_true) {
+                if (auto* target = std::get_if<int64_t>(&instr.operand)) {
+                    frame.ip = static_cast<size_t>(*target);
+                }
+            }
+            break;
+        }
         
         case OpCode::RET: {
             Value ret_val = pop();

@@ -49,7 +49,8 @@ enum class OpCode : uint8_t {
     DUP = 37,
     LOOP_START = 38,
     BREAK_JUMP = 39,
-    CONTINUE_JUMP = 40
+    CONTINUE_JUMP = 40,
+    JUMP_IF_TRUE = 41,
 };
 
 using Operand = std::variant<std::monostate, int64_t, double, std::string,
@@ -130,6 +131,7 @@ inline const char* opcode_to_string(OpCode op) {
         case OpCode::LOOP_START: return "LOOP_START";
         case OpCode::BREAK_JUMP: return "BREAK_JUMP";
         case OpCode::CONTINUE_JUMP: return "CONTINUE_JUMP";
+        case OpCode::JUMP_IF_TRUE: return "JUMP_IF_TRUE";
         default: return "UNKNOWN";
     }
 }

@@ -65,6 +65,12 @@ void VM::init(const Program& program) {
     globals_by_index_ = program.globals;
     global_functions_ = program.functions;
 
+    // Build reverse lookup for class name → ID
+    class_name_to_id_.clear();
+    for (const auto& [id, cls] : classes_) {
+        class_name_to_id_[cls.name] = id;
+    }
+
     if (!program.static_init.empty()) {
         frames_.emplace_back(&program.static_init);
         run_loop();
@@ -573,11 +579,9 @@ void VM::execute_instruction(CallFrame& frame) {
                 if constexpr (std::is_same_v<T, std::pair<std::string, int>>) {
                     const auto& [class_name, arg_count] = op;
                     uint16_t class_id = 0;
-                    for (const auto& [id, cls] : classes_) {
-                        if (cls.name == class_name) {
-                            class_id = id;
-                            break;
-                        }
+                    auto name_it = class_name_to_id_.find(class_name);
+                    if (name_it != class_name_to_id_.end()) {
+                        class_id = name_it->second;
                     }
                     ObjectPtr obj = std::make_shared<AlphabetObject>(class_id);
 
@@ -650,11 +654,9 @@ void VM::execute_instruction(CallFrame& frame) {
                     push(Value(obj));
                 } else if constexpr (std::is_same_v<T, std::string>) {
                     uint16_t class_id = 0;
-                    for (const auto& [id, cls] : classes_) {
-                        if (cls.name == op) {
-                            class_id = id;
-                            break;
-                        }
+                    auto name_it = class_name_to_id_.find(op);
+                    if (name_it != class_name_to_id_.end()) {
+                        class_id = name_it->second;
                     }
                     ObjectPtr obj = std::make_shared<AlphabetObject>(class_id);
 
@@ -741,23 +743,16 @@ void VM::execute_instruction(CallFrame& frame) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, std::string>) {
                     Value class_val = pop();
-                    // class_val is the class ID (a double from PUSH_CONST)
-                    std::string key;
                     if (class_val.is_number()) {
-                        // Look up class name from ID
                         uint16_t class_id = static_cast<uint16_t>(class_val.as_number());
-                        for (const auto& [id, cls] : classes_) {
-                            if (id == class_id) {
-                                key = cls.name + "." + std::string(op);
-                                break;
+                        auto cls_it = classes_.find(class_id);
+                        if (cls_it != classes_.end()) {
+                            std::string key = cls_it->second.name + "." + std::string(op);
+                            auto it = globals_.find(key);
+                            if (it != globals_.end()) {
+                                push(it->second);
+                                return;
                             }
-                        }
-                    }
-                    if (!key.empty()) {
-                        auto it = globals_.find(key);
-                        if (it != globals_.end()) {
-                            push(it->second);
-                            return;
                         }
                     }
                     push(Value(nullptr));
@@ -772,18 +767,13 @@ void VM::execute_instruction(CallFrame& frame) {
                 if constexpr (std::is_same_v<T, std::string>) {
                     Value val = pop();
                     Value class_val = pop();
-                    std::string key;
                     if (class_val.is_number()) {
                         uint16_t class_id = static_cast<uint16_t>(class_val.as_number());
-                        for (const auto& [id, cls] : classes_) {
-                            if (id == class_id) {
-                                key = cls.name + "." + std::string(op);
-                                break;
-                            }
+                        auto cls_it = classes_.find(class_id);
+                        if (cls_it != classes_.end()) {
+                            std::string key = cls_it->second.name + "." + std::string(op);
+                            globals_[key] = val;
                         }
-                    }
-                    if (!key.empty()) {
-                        globals_[key] = val;
                     }
                     push(val);
                 }
@@ -867,9 +857,12 @@ void VM::execute_instruction(CallFrame& frame) {
             
             if (obj.is_list() && idx.is_number()) {
                 const auto& list = obj.as_list();
-                size_t index = static_cast<size_t>(idx.as_number());
-                if (index < list.size()) {
-                    push(list[index]);
+                double raw = idx.as_number();
+                int64_t index = static_cast<int64_t>(raw);
+                // Python-style negative indexing
+                if (index < 0) index += static_cast<int64_t>(list.size());
+                if (index >= 0 && static_cast<size_t>(index) < list.size()) {
+                    push(list[static_cast<size_t>(index)]);
                 } else {
                     push(Value(nullptr));
                 }
@@ -894,9 +887,11 @@ void VM::execute_instruction(CallFrame& frame) {
             
             if (obj.is_list() && idx.is_number()) {
                 auto& list = obj.as_list();
-                size_t index = static_cast<size_t>(idx.as_number());
-                if (index < list.size()) {
-                    list[index] = val;
+                double raw = idx.as_number();
+                int64_t index = static_cast<int64_t>(raw);
+                if (index < 0) index += static_cast<int64_t>(list.size());
+                if (index >= 0 && static_cast<size_t>(index) < list.size()) {
+                    list[static_cast<size_t>(index)] = val;
                 }
             } else if (obj.is_map() && idx.is_string()) {
                 auto& map = obj.as_map();

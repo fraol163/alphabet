@@ -145,6 +145,7 @@ private:
     std::vector<std::string> globals_by_index_;
     std::vector<CallFrame> frames_;
     std::unordered_map<uint16_t, CompiledClass> classes_;
+    std::unordered_map<std::string, uint16_t> class_name_to_id_;  // Reverse lookup
     std::unordered_map<std::string, CompiledMethod> global_functions_;
 
     // Debug State

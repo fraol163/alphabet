@@ -594,15 +594,19 @@ void Compiler::visit_binary(const Binary& expr) {
 }
 
 void Compiler::visit_unary(const Unary& expr) {
-    visit_expr(expr.right);
-
     switch (expr.op.type) {
-        case TokenType::NOT: emit(OpCode::NOT); break;
+        case TokenType::NOT: 
+            visit_expr(expr.right);
+            emit(OpCode::NOT); 
+            break;
         case TokenType::MINUS:
-            emit(OpCode::PUSH_CONST, 0.0);
+            emit(OpCode::PUSH_CONST, 0.0);  // 0 - right
+            visit_expr(expr.right);
             emit(OpCode::SUB);
             break;
-        default: break;
+        default: 
+            visit_expr(expr.right);
+            break;
     }
 }
 

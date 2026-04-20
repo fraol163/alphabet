@@ -155,24 +155,25 @@ done"
 
 echo ""
 echo "=== IMPORT TESTS ==="
+export ALPHABET_PATH="/home/fraol/Desktop/All In One/Alphabet_Language"
 test_lang "English-Import" '#alphabet<en>
-import "test"
+import "test.abc"
 z.o("ok")' "ok"
 
 test_lang "Amharic-Import" '#alphabet<am>
-አስገባ "test"
+አስገባ "test.abc"
 ውጤት.o("ok")' "ok"
 
 test_lang "Spanish-Import" '#alphabet<es>
-importar "test"
+importar "test.abc"
 imprimir.o("ok")' "ok"
 
 test_lang "French-Import" '#alphabet<fr>
-importer "test"
+importer "test.abc"
 afficher.o("ok")' "ok"
 
 test_lang "German-Import" '#alphabet<de>
-importieren "test"
+importieren "test.abc"
 ausgeben.o("ok")' "ok"
 
 echo ""

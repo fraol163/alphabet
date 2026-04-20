@@ -89,6 +89,10 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
         uint16_t left_type = infer_expression_type(bin->left);
         uint16_t right_type = infer_expression_type(bin->right);
 
+        // String concatenation: if either side is STR, result is STR
+        if (left_type == TypeManager::STR || right_type == TypeManager::STR) {
+            return TypeManager::STR;
+        }
         if (left_type >= TypeManager::I8 && left_type <= TypeManager::I64 &&
             right_type >= TypeManager::I8 && right_type <= TypeManager::I64) {
             return std::max(left_type, right_type);

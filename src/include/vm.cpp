@@ -989,13 +989,19 @@ void VM::system_call(const std::string& method, int arg_count) {
     } else if (method == "f" && arg_count >= 1) {
         Value path_val = pop();
         if (path_val.is_string()) {
-            std::ifstream file(path_val.as_string());
-            if (file.is_open()) {
-                std::ostringstream oss;
-                oss << file.rdbuf();
-                push(Value(oss.str()));
-            } else {
+            std::string path = path_val.as_string();
+            // Block directory traversal
+            if (path.find("..") != std::string::npos) {
                 push(Value(std::string("")));
+            } else {
+                std::ifstream file(path);
+                if (file.is_open()) {
+                    std::ostringstream oss;
+                    oss << file.rdbuf();
+                    push(Value(oss.str()));
+                } else {
+                    push(Value(std::string("")));
+                }
             }
         } else {
             push(Value(std::string("")));
@@ -1034,6 +1040,96 @@ void VM::system_call(const std::string& method, int arg_count) {
         else if (v.is_number()) push(Value(std::string("number")));
         else if (v.is_string()) push(Value(std::string("string")));
         else push(Value(std::string("unknown")));
+    } else if (method == "split" && arg_count >= 2) {
+        // z.split(string, delimiter) -> list
+        Value delim = pop();
+        Value str = pop();
+        if (str.is_string() && delim.is_string()) {
+            std::vector<Value> result;
+            std::string s = str.as_string();
+            std::string d = delim.as_string();
+            if (d.empty()) {
+                for (char c : s) result.push_back(Value(std::string(1, c)));
+            } else {
+                size_t pos = 0, found;
+                while ((found = s.find(d, pos)) != std::string::npos) {
+                    result.push_back(Value(s.substr(pos, found - pos)));
+                    pos = found + d.size();
+                }
+                result.push_back(Value(s.substr(pos)));
+            }
+            push(Value(std::move(result)));
+        } else {
+            push(Value(std::vector<Value>()));
+        }
+    } else if (method == "join" && arg_count >= 2) {
+        // z.join(list, separator) -> string
+        Value sep = pop();
+        Value list = pop();
+        if (list.is_list() && sep.is_string()) {
+            const auto& items = list.as_list();
+            std::string separator = sep.as_string();
+            std::ostringstream oss;
+            for (size_t i = 0; i < items.size(); ++i) {
+                if (i > 0) oss << separator;
+                oss << value_to_string(items[i]);
+            }
+            push(Value(oss.str()));
+        } else {
+            push(Value(std::string("")));
+        }
+    } else if (method == "replace" && arg_count >= 3) {
+        // z.replace(string, old, new) -> string
+        Value new_val = pop();
+        Value old_val = pop();
+        Value str = pop();
+        if (str.is_string() && old_val.is_string() && new_val.is_string()) {
+            std::string s = str.as_string();
+            std::string old_str = old_val.as_string();
+            std::string new_str = new_val.as_string();
+            if (!old_str.empty()) {
+                size_t pos = 0;
+                while ((pos = s.find(old_str, pos)) != std::string::npos) {
+                    s.replace(pos, old_str.size(), new_str);
+                    pos += new_str.size();
+                }
+            }
+            push(Value(std::move(s)));
+        } else {
+            push(Value(value_to_string(str)));
+        }
+    } else if (method == "trim" && arg_count >= 1) {
+        // z.trim(string) -> string
+        Value str = pop();
+        if (str.is_string()) {
+            std::string s = str.as_string();
+            size_t start = s.find_first_not_of(" \t\n\r");
+            if (start == std::string::npos) { push(Value(std::string(""))); return; }
+            size_t end = s.find_last_not_of(" \t\n\r");
+            push(Value(s.substr(start, end - start + 1)));
+        } else {
+            push(Value(value_to_string(str)));
+        }
+    } else if (method == "upper" && arg_count >= 1) {
+        // z.upper(string) -> string
+        Value str = pop();
+        if (str.is_string()) {
+            std::string s = str.as_string();
+            std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+            push(Value(std::move(s)));
+        } else {
+            push(Value(value_to_string(str)));
+        }
+    } else if (method == "lower" && arg_count >= 1) {
+        // z.lower(string) -> string
+        Value str = pop();
+        if (str.is_string()) {
+            std::string s = str.as_string();
+            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+            push(Value(std::move(s)));
+        } else {
+            push(Value(value_to_string(str)));
+        }
     }
 }
 

@@ -557,8 +557,26 @@ void VM::execute_instruction(CallFrame& frame) {
 
                         const CompiledClass& cls = class_it->second;
 
-                        auto method_it = cls.methods.find(method_name);
-                        if (method_it == cls.methods.end()) {
+                        // Search for method in class hierarchy
+                        const CompiledClass* current_cls = &cls;
+                        auto method_it = current_cls->methods.end();
+                        while (current_cls) {
+                            method_it = current_cls->methods.find(method_name);
+                            if (method_it != current_cls->methods.end()) break;
+                            if (!current_cls->superclass.empty()) {
+                                auto sid = class_name_to_id_.find(current_cls->superclass);
+                                if (sid != class_name_to_id_.end()) {
+                                    auto sci = classes_.find(sid->second);
+                                    if (sci != classes_.end()) {
+                                        current_cls = &sci->second;
+                                        continue;
+                                    }
+                                }
+                            }
+                            current_cls = nullptr;
+                        }
+
+                        if (method_it == current_cls->methods.end()) {
                             // If init is called and doesn't exist, just return the object
                             if (method_name == "init") {
                                 push(callee);
@@ -607,51 +625,36 @@ void VM::execute_instruction(CallFrame& frame) {
 
                     auto class_it = classes_.find(class_id);
                     if (class_it != classes_.end()) {
-                        // Initialize default field values from field_init bytecode
-                        if (!class_it->second.field_init.empty()) {
-                            const auto& fi = class_it->second.field_init;
-                            for (size_t ip = 0; ip < fi.size(); ) {
-                                const auto& instr = fi[ip];
-                                if (instr.op == OpCode::RET) break;
-                                if (instr.op == OpCode::LOAD_VAR) {
-                                    push(Value(obj));
-                                } else if (instr.op == OpCode::PUSH_CONST) {
-                                    if (auto* d = std::get_if<double>(&instr.operand)) {
-                                        push(Value(*d));
-                                    } else if (auto* s = std::get_if<std::string>(&instr.operand)) {
-                                        push(Value(*s));
-                                    } else {
-                                        push(Value(nullptr));
-                                    }
-                                } else if (instr.op == OpCode::STORE_FIELD) {
-                                    Value val = pop();
-                                    Value obj_val = pop();
-                                    if (obj_val.is_object()) {
-                                        auto o = obj_val.as_object();
-                                        std::visit([&](const auto& f) {
-                                            if constexpr (std::is_same_v<std::decay_t<decltype(f)>, std::string>) {
-                                                o->fields[f] = std::make_shared<Value>(val);
-                                            }
-                                        }, instr.operand);
-                                    }
-                                    push(val);
-                                } else if (instr.op == OpCode::POP) {
-                                    pop();
-                                }
-                                ip++;
-                            }
-                        }
+                        // Initialize field values (walks superclass chain)
+                        run_field_init(obj, class_it->second);
 
-                        // Call init method if it exists
-                        auto init_it = class_it->second.methods.find("init");
-                        if (init_it != class_it->second.methods.end()) {
-                            CallFrame init_frame(&init_it->second.bytecode);
+                        // Call init method if it exists (searches hierarchy)
+                        const CompiledClass* init_cls = &class_it->second;
+                        bool found_init = false;
+                        while (init_cls) {
+                            auto it = init_cls->methods.find("init");
+                            if (it != init_cls->methods.end()) {
+                                found_init = true;
+                                break;
+                            }
+                            if (!init_cls->superclass.empty()) {
+                                auto sid = class_name_to_id_.find(init_cls->superclass);
+                                if (sid != class_name_to_id_.end()) {
+                                    auto sci = classes_.find(sid->second);
+                                    if (sci != classes_.end()) { init_cls = &sci->second; continue; }
+                                }
+                            }
+                            break;
+                        }
+                        if (found_init) {
+                            auto& init_method = init_cls->methods.find("init")->second;
+                            CallFrame init_frame(&init_method.bytecode);
                             init_frame.locals["this"] = Value(obj);
                             
                             // Pass arguments if provided
                             if (arg_count > 0) {
-                                for (size_t i = 0; i < args.size() && i < init_it->second.param_names.size(); ++i) {
-                                    init_frame.locals[init_it->second.param_names[i]] = args[i];
+                                for (size_t i = 0; i < args.size() && i < init_method.param_names.size(); ++i) {
+                                    init_frame.locals[init_method.param_names[i]] = args[i];
                                 }
                             }
                             
@@ -673,40 +676,10 @@ void VM::execute_instruction(CallFrame& frame) {
                     }
                     ObjectPtr obj = std::make_shared<AlphabetObject>(class_id);
 
-                    // Initialize default field values
+                    // Initialize field values (walks superclass chain)
                     auto class_it = classes_.find(class_id);
-                    if (class_it != classes_.end() && !class_it->second.field_init.empty()) {
-                        const auto& fi = class_it->second.field_init;
-                        for (size_t ip = 0; ip < fi.size(); ) {
-                            const auto& instr = fi[ip];
-                            if (instr.op == OpCode::RET) break;
-                            if (instr.op == OpCode::LOAD_VAR) {
-                                push(Value(obj));
-                            } else if (instr.op == OpCode::PUSH_CONST) {
-                                if (auto* d = std::get_if<double>(&instr.operand)) {
-                                    push(Value(*d));
-                                } else if (auto* s = std::get_if<std::string>(&instr.operand)) {
-                                    push(Value(*s));
-                                } else {
-                                    push(Value(nullptr));
-                                }
-                            } else if (instr.op == OpCode::STORE_FIELD) {
-                                Value val = pop();
-                                Value obj_val = pop();
-                                if (obj_val.is_object()) {
-                                    auto o = obj_val.as_object();
-                                    std::visit([&](const auto& f) {
-                                        if constexpr (std::is_same_v<std::decay_t<decltype(f)>, std::string>) {
-                                            o->fields[f] = std::make_shared<Value>(val);
-                                        }
-                                    }, instr.operand);
-                                }
-                                push(val);
-                            } else if (instr.op == OpCode::POP) {
-                                pop();
-                            }
-                            ip++;
-                        }
+                    if (class_it != classes_.end()) {
+                        run_field_init(obj, class_it->second);
                     }
 
                     push(Value(obj));
@@ -978,6 +951,63 @@ std::string VM::get_locals_json(const CallFrame& frame) {
     return oss.str();
 }
 
+void VM::run_field_init(ObjectPtr obj, const CompiledClass& cls) {
+    // Collect superclass chain from root to leaf
+    std::vector<const CompiledClass*> chain;
+    const CompiledClass* current = &cls;
+    while (current) {
+        chain.push_back(current);
+        if (!current->superclass.empty()) {
+            auto sid = class_name_to_id_.find(current->superclass);
+            if (sid != class_name_to_id_.end()) {
+                auto sci = classes_.find(sid->second);
+                if (sci != classes_.end()) {
+                    current = &sci->second;
+                    continue;
+                }
+            }
+        }
+        break;
+    }
+    // Reverse so superclass runs first, subclass last
+    std::reverse(chain.begin(), chain.end());
+
+    for (const auto* c : chain) {
+        if (c->field_init.empty()) continue;
+        const auto& fi = c->field_init;
+        for (size_t ip = 0; ip < fi.size(); ) {
+            const auto& instr = fi[ip];
+            if (instr.op == OpCode::RET) break;
+            if (instr.op == OpCode::LOAD_VAR) {
+                push(Value(obj));
+            } else if (instr.op == OpCode::PUSH_CONST) {
+                if (auto* d = std::get_if<double>(&instr.operand)) {
+                    push(Value(*d));
+                } else if (auto* s = std::get_if<std::string>(&instr.operand)) {
+                    push(Value(*s));
+                } else {
+                    push(Value(nullptr));
+                }
+            } else if (instr.op == OpCode::STORE_FIELD) {
+                Value val = pop();
+                Value obj_val = pop();
+                if (obj_val.is_object()) {
+                    auto o = obj_val.as_object();
+                    std::visit([&](const auto& f) {
+                        if constexpr (std::is_same_v<std::decay_t<decltype(f)>, std::string>) {
+                            o->fields[f] = std::make_shared<Value>(val);
+                        }
+                    }, instr.operand);
+                }
+                push(val);
+            } else if (instr.op == OpCode::POP) {
+                pop();
+            }
+            ip++;
+        }
+    }
+}
+
 void VM::system_call(const std::string& method, int arg_count) {
     if (method == "o" && arg_count >= 1) {
         Value val = pop();
@@ -1172,9 +1202,24 @@ void VM::throw_exception(const Value& value) {
 const std::vector<Instruction>* VM::lookup_method(const CompiledClass& cls,
                                                    const std::string& name,
                                                    const std::string& /*caller_class*/) {
-    auto it = cls.methods.find(name);
-    if (it != cls.methods.end()) {
-        return &it->second.bytecode;
+    const CompiledClass* current = &cls;
+    while (current) {
+        auto it = current->methods.find(name);
+        if (it != current->methods.end()) {
+            return &it->second.bytecode;
+        }
+        // Walk superclass chain
+        if (!current->superclass.empty()) {
+            auto super_id_it = class_name_to_id_.find(current->superclass);
+            if (super_id_it != class_name_to_id_.end()) {
+                auto cls_it = classes_.find(super_id_it->second);
+                if (cls_it != classes_.end()) {
+                    current = &cls_it->second;
+                    continue;
+                }
+            }
+        }
+        break;
     }
     return nullptr;
 }

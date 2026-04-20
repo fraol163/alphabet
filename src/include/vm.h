@@ -163,6 +163,7 @@ private:
                                                    const std::string& caller_class);
     void throw_exception(const Value& value);
     void system_call(const std::string& method, int arg_count);
+    void run_field_init(ObjectPtr obj, const CompiledClass& cls);
     
     // Debugger Helpers
     void check_breakpoints(const Instruction& instr);

@@ -346,11 +346,22 @@ StmtPtr Parser::var_statement(std::optional<Token> visibility, bool is_static) {
     return std::make_shared<VarStmt>(var_declaration(visibility, is_static));
 }
 
+StmtPtr Parser::const_statement() {
+    Token const_token = previous();
+    Token type_id(TokenType::NUMBER, std::string_view("0"), 0, const_token.line);
+    Token name = consume_identifier("Expect variable name after 'const'.");
+    consume(TokenType::EQUALS, "Expect '=' after const variable name.");
+    ExprPtr initializer = expression();
+    return std::make_shared<VarStmt>(type_id, name, std::move(initializer),
+                                     std::nullopt, false, true);
+}
+
 StmtPtr Parser::statement() {
     if (match({TokenType::IF})) return if_statement();
     if (match({TokenType::RETURN})) return return_statement();
     if (match({TokenType::LOOP})) return loop_statement();
     if (match({TokenType::TRY})) return try_statement();
+    if (match({TokenType::CONST})) return const_statement();
     if (match({TokenType::BREAK})) return std::make_shared<BreakStmt>(previous());
     if (match({TokenType::CONTINUE})) return std::make_shared<ContinueStmt>(previous());
     if (match({TokenType::LBRACE})) return std::make_shared<Block>(block());

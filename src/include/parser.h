@@ -49,6 +49,7 @@ private:
     FunctionStmt method(std::optional<Token> visibility, bool is_static);
     VarStmt var_declaration(std::optional<Token> visibility = std::nullopt, bool is_static = false);
     StmtPtr var_statement(std::optional<Token> visibility = std::nullopt, bool is_static = false);
+    StmtPtr const_statement();
 
     StmtPtr statement();
     StmtPtr if_statement();

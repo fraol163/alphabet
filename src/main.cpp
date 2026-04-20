@@ -102,8 +102,29 @@ void start_repl() {
     std::cout << "Developed by " << DEVELOPER << "\n";
     std::cout << "Type 'q' to exit.\n\n";
     std::cout << "Multi-line mode: Type '{' to start a block, then continue on next lines.\n";
+    std::cout << "Commands: 'history' (show past), '!!' (repeat last)\n";
 
     ffi_init();
+
+    // Load history from file
+    std::vector<std::string> history;
+    const char* home = std::getenv("HOME");
+    std::string history_path = home ? (std::string(home) + "/.alphabet_history") : ".alphabet_history";
+    {
+        std::ifstream hist_file(history_path);
+        std::string hist_line;
+        while (std::getline(hist_file, hist_line)) {
+            if (!hist_line.empty()) history.push_back(hist_line);
+        }
+    }
+    auto save_history = [&]() {
+        std::ofstream hist_file(history_path);
+        // Keep last 500 entries
+        size_t start = history.size() > 500 ? history.size() - 500 : 0;
+        for (size_t i = start; i < history.size(); ++i) {
+            hist_file << history[i] << "\n";
+        }
+    };
 
     std::string line;
     std::string buffer;
@@ -127,11 +148,30 @@ void start_repl() {
         }
 
         if (buffer.empty() && (line == "q" || line == "quit" || line == "exit")) {
+            save_history();
             break;
+        }
+
+        // History commands
+        if (buffer.empty() && line == "history") {
+            size_t start = history.size() > 20 ? history.size() - 20 : 0;
+            for (size_t i = start; i < history.size(); ++i) {
+                std::cout << "  " << (i + 1) << "  " << history[i] << "\n";
+            }
+            continue;
+        }
+        if (buffer.empty() && line == "!!" && !history.empty()) {
+            line = history.back();
+            std::cout << line << "\n";
         }
 
         if (buffer.empty() && line.empty()) {
             continue;
+        }
+
+        // Save to history (only non-empty, non-command lines)
+        if (buffer.empty() && line != "!!") {
+            history.push_back(line);
         }
 
         for (char c : line) {

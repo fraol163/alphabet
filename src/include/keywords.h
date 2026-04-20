@@ -37,7 +37,8 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
         {"import", "x"},
         {"match", "q"},
         {"extends", "^"},
-        {"export", "@"}
+        {"export", "@"},
+        {"const", "\x80"}  // Special marker — maps to CONST token
     }},
     
     // Amharic keywords

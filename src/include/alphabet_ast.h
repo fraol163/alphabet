@@ -154,11 +154,12 @@ struct VarStmt : Stmt {
     ExprPtr initializer;
     std::optional<Token> visibility;
     bool is_static = false;
+    bool is_const = false;
 
     VarStmt() = default;
-    VarStmt(Token tid, Token n, ExprPtr init, std::optional<Token> vis, bool stat = false)
+    VarStmt(Token tid, Token n, ExprPtr init, std::optional<Token> vis, bool stat = false, bool con = false)
         : type_id(tid), name(n), initializer(std::move(init)),
-          visibility(std::move(vis)), is_static(stat) {}
+          visibility(std::move(vis)), is_static(stat), is_const(con) {}
 };
 
 struct Block : Stmt {

@@ -24,6 +24,7 @@ const char* token_type_to_string(TokenType type) {
         case TokenType::TRY: return "TRY";
         case TokenType::HANDLE: return "HANDLE";
         case TokenType::SYSTEM: return "SYSTEM";
+        case TokenType::CONST: return "CONST";
         case TokenType::IDENTIFIER: return "IDENTIFIER";
         case TokenType::NUMBER: return "NUMBER";
         case TokenType::STRING: return "STRING";
@@ -200,8 +201,12 @@ void Lexer::scan_token() {
         case '\n':
             break;
             
-        case '"':
-            string();
+        case '\"':
+            if (peek() == '"' && peek_next() == '"') {
+                multi_line_string();
+            } else {
+                string();
+            }
             break;
             
         default:
@@ -289,6 +294,48 @@ void Lexer::string() {
     }
 }
 
+void Lexer::multi_line_string() {
+    advance(); // consume second "
+    advance(); // consume third "
+
+    std::string processed;
+    bool has_escapes = false;
+
+    while (!is_at_end()) {
+        if (peek() == '"' && current_ + 2 < source_.size() &&
+            source_[current_ + 1] == '"' && source_[current_ + 2] == '"') {
+            advance(); // consume first "
+            advance(); // consume second "
+            advance(); // consume third "
+            break;
+        }
+        if (peek() == '\\') {
+            has_escapes = true;
+            advance();
+            if (is_at_end()) break;
+            char escaped = advance();
+            switch (escaped) {
+                case 'n': processed += '\n'; break;
+                case 't': processed += '\t'; break;
+                case '\\': processed += '\\'; break;
+                case '"': processed += '"'; break;
+                case '0': processed += '\0'; break;
+                default:
+                    processed += '\\';
+                    processed += escaped;
+                    break;
+            }
+        } else {
+            char c = advance();
+            if (c == '\n') ++line_;
+            processed += c;
+        }
+    }
+
+    string_pool_.push_back(std::move(processed));
+    tokens_.emplace_back(TokenType::STRING, string_pool_.back(), 0, line_, start_column_);
+}
+
 void Lexer::number() {
     while (std::isdigit(static_cast<unsigned char>(peek()))) {
         advance();
@@ -317,6 +364,12 @@ void Lexer::identifier() {
     // Check for true/false literals
     if (text == "true" || text == "false") {
         add_token(TokenType::NUMBER, (text == "true") ? 1.0 : 0.0);
+        return;
+    }
+
+    // Check for const keyword (single-word, not a keyword char)
+    if (text == "const") {
+        add_token(TokenType::CONST);
         return;
     }
 

@@ -31,6 +31,7 @@ private:
     std::unordered_map<std::string, uint16_t> class_map_;
     uint16_t next_class_id_ = 15;
     std::vector<std::string> globals_;
+    std::unordered_set<std::string> const_vars_;  // Track const variables
     std::unordered_map<std::string, uint16_t> var_types_;  // Track declared variable types
     std::unordered_map<std::string, CompiledMethod> pending_functions_;
     std::unordered_map<std::string, CompiledClass> pending_classes_;  // Classes from imports

@@ -32,6 +32,7 @@ enum class TokenType : int {
     SYSTEM = 116,
     IMPORT = 117,
     MATCH = 118,
+    CONST = 119,
     
     // Operators and special chars
     EXTENDS = '^',
@@ -97,6 +98,7 @@ private:
     bool match(char expected);
     void add_token(TokenType type, double literal = 0);
     void string();
+    void multi_line_string();
     void number();
     void identifier();
     [[nodiscard]] bool is_keyword_char(char c) const;

@@ -17,7 +17,7 @@ void Compiler::validate_types(const std::vector<StmtPtr>& statements) {
             uint16_t declared_type = static_cast<uint16_t>(std::stoi(sv_to_str(var_stmt->type_id.lexeme)));
             std::string var_name = sv_to_str(var_stmt->name.lexeme);
             var_types_[var_name] = declared_type;
-            if (var_stmt->initializer) {
+            if (var_stmt->initializer && declared_type != 0) {
                 uint16_t inferred_type = infer_expression_type(var_stmt->initializer);
                 if (!types_compatible(inferred_type, declared_type)) {
                     std::ostringstream oss;
@@ -363,9 +363,14 @@ void Compiler::visit_var(const VarStmt& stmt) {
         emit(OpCode::PUSH_CONST, nullptr, stmt.name.line);
     }
 
-    size_t idx = get_global_index(sv_to_str(stmt.name.lexeme));
+    std::string name = sv_to_str(stmt.name.lexeme);
+    size_t idx = get_global_index(name);
     emit(OpCode::STORE_VAR, static_cast<int64_t>(idx), stmt.name.line);
     emit(OpCode::POP);
+
+    if (stmt.is_const) {
+        const_vars_.insert(name);
+    }
 }
 
 void Compiler::visit_expression(const ExpressionStmt& stmt) {
@@ -682,9 +687,15 @@ void Compiler::visit_variable(const Variable& expr) {
 }
 
 void Compiler::visit_assign(const Assign& expr) {
+    std::string name = sv_to_str(expr.name.lexeme);
+
+    // Check for const reassignment
+    if (const_vars_.count(name)) {
+        throw CompileError("Cannot reassign const variable '" + name + "'");
+    }
+
     visit_expr(expr.value);
 
-    std::string name = sv_to_str(expr.name.lexeme);
     auto global_it = std::find(globals_.begin(), globals_.end(), name);
     if (global_it != globals_.end()) {
         size_t idx = global_it - globals_.begin();

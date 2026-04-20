@@ -19,3 +19,4 @@ venv/
 
 # NOTE: src/ and alphabet.py ARE included so GitHub Actions can build them.
 # YOU MUST SET THE REPOSITORY TO PRIVATE TO HIDE YOUR CODE.
+alphabet-linux-amd64

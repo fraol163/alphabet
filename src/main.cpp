@@ -307,7 +307,12 @@ void do_update() {
     // Determine OS and arch
     std::string os = "linux";
     std::string arch = "amd64";
-#ifdef __aarch64__
+#ifdef __APPLE__
+    os = "macos";
+    #ifdef __aarch64__
+    arch = "arm64";
+    #endif
+#elif defined(__aarch64__)
     arch = "arm64";
 #endif
 

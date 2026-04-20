@@ -1,78 +1,48 @@
-name: Release
+name: Build Release
 
 on:
+  release:
+    types: [created]
   push:
-    tags:
-      - 'v*'
-
-permissions:
-  contents: write
+    tags: ['v*']
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: |
-        cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
-        cmake --build build -j$(nproc)
-        strip build/alphabet
-    - name: Package
-      run: cd build && tar czf alphabet-linux-amd64.tar.gz alphabet ../stdlib/ ../examples/
-    - name: Upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: linux
-        path: build/alphabet-linux-amd64.tar.gz
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-amd64
+            artifact: alphabet
+          - os: macos-latest
+            target: macos-amd64
+            artifact: alphabet
+          - os: macos-latest
+            target: macos-arm64
+            artifact: alphabet
+            extra_flags: -DCMAKE_OSX_ARCHITECTURES=arm64
+          - os: windows-latest
+            target: windows-amd64
+            artifact: alphabet.exe
 
-  build-macos:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+    
     steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: |
-        cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
-        cmake --build build -j$(sysctl -n hw.ncpu)
-        strip build/alphabet
-    - name: Package
-      run: cd build && tar czf alphabet-macos-arm64.tar.gz alphabet ../stdlib/ ../examples/
-    - name: Upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: macos
-        path: build/alphabet-macos-arm64.tar.gz
+      - uses: actions/checkout@v4
 
-  build-windows:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      run: |
-        cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
-        cmake --build build --config Release
-    - name: Package
-      run: |
-        cd build/Release
-        Compress-Archive -Path alphabet.exe,../../stdlib/,../../examples/ -DestinationPath alphabet-windows-amd64.zip
-    - name: Upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: windows
-        path: build/Release/alphabet-windows-amd64.zip
+      - name: Configure
+        run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release ${{ matrix.extra_flags }}
 
-  release:
-    needs: [build-linux, build-macos, build-windows]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-    - name: Create release
-      uses: softprops/action-gh-release@v2
-      with:
-        generate_release_notes: true
-        files: |
-          linux/alphabet-linux-amd64.tar.gz
-          macos/alphabet-macos-arm64.tar.gz
-          windows/alphabet-windows-amd64.zip
+      - name: Build
+        run: cmake --build build --config Release --target alphabet
+
+      - name: Strip (Unix)
+        if: runner.os != 'Windows'
+        run: strip build/${{ matrix.artifact }}
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/${{ matrix.artifact }}
+          asset_name: alphabet-${{ matrix.target }}${{ runner.os == 'Windows' && '.exe' || '' }}

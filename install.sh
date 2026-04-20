@@ -28,9 +28,10 @@ fi
 # Detect OS
 detect_os() {
     case "$(uname -s)" in
-        Linux*)  echo "linux" ;;
-        Darwin*) echo "macos" ;;
-        *)       error "Unsupported OS: $(uname -s)" ;;
+        Linux*)     echo "linux" ;;
+        Darwin*)    echo "macos" ;;
+        MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
+        *)          error "Unsupported OS: $(uname -s)" ;;
     esac
 }
 
@@ -99,7 +100,11 @@ main() {
     fi
 
     # Build download URL
-    BINARY_NAME="alphabet-${OS}-${ARCH}"
+    EXT=""
+    if [ "$OS" = "windows" ]; then
+        EXT=".exe"
+    fi
+    BINARY_NAME="alphabet-${OS}-${ARCH}${EXT}"
     DOWNLOAD_URL="https://github.com/$REPO/releases/download/v${LATEST}/${BINARY_NAME}"
     
     info "Downloading from: $DOWNLOAD_URL"

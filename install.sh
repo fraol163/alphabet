@@ -17,6 +17,14 @@ info() { printf "${CYAN}▸${NC} %s\n" "$1"; }
 success() { printf "${GREEN}✓${NC} %s\n" "$1"; }
 error() { printf "${RED}✗${NC} %s\n" "$1"; exit 1; }
 
+# Uninstall support
+if [ "$1" = "--uninstall" ]; then
+    rm -f "$INSTALL_DIR/alphabet"
+    hash -r 2>/dev/null || true
+    success "Uninstalled alphabet from $INSTALL_DIR"
+    exit 0
+fi
+
 # Detect OS
 detect_os() {
     case "$(uname -s)" in
@@ -101,6 +109,7 @@ main() {
 
     # Download
     TMP_FILE=$(mktemp)
+    trap 'rm -f "$TMP_FILE"' EXIT
     if ! curl -L -o "$TMP_FILE" "$DOWNLOAD_URL" 2>/dev/null; then
         rm -f "$TMP_FILE"
         error "Download failed. Check: $DOWNLOAD_URL"
@@ -109,6 +118,7 @@ main() {
     # Install
     chmod +x "$TMP_FILE"
     mv "$TMP_FILE" "$INSTALL_DIR/alphabet"
+    hash -r 2>/dev/null || true
     success "Installed to $INSTALL_DIR/alphabet"
 
     # Check PATH

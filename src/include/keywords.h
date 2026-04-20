@@ -14,6 +14,8 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
     // English aliases (multi-letter keywords)
     {"en", {
         {"class", "c"},
+        {"abstract", "a"},
+        {"interface", "j"},
         {"method", "m"},
         {"if", "i"},
         {"else", "e"},
@@ -33,16 +35,21 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
         {"output", "z"},
         {"input", "z.i"},
         {"import", "x"},
-        {"match", "q"}
+        {"match", "q"},
+        {"extends", "^"},
+        {"export", "@"}
     }},
     
     // Amharic keywords
     {"am", {
         {"ክፍል", "c"},        // class
+        {"ሥር", "a"},         // abstract
+        {"በይነገጽ", "j"},     // interface
         {"ዘዴ", "m"},          // method
         {"ከሆነ", "i"},        // if
         {"አለበለዚህ", "e"},    // else
         {"ሉፕ", "l"},         // loop
+        {"እስከሆነ", "l"},      // while
         {"ተመለስ", "r"},       // return
         {"ስበር", "b"},        // break
         {"ቀጥል", "k"},        // continue
@@ -51,7 +58,7 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
         {"ግል", "p"},         // private
         {"ቋሚ", "s"},        // static
         {"ሞክር", "t"},        // try
-        {"ይዝ", "h"},         // catch/handle
+        {"ያዟ", "h"},         // catch/handle
         {"ውጤት", "z"},       // print/output
         {"ግብአት", "z.i"},    // input
         {"አስገባ", "x"},       // import
@@ -61,6 +68,8 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
     // Spanish keywords
     {"es", {
         {"clase", "c"},
+        {"abstracto", "a"},
+        {"interfaz", "j"},
         {"metodo", "m"},
         {"si", "i"},
         {"sino", "e"},
@@ -85,10 +94,13 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
     // French keywords
     {"fr", {
         {"classe", "c"},
+        {"abstrait", "a"},
+        {"interface", "j"},
         {"methode", "m"},
         {"si", "i"},
         {"sinon", "e"},
         {"boucle", "l"},
+        {"tantque", "l"},
         {"retour", "r"},
         {"rompre", "b"},
         {"continuer", "k"},
@@ -107,10 +119,13 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
     // German keywords
     {"de", {
         {"klasse", "c"},
+        {"abstrakt", "a"},
+        {"schnittstelle", "j"},
         {"methode", "m"},
         {"wenn", "i"},
         {"sonst", "e"},
         {"schleife", "l"},
+        {"solange", "l"},
         {"zuruck", "r"},
         {"brechen", "b"},
         {"fortsetzen", "k"},

@@ -2,7 +2,7 @@
 # Exception Handling Test
 t {
   z.o("In try block")
-  z.t()
+  z.t("Custom Error 15")
   z.o("This should not print")
 } h (15 e) {
   z.o("Caught exception:")

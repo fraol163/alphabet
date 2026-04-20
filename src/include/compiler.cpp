@@ -14,8 +14,10 @@ inline std::string sv_to_str(std::string_view sv) {
 void Compiler::validate_types(const std::vector<StmtPtr>& statements) {
     for (const auto& stmt : statements) {
         if (auto* var_stmt = dynamic_cast<const VarStmt*>(stmt.get())) {
+            uint16_t declared_type = static_cast<uint16_t>(std::stoi(sv_to_str(var_stmt->type_id.lexeme)));
+            std::string var_name = sv_to_str(var_stmt->name.lexeme);
+            var_types_[var_name] = declared_type;
             if (var_stmt->initializer) {
-                uint16_t declared_type = static_cast<uint16_t>(std::stoi(sv_to_str(var_stmt->type_id.lexeme)));
                 uint16_t inferred_type = infer_expression_type(var_stmt->initializer);
                 if (!types_compatible(inferred_type, declared_type)) {
                     std::ostringstream oss;
@@ -25,6 +27,20 @@ void Compiler::validate_types(const std::vector<StmtPtr>& statements) {
                 }
             }
         } else if (auto* class_stmt = dynamic_cast<const ClassStmt*>(stmt.get())) {
+            // Track field types for type inference
+            for (const auto& field : class_stmt->fields) {
+                std::string field_name = sv_to_str(field.name.lexeme);
+                uint16_t field_type = static_cast<uint16_t>(std::stoi(sv_to_str(field.type_id.lexeme)));
+                var_types_[field_name] = field_type;
+            }
+            // Track parameter types for method return validation
+            for (const auto& method : class_stmt->methods) {
+                for (const auto& param : method.params) {
+                    std::string param_name = sv_to_str(param.name.lexeme);
+                    uint16_t param_type = static_cast<uint16_t>(std::stoi(sv_to_str(param.type_id.lexeme)));
+                    var_types_[param_name] = param_type;
+                }
+            }
             for (const auto& method : class_stmt->methods) {
                 for (const auto& body_stmt : method.body) {
                     if (auto* ret_stmt = dynamic_cast<const ReturnStmt*>(body_stmt.get())) {
@@ -40,6 +56,13 @@ void Compiler::validate_types(const std::vector<StmtPtr>& statements) {
                         }
                     }
                 }
+            }
+        } else if (auto* func_stmt = dynamic_cast<const FunctionStmt*>(stmt.get())) {
+            // Track parameter types for return validation
+            for (const auto& param : func_stmt->params) {
+                std::string param_name = sv_to_str(param.name.lexeme);
+                uint16_t param_type = static_cast<uint16_t>(std::stoi(sv_to_str(param.type_id.lexeme)));
+                var_types_[param_name] = param_type;
             }
         }
     }
@@ -110,9 +133,11 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
         if (class_map_.find(name) != class_map_.end()) {
             return class_map_[name];
         }
-        // For variables, we don't know the type at inference time.
-        // Return I32 as a reasonable default -- the declaration already
-        // enforced the type when the variable was created.
+        // Look up declared variable type
+        auto type_it = var_types_.find(name);
+        if (type_it != var_types_.end()) {
+            return type_it->second;
+        }
         return TypeManager::I32;
     }
 

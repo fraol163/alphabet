@@ -134,7 +134,7 @@ z.o("done")' "try
 done"
 
 test_lang "Amharic-Try" '#alphabet<am>
-ሞክር { ውጤት.o("try") } ይዝ (12 e) { ውጤት.o("catch") }
+ሞክር { ውጤት.o("try") } ያዟ (12 e) { ውጤት.o("catch") }
 ውጤት.o("done")' "try
 done"
 

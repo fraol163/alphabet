@@ -168,6 +168,13 @@ private:
     void wait_for_debugger_command();
     std::string get_stack_trace();
     std::string get_locals_json(const CallFrame& frame);
+
+    static constexpr size_t MAX_CALL_DEPTH = 1000;
+    void check_call_depth() const {
+        if (frames_.size() >= MAX_CALL_DEPTH) {
+            throw RuntimeError("Stack overflow: max call depth (" + std::to_string(MAX_CALL_DEPTH) + ") exceeded");
+        }
+    }
 };
 
 std::string value_to_string(const Value& value);

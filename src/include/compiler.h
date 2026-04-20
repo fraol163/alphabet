@@ -89,6 +89,7 @@ private:
     void visit_list(const ListLiteral& expr);
     void visit_map(const MapLiteral& expr);
     void visit_index(const IndexExpr& expr);
+    void visit_index_assign(const IndexAssign& expr);
 
     CompiledClass compile_class_def(const ClassStmt& stmt);
     std::vector<Instruction> compile_method(const FunctionStmt& method);

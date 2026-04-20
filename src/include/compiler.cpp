@@ -317,6 +317,8 @@ void Compiler::visit_expr(const ExprPtr& expr) {
         visit_map(*mape);
     } else if (auto* ie = dynamic_cast<const IndexExpr*>(expr.get())) {
         visit_index(*ie);
+    } else if (auto* iae = dynamic_cast<const IndexAssign*>(expr.get())) {
+        visit_index_assign(*iae);
     }
 }
 
@@ -749,6 +751,13 @@ void Compiler::visit_index(const IndexExpr& expr) {
     visit_expr(expr.obj);
     visit_expr(expr.index);
     emit(OpCode::LOAD_INDEX);
+}
+
+void Compiler::visit_index_assign(const IndexAssign& expr) {
+    visit_expr(expr.obj);
+    visit_expr(expr.index);
+    visit_expr(expr.value);
+    emit(OpCode::STORE_INDEX);
 }
 
 CompiledClass Compiler::compile_class_def(const ClassStmt& stmt) {

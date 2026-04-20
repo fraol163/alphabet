@@ -285,6 +285,7 @@ void Lexer::number() {
     }
 
     if (peek() == '.' && std::isdigit(static_cast<unsigned char>(peek_next()))) {
+        advance();  // consume the '.'
         while (std::isdigit(static_cast<unsigned char>(peek()))) {
             advance();
         }

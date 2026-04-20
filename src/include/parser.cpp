@@ -555,6 +555,8 @@ ExprPtr Parser::assignment() {
             return std::make_shared<Assign>(var->name, std::move(value));
         } else if (auto* get = dynamic_cast<Get*>(expr.get())) {
             return std::make_shared<Set>(get->obj, get->name, std::move(value));
+        } else if (auto* idx = dynamic_cast<IndexExpr*>(expr.get())) {
+            return std::make_shared<IndexAssign>(idx->obj, idx->index, std::move(value));
         }
         
         throw error(equals, "Invalid assignment target.");

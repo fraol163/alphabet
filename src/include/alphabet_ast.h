@@ -129,6 +129,15 @@ struct IndexExpr : Expr {
         : obj(std::move(o)), index(std::move(i)) {}
 };
 
+struct IndexAssign : Expr {
+    ExprPtr obj;
+    ExprPtr index;
+    ExprPtr value;
+
+    IndexAssign(ExprPtr o, ExprPtr i, ExprPtr v)
+        : obj(std::move(o)), index(std::move(i)), value(std::move(v)) {}
+};
+
 struct Stmt {
     virtual ~Stmt() = default;
 };

@@ -517,8 +517,9 @@ void VM::execute_instruction(CallFrame& frame) {
                     if (callee.is_string()) {
                         auto func_it = global_functions_.find(callee.as_string());
                         if (func_it != global_functions_.end()) {
-                            const CompiledMethod& method_info = func_it->second;
-                            CallFrame new_frame(&method_info.bytecode);
+                        const CompiledMethod& method_info = func_it->second;
+                        check_call_depth();
+                        CallFrame new_frame(&method_info.bytecode);
                             for (size_t i = 0; i < args.size() && i < method_info.param_names.size(); ++i) {
                                 new_frame.locals[method_info.param_names[i]] = args[i];
                             }
@@ -548,6 +549,7 @@ void VM::execute_instruction(CallFrame& frame) {
                         }
 
                         const CompiledMethod& method_info = method_it->second;
+                        check_call_depth();
                         CallFrame new_frame(&method_info.bytecode);
                         new_frame.locals["this"] = callee;
 
@@ -637,6 +639,7 @@ void VM::execute_instruction(CallFrame& frame) {
                             }
                             
                             // Set post-action to push the object after init completes
+                            check_call_depth();
                             init_frame.post_action_value = Value(obj);
                             init_frame.push_post_action_on_return = true;
                             frames_.push_back(std::move(init_frame));
@@ -894,9 +897,12 @@ void VM::execute_instruction(CallFrame& frame) {
                 size_t index = static_cast<size_t>(idx.as_number());
                 if (index < list.size()) {
                     list[index] = val;
-                    push(val);
                 }
+            } else if (obj.is_map() && idx.is_string()) {
+                auto& map = obj.as_map();
+                map[idx.as_string()] = val;
             }
+            push(val);
             break;
         }
         
@@ -979,7 +985,12 @@ void VM::system_call(const std::string& method, int arg_count) {
             push(Value(input));
         }
     } else if (method == "t") {
-        throw_exception(Value("Custom Error 15"));
+        if (arg_count >= 1) {
+            Value msg = pop();
+            throw_exception(Value(value_to_string(msg)));
+        } else {
+            throw_exception(Value("Custom Error"));
+        }
     } else if (method == "f" && arg_count >= 1) {
         Value path_val = pop();
         if (path_val.is_string()) {
@@ -991,6 +1002,8 @@ void VM::system_call(const std::string& method, int arg_count) {
             } else {
                 push(Value(std::string("")));
             }
+        } else {
+            push(Value(std::string("")));
         }
     } else if (method == "sqrt" && arg_count >= 1) {
         Value v = pop(); push(Value(v.is_number() ? std::sqrt(v.as_number()) : 0.0));

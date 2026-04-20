@@ -1,0 +1,200 @@
+#alphabet<en>
+// ============================================================
+// ALPHABET LANGUAGE — COMPREHENSIVE SCENARIO TEST
+// Tests every feature from smallest to largest
+// ============================================================
+
+// --- 1. LITERALS ---
+z.o("1. Literals:")
+z.o(42)
+z.o(3.14)
+z.o("hello")
+z.o(null)
+
+// --- 2. VARIABLES & TYPES ---
+z.o("2. Variables:")
+5 xx = 10
+5 yy = 20
+z.o(xx + yy)
+12 name = "Fraol"
+z.o(name)
+5 flag = 1
+z.o(flag)
+
+// --- 3. ARITHMETIC ---
+z.o("3. Arithmetic:")
+z.o(10 + 3)
+z.o(10 - 3)
+z.o(10 * 3)
+z.o(10 / 3)
+z.o(10 % 3)
+
+// --- 4. COMPARISON ---
+z.o("4. Comparison:")
+z.o(5 == 5)
+z.o(5 != 3)
+z.o(5 > 3)
+z.o(3 < 5)
+z.o(5 >= 5)
+z.o(3 <= 5)
+
+// --- 5. CONDITIONALS ---
+z.o("5. Conditionals:")
+5 score = 85
+i (score >= 90) {
+  z.o("A")
+} e i (score >= 80) {
+  z.o("B")
+} e {
+  z.o("C")
+}
+
+// --- 6. LOOPS ---
+z.o("6. Loops:")
+5 idx = 0
+l (idx < 3) {
+  z.o(idx)
+  idx = idx + 1
+}
+
+// --- 7. BREAK & CONTINUE ---
+z.o("7. Break/Continue:")
+5 jj = 0
+l (jj < 5) {
+  jj = jj + 1
+  i (jj == 2) { k }
+  i (jj == 4) { b }
+  z.o(jj)
+}
+
+// --- 8. LISTS ---
+z.o("8. Lists:")
+13 nums = [10, 20, 30]
+z.o(nums)
+z.o(nums[0])
+z.o(nums[2])
+nums[1] = 99
+z.o(nums[1])
+z.o(z.len(nums))
+
+// --- 9. MAPS ---
+z.o("9. Maps:")
+14 person = {"name": "Fraol", "age": 25}
+z.o(person)
+z.o(person["name"])
+person["city"] = "Addis"
+z.o(person["city"])
+
+// --- 10. FUNCTIONS ---
+z.o("10. Functions:")
+m 5 double_it(5 num) {
+  r num * 2
+}
+z.o(double_it(21))
+
+m 12 greet(12 who) {
+  r "Hello " + who + "!"
+}
+z.o(greet("World"))
+
+// --- 11. RECURSION ---
+z.o("11. Recursion:")
+m 5 factorial(5 num) {
+  i (num <= 1) { r 1 }
+  r num * factorial(num - 1)
+}
+z.o(factorial(5))
+
+// --- 12. CLASSES ---
+z.o("12. Classes:")
+c Animal {
+  12 sound
+  v m 12 speak() {
+    r sound + "!"
+  }
+}
+15 cat = n Animal()
+cat.sound = "meow"
+z.o(cat.speak())
+
+// --- 13. CLASS WITH INIT ---
+z.o("13. Constructor:")
+c Point {
+  5 x_pos = 0
+  5 y_pos = 0
+  v m init(5 xx, 5 yy) {
+    x_pos = xx
+    y_pos = yy
+  }
+  v m 5 sum() {
+    r x_pos + y_pos
+  }
+}
+15 pt = n Point(3, 7)
+z.o(pt.sum())
+
+// --- 14. STATIC MEMBERS ---
+z.o("14. Static:")
+c Counter {
+  s 5 count = 0
+  v m increment() {
+    Counter.count = Counter.count + 1
+  }
+}
+15 ctr1 = n Counter()
+15 ctr2 = n Counter()
+ctr1.increment()
+ctr2.increment()
+z.o(Counter.count)
+
+// --- 15. EXCEPTIONS ---
+z.o("15. Exceptions:")
+t {
+  z.t("something broke")
+} h (5 err) {
+  z.o("caught")
+}
+
+// --- 16. PATTERN MATCHING ---
+z.o("16. Match:")
+5 val = 2
+q (val) {
+  1: z.o("one")
+  2: z.o("two")
+  e: z.o("other")
+}
+
+// --- 17. STRING OPERATIONS ---
+z.o("17. Strings:")
+12 s1 = "Hello"
+12 s2 = "World"
+z.o(s1 + " " + s2)
+z.o(z.len("alphabet"))
+z.o(z.tostr(42))
+z.o(z.tonum("3.14"))
+z.o(z.type("hi"))
+z.o(z.type(100))
+z.o(z.type(null))
+
+// --- 18. MATH FUNCTIONS ---
+z.o("18. Math:")
+z.o(z.sqrt(144))
+z.o(z.abs(-5))
+z.o(z.floor(3.7))
+z.o(z.ceil(3.2))
+z.o(z.pow(2, 10))
+
+// --- 19. NESTED STRUCTURES ---
+z.o("19. Nested:")
+13 matrix = [[1, 2], [3, 4]]
+z.o(matrix[0][1])
+14 config = {"db": {"host": "localhost", "port": 5432}}
+z.o(config["db"]["host"])
+
+// --- 20. COMPLEX: FIBONACCI ---
+z.o("20. Fibonacci:")
+m 5 fib(5 num) {
+  i (num <= 1) { r num }
+  r fib(num - 1) + fib(num - 2)
+}
+z.o(fib(10))

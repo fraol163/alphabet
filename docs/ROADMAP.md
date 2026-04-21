@@ -5,7 +5,7 @@
 ## Completed (v2.0.0 - v2.3.0)
 
 ### Core Language
-- [x] Lexer with 17 single-letter keywords
+- [x] Lexer with 19 single-letter keywords
 - [x] Recursive descent parser
 - [x] Stack-based bytecode compiler
 - [x] Virtual machine with 40+ opcodes

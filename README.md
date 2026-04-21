@@ -53,11 +53,11 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
 
 ## What is Alphabet?
 
-Alphabet is a **beginner-friendly programming language** with only **17 single-letter keywords**. Designed for education, prototyping, and rapid experimentation, Alphabet makes programming accessible to everyone.
+Alphabet is a **beginner-friendly programming language** with only **19 single-letter keywords**. Designed for education, prototyping, and rapid experimentation, Alphabet makes programming accessible to everyone.
 
 ### Key Features
 
-- **17 Keywords** - Master the entire language in 10 minutes
+- **19 Keywords** - Master the entire language in 10 minutes
 - **Bytecode VM** - Stack-based interpreter with compiled execution
 - **Simple Syntax** - No semicolons, no boilerplate, no complex rules
 - **Type System** - Compile-time type checking with numeric type IDs
@@ -547,7 +547,7 @@ cd build && ctest --output-on-failure
 ## What Problem Does Alphabet Solve?
 
 ### 1. Education Overload
-Beginners struggle with syntax before understanding concepts. Alphabet removes this barrier with only 17 keywords.
+Beginners struggle with syntax before understanding concepts. Alphabet removes this barrier with only 19 keywords.
 
 ### 2. Rapid Prototyping
 Quick experiments without boilerplate. Compare:

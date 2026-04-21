@@ -103,7 +103,7 @@ enum class OpCode : uint8_t {
 
 **Status:** ✅ COMPLETE
 
-### 2.2 Native VM with Fixed-Size std::array
+### 2.3 Dynamic VM Stack with std::vector
 **Requirement:** Stack-based VM using `std::array` for stack.
 
 **Implementation:** `src/include/vm.h:145-147`
@@ -375,7 +375,7 @@ build-asan:
 | 1.4 Shebang Support | ✅ | `lexer.cpp:66-70` |
 | **2. Native Engine** | ✅ | `bytecode.h`, `vm.h/cpp` |
 | 2.1 36 uint8_t Opcodes | ✅ | `bytecode.h:13-48` |
-| 2.2 Fixed std::array Stack | ✅ | `vm.h:145-147` |
+| 2.3 Dynamic std::vector Stack | ✅ | `vm.h:145-147` |
 | 2.3 Pointer Arithmetic | ✅ | `vm.cpp:95-110` |
 | 2.4 Compile-Time Type Check | ✅ | `compiler.cpp:18-54,185` |
 | **3. Type System & FFI** | ✅ | `type_system.h`, `ffi.h/cpp` |

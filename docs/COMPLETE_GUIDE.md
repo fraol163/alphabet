@@ -25,21 +25,21 @@
 
 ### What is Alphabet?
 
-Alphabet is a **beginner-friendly programming language** with only **17 single-letter keywords**. It's designed for:
+Alphabet is a **beginner-friendly programming language** with only **19 single-letter keywords**. It's designed for:
 
 - 🎓 **Education** - Learn programming without syntax overload
 - ⚡ **Prototyping** - Quick experiments and testing ideas
 - 🚀 **Performance** - Native C++ compiled code
 - 🌐 **Accessibility** - Easy for non-English speakers
 
-### Why 17 Keywords?
+### Why 19 Keywords?
 
 Traditional languages require memorizing 30-50 keywords:
 - C: 32 keywords
 - Python: 35 keywords
 - Java: 50+ keywords
 
-Alphabet uses only **17 single letters**, making it possible to learn the entire language in **10 minutes**.
+Alphabet uses only **19 single letters**, making it possible to learn the entire language in **10 minutes**.
 
 ### Design Philosophy
 

@@ -35,19 +35,23 @@
 
 ## 1. What is Alphabet?
 
-Alphabet is a beginner-friendly programming language with only 17 single-letter keywords. It compiles to bytecode and runs on a stack-based virtual machine, written entirely in C++17.
+Alphabet is a beginner-friendly programming language with 19 single-letter keywords. It was designed from the ground up to make programming accessible to everyone, regardless of their native language or prior experience.
+
+The language compiles to bytecode and runs on a stack-based virtual machine, both written entirely in C++17. This means there are no runtime dependencies -- you get a single binary that just works.
 
 ### Design Philosophy
-- **Simplicity first:** 17 keywords cover every concept you need
-- **Learn by doing:** Write code in your native language (5 languages supported)
-- **No boilerplate:** No semicolons, no imports for basic features, no build config
-- **Real power:** Classes, exceptions, pattern matching, FFI, and a debugger
+
+The core philosophy behind Alphabet is that the syntax of a programming language should never be the barrier to learning. Most languages force beginners to memorize dozens of keywords, understand complex type declarations, and fight with semicolons and indentation rules before they can write their first useful program. Alphabet removes all of that.
+
+Instead of writing `int`, `string`, `List<Integer>`, or `HashMap<String, Object>`, you write numbers. The number 5 means integer. The number 12 means string. The number 13 means list. The number 14 means map. This is not arbitrary -- the numbers correspond to a type hierarchy that the compiler understands, but beginners only need to remember four numbers to get started.
+
+Instead of writing `if`, `else`, `while`, `return`, `class`, `public`, `private`, `static`, `try`, `catch`, `import`, and `match`, you write single letters. The letter i means if. The letter e means else. The letter l means loop. The letter r means return. Nineteen letters cover every concept in the language.
 
 ### Who Is It For?
-- **Students** learning their first programming language
-- **Educators** teaching computational thinking
-- **Prototypers** who want quick experiments
-- **Developers** building educational tools
+
+Alphabet is designed primarily for students who are learning programming for the first time. It is also useful for educators who want to teach computational thinking without syntax overhead, for prototypers who want to test ideas quickly, and for developers building educational tools.
+
+It is not designed to replace Python, Java, or C for production software. It is designed to be the best first language, so that when students graduate to production languages, they already understand variables, functions, loops, classes, exceptions, and collections.
 
 ---
 
@@ -55,42 +59,52 @@ Alphabet is a beginner-friendly programming language with only 17 single-letter 
 
 ### Installation
 
+Installing Alphabet takes one command and about ten seconds. Open your terminal and run:
+
 ```bash
-# One-line install (Linux/macOS)
 curl -fsSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh | sh
 ```
 
-This installs `alphabet` to `~/.local/bin` and adds it to your PATH.
+This command downloads an installer script that detects your operating system (Linux, macOS, or Windows via WSL), detects your processor architecture (x86_64 or ARM64), downloads the correct pre-built binary from GitHub Releases, places it in your home directory under .local/bin, and adds that directory to your PATH if it is not already there. You do not need root access or sudo.
+
+If a pre-built binary is not available for your platform, the installer automatically falls back to building from source, which requires a C++17 compiler and CMake.
 
 ### Your First Program
 
-Create a file called `hello.abc`:
+Create a file called hello.abc with this content:
 
-```alphabet
+```
 #alphabet<en>
 12 greeting = "Hello, Alphabet!"
 z.o(greeting)
 ```
 
-Run it:
+Line one is the magic header. Every Alphabet file must start with a line containing a hash symbol, the word alphabet, and a language code in angle brackets. The language code tells the compiler which set of keywords you are using. English is en.
+
+Line two declares a variable. The number 12 is the type ID for strings. The variable is named greeting and is assigned the value "Hello, Alphabet!".
+
+Line three calls the built-in output function. The z namespace contains all built-in functions. The o function prints its argument to standard output.
+
+Run the program with:
 
 ```bash
 alphabet hello.abc
 ```
 
-Output: `Hello, Alphabet!`
+You should see `Hello, Alphabet!` printed to your terminal.
 
 ### The Magic Header
 
-Every Alphabet file must start with `#alphabet<en>` on the first line. This tells the compiler which language keywords you are using.
+The magic header is required as the first line of every source file. It tells the compiler two things: that this is an Alphabet source file, and which language you are writing keywords in.
 
-```alphabet
-#alphabet<en>     # English keywords
-#alphabet<am>     # Amharic keywords
-#alphabet<es>     # Spanish keywords
-#alphabet<fr>     # French keywords
-#alphabet<de>     # German keywords
-```
+Valid headers include:
+- `#alphabet<en>` for English
+- `#alphabet<am>` for Amharic
+- `#alphabet<es>` for Spanish
+- `#alphabet<fr>` for French
+- `#alphabet<de>` for German
+
+The header is not a comment -- it is a compiler directive. If you forget it, the compiler will give you a clear error message telling you to add it.
 
 ---
 
@@ -98,48 +112,55 @@ Every Alphabet file must start with `#alphabet<en>` on the first line. This tell
 
 ### Comments
 
-```alphabet
-// This is a comment (// anywhere on a line)
+Comments start with two forward slashes and extend to the end of the line. There are no block comments.
+
+```
+// This is a comment
+5 x = 10  // This is also a comment
 ```
 
 ### Identifiers
 
-Variable and function names can use:
-- ASCII letters: `a-z`, `A-Z`
-- Digits (not at start): `0-9`
-- Underscore: `_`
-- UTF-8 characters: `ቁጥር`, `数字`, `число`
+Names for variables and functions can use ASCII letters, digits (not at the start), underscores, and any UTF-8 characters. This means you can write variable names in Amharic, Chinese, Russian, Arabic, or any other script.
+
+```
+5 count = 10
+5 _temp = 20
+5 ቁጥር = 30      // Amharic variable name
+5 数字 = 40      // Chinese variable name
+```
 
 ### File Extension
 
-All Alphabet source files use the `.abc` extension.
+All Alphabet source files use the .abc extension. This is a convention, not a requirement -- the compiler will process any file regardless of extension -- but using .abc helps editors and tools identify the language.
 
 ---
 
 ## 4. Data Types
 
-Alphabet uses numeric type IDs to declare variables:
+Alphabet uses numeric type IDs instead of named types. This is one of the language's most distinctive features. Instead of writing `int` or `string`, you write a number that represents the type.
 
-### Primitive Types
+### Common Types
 
-| Type ID | Name | Example |
-|---------|------|---------|
-| 5 | Integer | `5 x = 42` |
-| 6 | Float (32-bit) | `6 pi = 3.14` |
-| 7 | Float (64-bit) | `7 big = 1.23456789` |
-| 11 | Boolean | `11 ok = 1` |
-| 12 | String | `12 s = "hello"` |
-| 13 | List | `13 nums = [1, 2, 3]` |
-| 14 | Map | `14 cfg = {"key": 100}` |
-| 15+ | Custom class | `15 obj = n MyClass()` |
+Most programs only need four type IDs:
 
-### Type Inference
+- **5** for integers and general numbers
+- **12** for strings (text)
+- **13** for lists (ordered collections)
+- **14** for maps (key-value collections)
 
-In practice, most users use:
-- `5` for all numbers
-- `12` for strings
-- `13` for lists
-- `14` for maps
+### Full Type System
+
+The complete type system includes more specific numeric types:
+
+- Types 1 through 4 are specific integer sizes (8-bit, 16-bit, 32-bit, 64-bit)
+- Type 5 is the generic integer type
+- Types 6 and 7 are specific float sizes (32-bit and 64-bit)
+- Type 8 is the generic float type
+- Type 11 is boolean (represented as 0 or 1)
+- Types 15 and above are custom class types
+
+In practice, beginners should use type 5 for all numbers, type 12 for text, type 13 for lists, and type 14 for maps. The more specific types are available for advanced users who need them.
 
 ---
 
@@ -147,32 +168,32 @@ In practice, most users use:
 
 ### Declaration
 
-```alphabet
-#alphabet<en>
+To declare a variable, write the type ID, the variable name, an equals sign, and the value:
+
+```
 5 age = 25
 12 name = "Fraol"
-11 is_student = 1
+13 scores = [95, 87, 92]
 ```
 
 ### Reassignment
 
-```alphabet
+Variables can be reassigned at any time. You write the type ID again, the variable name, and the new value:
+
+```
 5 x = 10
 5 x = x + 5     // x is now 15
 ```
 
+The type ID must match the original declaration. You cannot declare a variable as type 5 and later assign a string to it.
+
 ### Constants
 
-```alphabet
-5 MAX = 100     // by convention, uppercase for constants
+There is no separate const keyword in the language. By convention, uppercase variable names indicate values that should not be changed:
+
 ```
-
-### Multiple Variables
-
-```alphabet
-5 a = 1
-5 b = 2
-5 c = 3
+5 MAX_RETRIES = 3
+12 APP_NAME = "MyApp"
 ```
 
 ---
@@ -181,38 +202,42 @@ In practice, most users use:
 
 ### Arithmetic
 
-```alphabet
-5 sum = 10 + 3      // 13
-5 diff = 10 - 3     // 7
-5 prod = 10 * 3     // 30
-5 quot = 10 / 3     // 3
-5 rem = 10 % 3      // 1
-```
+The standard arithmetic operators work on numbers:
+
+- Addition: `+`
+- Subtraction: `-`
+- Multiplication: `*`
+- Division: `/` (integer division for integers, floating point for floats)
+- Modulo: `%` (remainder after division)
+
+Standard operator precedence applies: multiplication and division are evaluated before addition and subtraction. Use parentheses to change the order.
 
 ### Comparison
 
-```alphabet
-5 a = 5 == 5    // 1 (true)
-5 b = 5 != 3    // 1 (true)
-5 c = 5 > 3     // 1 (true)
-5 d = 5 < 3     // 0 (false)
-5 e = 5 >= 5    // 1 (true)
-5 f = 5 <= 3    // 0 (false)
-```
+Comparison operators return 1 for true and 0 for false:
+
+- Equal: `==`
+- Not equal: `!=`
+- Greater than: `>`
+- Less than: `<`
+- Greater than or equal: `>=`
+- Less than or equal: `<=`
 
 ### Logical
 
-```alphabet
-5 x = 1 && 1    // 1 (AND)
-5 y = 0 || 1    // 1 (OR)
-5 z = !0        // 1 (NOT)
-```
+Logical operators work on the numeric truthiness of values. Zero is false, anything else is true:
+
+- Logical AND: `&&`
+- Logical OR: `||`
+- Logical NOT: `!`
 
 ### String Concatenation
 
-```alphabet
+The plus operator concatenates strings. When one operand is a string and the other is a number, the number is automatically converted to a string:
+
+```
 12 s = "Hello" + " " + "World"  // "Hello World"
-12 t = "x = " + 42              // "x = 42"
+12 t = "Count: " + 42           // "Count: 42"
 ```
 
 ---
@@ -221,50 +246,60 @@ In practice, most users use:
 
 ### If/Else
 
-```alphabet
-5 x = 10
-i (x > 5) {
-  z.o("x is big")
+Conditional execution uses the letter i for if and the letter e for else. The condition goes in parentheses, and the body goes in curly braces:
+
+```
+5 temperature = 35
+i (temperature > 30) {
+  z.o("Hot day")
 } e {
-  z.o("x is small")
+  z.o("Nice day")
+}
+```
+
+You can chain conditions by writing another i after the closing brace:
+
+```
+i (score >= 90) {
+  z.o("A")
+} i (score >= 80) {
+  z.o("B")
+} e {
+  z.o("C")
 }
 ```
 
 ### While Loop
 
-```alphabet
-5 i = 0
-l (i < 5) {
-  z.o(i)
-  5 i = i + 1
+The letter l creates a loop that continues while a condition is true:
+
+```
+5 count = 0
+l (count < 5) {
+  z.o(count)
+  5 count = count + 1
 }
 ```
 
 ### For Loop
 
-```alphabet
-l (5 j = 0 : j < 10 : j = j + 1) {
-  z.o(j)
+A C-style for loop is also available. Write l followed by parentheses containing three parts separated by colons: the initializer, the condition, and the increment:
+
+```
+l (5 i = 0 : i < 10 : i = i + 1) {
+  z.o(i)
 }
 ```
 
 ### Break and Continue
 
-```alphabet
-l (5 i = 0 : i < 100 : i = i + 1) {
-  i (i == 3) { k }       // skip 3 (continue)
-  i (i == 7) { b }       // stop at 7 (break)
-  z.o(i)
-}
+Inside a loop, the letter b breaks out of the loop immediately. The letter k skips to the next iteration:
+
 ```
-
-### Nested Loops
-
-```alphabet
-l (5 i = 0 : i < 3 : i = i + 1) {
-  l (5 j = 0 : j < 3 : j = j + 1) {
-    z.o(i * 10 + j)
-  }
+l (5 i = 0 : i < 100 : i = i + 1) {
+  i (i == 5) { b }       // stop at 5
+  i (i % 2 == 0) { k }   // skip even numbers
+  z.o(i)
 }
 ```
 
@@ -274,24 +309,30 @@ l (5 i = 0 : i < 3 : i = i + 1) {
 
 ### Defining Functions
 
-```alphabet
+The letter m defines a function. After m, write the return type, the function name, and the parameters in parentheses. Each parameter has a type and a name:
+
+```
 m 5 add(5 a, 5 b) {
   r a + b
 }
 ```
 
-Syntax: `m <return_type> <name>(<param_type> <param>, ...) { body }`
+This defines a function named add that takes two integer parameters, returns an integer, and returns their sum. The letter r means return.
 
 ### Calling Functions
 
-```alphabet
-5 result = add(3, 4)    // 7
+Call a function by writing its name followed by arguments in parentheses:
+
+```
+5 result = add(3, 4)    // result is 7
 z.o(result)
 ```
 
 ### Recursion
 
-```alphabet
+Functions can call themselves. Here is a recursive factorial:
+
+```
 m 5 factorial(5 num) {
   i (num <= 1) { r 1 }
   r num * factorial(num - 1)
@@ -299,23 +340,17 @@ m 5 factorial(5 num) {
 z.o(factorial(5))  // 120
 ```
 
-### Functions as Values
-
-Functions are first-class. You can pass them around:
-
-```alphabet
-m 5 double_it(5 x) { r x * 2 }
-m 5 apply(5 val) { r double_it(val) }
-z.o(apply(21))  // 42
-```
+The virtual machine has a maximum call depth of 1000 to prevent stack overflow from infinite recursion.
 
 ---
 
 ## 9. Classes and OOP
 
-### Basic Class
+### Defining a Class
 
-```alphabet
+The letter c defines a class. Inside the class body, you declare fields with type IDs and method names, and define methods with the letter m:
+
+```
 c Person {
   12 name = ""
   5 age = 0
@@ -326,30 +361,30 @@ c Person {
 }
 ```
 
+The letter v before m means the method is public. Without v, the method is accessible within the class only.
+
 ### Creating Objects
 
-```alphabet
+The letter n creates a new instance of a class. Custom classes start at type ID 15:
+
+```
 15 p = n Person()
 12 msg = p.greet()
 ```
 
 ### Visibility
 
-```alphabet
-c BankAccount {
-  v 5 balance = 0       // public
-  p 12 pin = "1234"     // private
+Three visibility modifiers are available:
 
-  v m 5 deposit(5 amount) {
-    5 balance = balance + amount
-    r balance
-  }
-}
-```
+- **v** (public) -- accessible from anywhere
+- **p** (private) -- accessible only within the class
+- **s** (static) -- belongs to the class, not to instances
 
 ### Inheritance
 
-```alphabet
+The caret symbol creates an inheritance relationship:
+
+```
 c Animal {
   v m 12 speak() { r "..." }
 }
@@ -359,24 +394,15 @@ c Dog ^ Animal {
 }
 ```
 
-### Static Members
-
-```alphabet
-c Counter {
-  s 5 count = 0
-
-  v m 5 increment() {
-    5 count = count + 1
-    r count
-  }
-}
-```
+Dog inherits from Animal and overrides the speak method. When you call speak on a Dog instance, it returns "Woof!" instead of "...".
 
 ### Abstract Classes and Interfaces
 
-```alphabet
+The letter a before c defines an abstract class that cannot be instantiated directly. The letter j defines an interface -- a contract that classes can implement:
+
+```
 a c Shape {
-  m 5 area()
+  m 5 area()       // abstract method, no body
 }
 
 j Printable {
@@ -390,105 +416,103 @@ j Printable {
 
 ### Lists
 
-```alphabet
-// Create
-13 nums = [1, 2, 3, 4, 5]
+Lists are ordered collections of values. They use type ID 13:
 
-// Access by index
-z.o(nums[0])      // 1
-z.o(nums[-1])     // 5 (negative indexing!)
-
-// Length
-z.o(z.len(nums))  // 5
-
-// Modify
-z.append(nums, 6)      // [1,2,3,4,5,6]
-z.o(z.pop_back(nums))  // 6
-
-// Search
-z.o(z.contains(nums, 3))  // 1
-
-// Reverse
-13 rev = z.reverse(nums)  // [5,4,3,2,1]
 ```
+13 fruits = ["apple", "banana", "cherry"]
+13 numbers = [10, 20, 30, 40, 50]
+```
+
+Access elements by index in square brackets. Indexing starts at zero. Negative indices count from the end:
+
+```
+z.o(numbers[0])     // 10 (first element)
+z.o(numbers[-1])    // 50 (last element)
+z.o(numbers[-2])    // 40 (second to last)
+```
+
+Get the length with z.len, append with z.append, remove the last element with z.pop_back, and check membership with z.contains.
 
 ### Maps
 
-```alphabet
-// Create
+Maps store key-value pairs. They use type ID 14:
+
+```
 14 config = {"host": "localhost", "port": 8080}
-
-// Access
-z.o(config["host"])  // "localhost"
-
-// Modify
-config["timeout"] = 30
-
-// Keys and Values
-13 k = z.keys(config)    // ["host", "port", "timeout"]
-13 v = z.values(config)  // ["localhost", 8080, 30]
 ```
 
-### Range
+Access values by key in square brackets. Add new entries the same way:
 
-```alphabet
-13 r = z.range(5)           // [0, 1, 2, 3, 4]
-13 r2 = z.range(2, 8)       // [2, 3, 4, 5, 6, 7]
-13 r3 = z.range(0, 10, 2)   // [0, 2, 4, 6, 8]
 ```
+z.o(config["host"])      // "localhost"
+config["timeout"] = 30   // add new entry
+```
+
+Get all keys with z.keys and all values with z.values. Both return a list.
+
+### Ranges
+
+The z.range function generates a list of numbers:
+
+- z.range(5) produces [0, 1, 2, 3, 4]
+- z.range(2, 7) produces [2, 3, 4, 5, 6]
+- z.range(0, 10, 2) produces [0, 2, 4, 6, 8]
+
+This is useful for iterating over indices or generating sequences.
 
 ---
 
 ## 11. String Operations
 
-```alphabet
-12 s = "Hello, World!"
+Alphabet has over 20 built-in string functions accessible through the z namespace.
 
-// Case conversion
-z.o(z.upper(s))     // "HELLO, WORLD!"
-z.o(z.lower(s))     // "hello, world!"
+### Case Conversion
 
-// Trimming
-z.o(z.trim("  hi  "))  // "hi"
+z.upper converts to uppercase, z.lower converts to lowercase.
 
-// Splitting and Joining
-13 parts = z.split("a,b,c", ",")  // ["a", "b", "c"]
-z.o(z.join(parts, "-"))            // "a-b-c"
+### Trimming
 
-// Replace
-z.o(z.replace("cat and cat", "cat", "dog"))  // "dog and dog"
+z.remove whitespace from the beginning and end of a string.
 
-// Substring
-z.o(z.substr("hello", 1, 3))  // "ell"
+### Splitting and Joining
 
-// Search
-z.o(z.contains("hello", "ell"))      // 1
-z.o(z.starts_with("hello", "hel"))   // 1
-z.o(z.ends_with("hello", "llo"))     // 1
+z.split breaks a string into a list using a delimiter. z.join puts a list back together with a separator between elements. These two functions are inverses of each other.
 
-// Character conversion
-z.o(z.chr(65))    // "A"
-z.o(z.ord("A"))   // 65
+### Searching
 
-// Reverse
-z.o(z.reverse("abc"))  // "cba"
-```
+z.contains checks if a substring exists anywhere in the string. z.starts_with checks the beginning. z.ends_with checks the end. All return 1 for true and 0 for false.
+
+### Replacing
+
+z.replace finds all occurrences of a substring and replaces them with another string.
+
+### Extracting
+
+z.substr extracts a portion of a string starting at a given index, with an optional length.
+
+### Character Conversion
+
+z.chr converts a number to its ASCII character. z.ord does the reverse -- it gives you the numeric code of a character.
 
 ---
 
 ## 12. Exception Handling
 
-```alphabet
+Exception handling uses t for try and h for handle (the equivalent of catch):
+
+```
 t {
-  5 x = 10 / 0
+  5 result = 10 / 0
 } h (12 e) {
   z.o("Error: " + e)
 }
 ```
 
-### Throwing Errors
+If an error occurs inside the try block, execution jumps to the handle block. The variable after h receives the error message. The type of the exception variable is always string (type 12).
 
-```alphabet
+To throw an error yourself, call z.t with an optional message:
+
+```
 m 5 divide(5 a, 5 b) {
   i (b == 0) { z.t("Division by zero") }
   r a / b
@@ -499,7 +523,9 @@ m 5 divide(5 a, 5 b) {
 
 ## 13. Pattern Matching
 
-```alphabet
+The letter q provides pattern matching, similar to switch in C or match in Rust:
+
+```
 5 day = 3
 q (day) {
   1: z.o("Monday")
@@ -511,7 +537,7 @@ q (day) {
 }
 ```
 
-The `e:` case is the default (else).
+The compiler evaluates the expression in parentheses and compares it against each case value. The first matching case runs. The e case is the default -- it runs if nothing else matched. This is cleaner than a long if-else chain when you have many discrete values to check.
 
 ---
 
@@ -519,336 +545,220 @@ The `e:` case is the default (else).
 
 ### Importing Files
 
-```alphabet
-#alphabet<en>
-x "path/to/module.abc"
+The letter x imports another Alphabet source file. The path goes in quotes:
+
 ```
-
-### Using Imported Functions
-
-```alphabet
 x "stdlib/math.abc"
-z.o(factorial(5))    // function from math.abc
 ```
 
-### Module Search Path
+Once imported, all public functions and variables from that file are available in the current file.
 
-The compiler searches:
-1. Relative to the source file
-2. Directories in `ALPHABET_PATH` environment variable
+### Search Paths
+
+The compiler searches for imports relative to the source file first. If not found, it checks directories listed in the ALPHABET_PATH environment variable. You can set this to a colon-separated list of directories.
+
+### Writing Modules
+
+Any .abc file can be a module. Just define functions in it with public visibility and they become available to anyone who imports the file.
 
 ---
 
 ## 15. Built-In Functions
 
-All built-in functions are accessed through the `z` namespace.
+All built-in functions are accessed through the z namespace. Here is the complete list organized by category.
 
-### I/O
-| Function | Description |
-|----------|-------------|
-| `z.o(x)` | Print value |
-| `z.i()` | Read input |
-| `z.f(path)` | Read file |
+### I/O Functions
 
-### Math
-| Function | Description |
-|----------|-------------|
-| `z.sqrt(x)` | Square root |
-| `z.abs(x)` | Absolute value |
-| `z.pow(a, b)` | Power (a^b) |
-| `z.floor(x)` | Floor |
-| `z.ceil(x)` | Ceiling |
-| `z.sin(x)` | Sine |
-| `z.cos(x)` | Cosine |
+z.o prints a value to standard output with a newline. z.i reads a line of input from the user and returns it as a string (or number if the input looks numeric). z.f reads the contents of a file and returns it as a string.
 
-### Type Info
-| Function | Description |
-|----------|-------------|
-| `z.type(x)` | Type name as string |
-| `z.len(x)` | Length of string/list/map |
-| `z.tostr(x)` | Convert to string |
-| `z.tonum(x)` | Convert to number |
+### Math Functions
 
-### String
-| Function | Description |
-|----------|-------------|
-| `z.upper(s)` | Uppercase |
-| `z.lower(s)` | Lowercase |
-| `z.trim(s)` | Trim whitespace |
-| `z.split(s, d)` | Split string |
-| `z.join(l, s)` | Join list |
-| `z.replace(s, o, n)` | Replace all |
-| `z.substr(s, i, l)` | Substring |
-| `z.chr(n)` | Character from code |
-| `z.ord(s)` | Code from character |
-| `z.starts_with(s, p)` | Check prefix |
-| `z.ends_with(s, s)` | Check suffix |
-| `z.contains(c, v)` | Search (string or list) |
-| `z.reverse(c)` | Reverse (string or list) |
+z.sqrt computes the square root. z.abs returns the absolute value. z.pow raises a number to a power. z.floor rounds down to the nearest integer. z.ceil rounds up to the nearest integer. z.sin and z.cos compute trigonometric functions.
 
-### List/Map
-| Function | Description |
-|----------|-------------|
-| `z.append(l, v)` | Add to list |
-| `z.pop_back(l)` | Remove last |
-| `z.range(stop)` | Range [0, stop) |
-| `z.range(a, b)` | Range [a, b) |
-| `z.range(a, b, s)` | Range with step |
-| `z.keys(m)` | Map keys |
-| `z.values(m)` | Map values |
+### Type Functions
 
-### Other
-| Function | Description |
-|----------|-------------|
-| `z.t()` | Throw error |
-| `z.t(msg)` | Throw with message |
-| `z.dyn(lib, func, ...)` | FFI call |
+z.type returns the type of a value as a string -- "number", "string", "null", or "object". z.len returns the length of a string, list, or map. z.tostr converts any value to its string representation. z.tonum converts a string to a number, returning 0 if the conversion fails.
+
+### String Functions
+
+z.upper and z.lower change case. z.trim removes whitespace. z.split and z.join convert between strings and lists. z.replace substitutes substrings. z.substr extracts portions. z.chr and z.ord convert between characters and codes. z.starts_with, z.ends_with, and z.contains perform searches. z.reverse flips a string.
+
+### List and Map Functions
+
+z.append adds an element to the end of a list. z.pop_back removes and returns the last element. z.contains checks membership. z.reverse returns a new reversed copy. z.range generates number sequences. z.keys and z.values extract from maps.
+
+### Error Functions
+
+z.t throws an exception with an optional message.
+
+### FFI Function
+
+z.dyn calls a function in a native C shared library. It takes the library path, function name, and up to four integer arguments.
 
 ---
 
 ## 16. Standard Library
 
+Alphabet ships with four standard library modules in the stdlib directory.
+
 ### math.abc
-```alphabet
-factorial(n)    # n!
-gcd(a, b)       # Greatest common divisor
-lcm(a, b)       # Least common multiple
-max(a, b)       # Maximum
-min(a, b)       # Minimum
-clamp(v, lo, hi) # Clamp to range
-is_even(n)      # 1 if even
-is_odd(n)       # 1 if odd
-sign(n)         # -1, 0, or 1
-```
+
+This module provides mathematical utility functions: factorial for computing n factorial, gcd for greatest common divisor, lcm for least common multiple, max and min for comparisons, clamp for constraining a value to a range, is_even and is_odd for parity checks, and sign for determining if a number is positive, negative, or zero.
 
 ### io.abc
-```alphabet
-print(val)      # Print without newline
-println(val)    # Print with newline
-read_file(path) # Read file to string
-```
+
+This module wraps the built-in I/O functions: print for output without a newline, println for output with a newline, and read_file for reading file contents.
 
 ### string.abc
-```alphabet
-contains(haystack, needle)
-starts_with(s, prefix)
-ends_with(s, suffix)
-split(s, delim)
-join(items, sep)
-replace(s, old, new)
-trim(s)
-upper(s)
-lower(s)
-substr(s, start)
-slice(s, start, length)
-reverse(s)
-length(s)
-chr(code)
-ord(c)
-```
+
+This module provides named functions for all string operations so you can call them without the z prefix: contains, starts_with, ends_with, split, join, replace, trim, upper, lower, substr, slice, reverse, length, chr, and ord.
 
 ### list.abc
-```alphabet
-length(lst)
-push(lst, val)
-pop(lst)
-contains(lst, val)
-reverse(lst)
-first(lst)
-last(lst)
-range(stop)
-range_from(start, stop)
-range_step(start, stop, step)
-keys(map)
-values(map)
-```
+
+This module provides named functions for list and map operations: length, push, pop, contains, reverse, first, last, range, range_from, range_step, keys, and values.
 
 ---
 
 ## 17. Multilingual Keywords
 
-Write code in your language. Each keyword maps to the same single-letter token.
+Alphabet supports writing code in five natural languages. The compiler translates keywords from your chosen language to the same internal representation, so programs written in different languages produce identical bytecode.
 
-| English | Amharic | Spanish | French | German |
-|---------|---------|---------|--------|--------|
-| class | ክፍል | clase | classe | klasse |
-| if | ከሆነ | si | si | wenn |
-| else | አለበለዚህ | sino | sinon | sonst |
-| loop | ሉፕ | bucle | boucle | schleife |
-| return | ተመለስ | retornar | retour | zuruck |
-| new | አዲስ | nuevo | nouveau | neu |
-| print | ውጤት | imprimir | afficher | ausgeben |
+### Supported Languages
+
+English (en), Amharic (am), Spanish (es), French (fr), and German (de).
+
+### How It Works
+
+Set the language in the magic header. Then write keywords in that language. The compiler looks up each word in its translation table and converts it to the corresponding single-letter token.
 
 ### UTF-8 Variable Names
 
-```alphabet
-#alphabet<en>
-5 ቁጥር = 100
-5 数字 = 200
-z.o(ቁጥር + 数字)  # 300
-```
+Variable names can use any Unicode characters. This means you can write variable names in Amharic, Chinese, Russian, Arabic, or any other script alongside English keywords, or use non-English keywords with English variable names, or mix freely.
 
 ---
 
 ## 18. FFI - Native C Integration
 
-Call C functions directly from Alphabet:
+Alphabet can call functions in native C shared libraries at runtime using z.dyn. This lets you extend the language with existing C libraries for graphics, networking, or any other functionality.
 
-```alphabet
-#alphabet<en>
-5 result = z.dyn("/usr/lib/libm.so", "sqrt", 144)
-z.o(result)  # 12
-```
+The function takes the path to a shared library (.so on Linux, .dylib on macOS, .dll on Windows), the name of the function to call, and up to four integer arguments. It returns the function's return value as a number.
 
-Signature: `z.dyn(library_path, function_name, arg1, arg2, ...)`
-
-Supports up to 4 int64_t arguments. Returns int64_t.
+In sandbox mode (--sandbox flag), FFI calls are blocked for security.
 
 ---
 
 ## 19. REPL Mode
 
-```bash
-alphabet --repl
-```
+The REPL (Read-Eval-Print Loop) lets you type code interactively and see results immediately. Start it with alphabet --repl.
 
-Features:
-- Persistent state across lines
-- Multi-line input (brace tracking)
-- Command history (saved to ~/.alphabet_history)
-- `history` command to view past entries
-- `!!` to repeat last command
-- `q` to quit
+Key features of the REPL:
+
+- **Persistent state:** Variables and functions you define stay defined across lines. You can build up a program piece by piece.
+- **Multi-line input:** If you open a curly brace, the REPL waits for you to close it before executing.
+- **Error recovery:** If you make a mistake, the REPL shows the error and keeps your previous state. You do not lose your work.
+- **History:** Your input is saved to ~/.alphabet_history. Type "history" to see recent entries. Type "!!" to repeat the last command.
+- **Exit:** Type q, quit, or exit to leave the REPL.
 
 ---
 
 ## 20. Debugging
 
-```bash
-alphabet --debug program.abc
-```
+Alphabet includes a built-in debugger. Run a program with alphabet --debug to activate it.
 
-### Debugger Commands
+### Setting Breakpoints
 
-| Command | Alias | Description |
-|---------|-------|-------------|
-| continue | c | Resume execution |
-| step | s | Step to next line |
-| locals | l | Show local variables |
-| globals | g | Show global variables |
-| stack | bt | Show call stack |
-| print | p | Show stack contents |
-| add_break N | b N | Set breakpoint at line N |
-| del_break N | db N | Remove breakpoint |
-| breakpoints | bl | List breakpoints |
-| help | ? | Show help |
+Use add_break followed by a line number to set a breakpoint. Use del_break to remove one. Use breakpoints to list all active breakpoints.
 
-The debugger outputs JSON-structured events for tool integration.
+### Stepping Through Code
+
+When the program hits a breakpoint, it stops and shows a JSON event with the line number and reason. You can then type commands: continue to resume, step to execute one line and stop again, locals to see local variables, globals to see global variables, stack to see the call stack, and print to see the operand stack.
+
+### Debugger Output
+
+The debugger outputs structured JSON, which means external tools can parse the output and build graphical debugger interfaces on top of it.
 
 ---
 
 ## 21. Command Line Interface
 
-```bash
-alphabet [options] [file]
+The alphabet command supports several modes:
 
-Options:
-  -v, --version         Version info
-  -h, --help            Help message
-  -c, --compile         Compile only
-  -o, --output FILE     Output file
-  --repl                Interactive mode
-  --lsp                 LSP server
-  --debug               Debug mode
-  --sandbox             Block FFI/file access
-  --dump-bytecode       Print bytecode
+- **Run a file:** alphabet program.abc
+- **Interactive REPL:** alphabet --repl
+- **LSP server:** alphabet --lsp
+- **Debug mode:** alphabet --debug program.abc
+- **Inspect bytecode:** alphabet --dump-bytecode program.abc
+- **Sandbox mode:** alphabet --sandbox program.abc
+- **Compile only:** alphabet -c program.abc
+- **Self-update:** alphabet update
+- **Version:** alphabet --version
+- **Help:** alphabet --help
 
-Subcommands:
-  alphabet update       Self-update
-```
-
-### Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `ALPHABET_PATH` | Colon-separated import directories |
+The ALPHABET_PATH environment variable can be set to a colon-separated list of directories to search for imports.
 
 ---
 
 ## 22. Architecture
 
-### Pipeline
+Alphabet follows a classic four-stage compiler pipeline.
 
-```
-Source (.abc) -> Lexer -> Tokens -> Parser -> AST -> Compiler -> Bytecode -> VM -> Output
-```
+The lexer reads source code character by character and produces a stream of tokens. It handles multilingual keyword translation, UTF-8 identifiers, string escape sequences, and comments. It requires the magic header on line one.
 
-### Components
+The parser takes the token stream and builds an abstract syntax tree using recursive descent parsing. It produces clear error messages with line numbers, column numbers, and source context.
 
-- **Lexer** (476 lines): Tokenizes source with multilingual keyword support
-- **Parser** (768 lines): Recursive descent parser producing AST
-- **Compiler** (995 lines): AST to bytecode compiler with type checking
-- **VM** (1235 lines): Stack-based interpreter with 43 opcodes
-- **LSP** (509 lines): Language Server Protocol for editor integration
-- **FFI** (278 lines): Dynamic library loading bridge
+The compiler walks the AST and emits bytecode instructions. It performs type checking at compile time using the numeric type IDs. It resolves class inheritance, method calls, and import paths.
 
-### Bytecode
+The virtual machine executes the bytecode on a stack-based interpreter with 43 opcodes. It manages a dynamic stack (starts at 4096 slots, doubles as needed), a call frame stack for function calls, a global variable table, and an exception handling mechanism.
 
-43 opcodes including:
-- Stack: PUSH_CONST, POP, DUP
-- Arithmetic: ADD, SUB, MUL, DIV, PERCENT
-- Comparison: EQ, NE, GT, GE, LT, LE
-- Logic: AND, OR, NOT
-- Control: JUMP, JUMP_IF_FALSE, JUMP_IF_TRUE, CALL, RET
-- Objects: NEW, LOAD_FIELD, STORE_FIELD, GET_STATIC, SET_STATIC
-- Collections: BUILD_LIST, BUILD_MAP, LOAD_INDEX, STORE_INDEX
-- Exceptions: SETUP_TRY, POP_TRY, THROW
-- Loops: LOOP_START, BREAK_JUMP, CONTINUE_JUMP
+Additional modules include the FFI bridge for calling native C functions and the LSP server for editor integration.
 
 ---
 
 ## 23. Type System Reference
 
-| ID | Type | Runtime Storage |
-|----|------|----------------|
-| 0 | void | std::monostate |
-| 1-4 | i8/i16/i32/i64 | double |
-| 5 | int | double |
-| 6-7 | f32/f64 | double |
-| 8 | float | double |
-| 9 | dec | double |
-| 10 | cpx | double |
-| 11 | bool | double (0/1) |
-| 12 | str | std::string |
-| 13 | list | shared_ptr<vector<Value>> |
-| 14 | map | shared_ptr<unordered_map> |
-| 15+ | class | ObjectPtr |
+The type system uses numeric IDs from 0 to infinity:
+
+- 0 is void (no value)
+- 1 through 4 are specific integer sizes
+- 5 is the generic integer type (most common)
+- 6 and 7 are specific float sizes
+- 8 is the generic float type
+- 9 and 10 are decimal and complex (reserved)
+- 11 is boolean
+- 12 is string
+- 13 is list
+- 14 is map
+- 15 and above are custom class types, assigned sequentially as classes are defined
+
+At runtime, all numeric types are stored as 64-bit floating point. Strings are stored as C++ std::string. Lists and maps use shared pointers to heap-allocated containers for efficient passing by reference.
 
 ---
 
 ## 24. Complete Keyword Reference
 
-| Token | Keyword (EN) | Description |
-|-------|--------------|-------------|
-| a | abstract | Abstract class/method |
-| b | break | Exit loop |
-| c | class | Define class |
-| e | else | Else branch |
-| h | handle/catch | Catch exception |
-| i | if | Conditional |
+| Token | English | Description |
+|-------|---------|-------------|
+| a | abstract | Abstract class or method |
+| b | break | Exit current loop |
+| c | class | Define a class |
+| e | else | Else branch of condition |
+| h | handle | Catch exception (like catch) |
+| i | if | Conditional statement |
 | j | interface | Interface definition |
-| k | continue | Skip to next iteration |
-| l | loop/while | Loop |
-| m | method/function | Define function |
-| n | new | Create instance |
-| p | private | Private access |
-| r | return | Return value |
+| k | continue | Skip to next loop iteration |
+| l | loop | Loop (while or for) |
+| m | method | Define a function |
+| n | new | Create a new instance |
+| p | private | Private access modifier |
+| r | return | Return from function |
 | s | static | Static member |
-| t | try | Try block |
-| v | public | Public access |
-| z | output/print | System namespace |
-| x | import | Import module |
-| q | match | Pattern match |
+| t | try | Try block for exceptions |
+| v | public | Public access modifier |
+| z | system | System namespace (built-ins) |
+| x | import | Import a module |
+| q | match | Pattern matching |
+
+Additionally, the caret symbol (^) means extends (inheritance), and the at symbol (@) is reserved for future export functionality.
 
 ---
 

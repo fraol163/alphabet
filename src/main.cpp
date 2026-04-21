@@ -398,21 +398,34 @@ void do_update() {
     int dl_status = system(dl_cmd.c_str());
     if (dl_status != 0) {
         std::cerr << "Error: Download failed\n";
+#ifdef _WIN32
+        _unlink(tmp_path.c_str());
+#else
         unlink(tmp_path.c_str());
+#endif
         return;
     }
 
-    // Make executable
+    // Make executable (no-op on Windows)
+#ifndef _WIN32
     chmod(tmp_path.c_str(), 0755);
+#endif
 
     // Replace self (use a shell wrapper since we can't replace running binary)
     std::cout << "Installing update...\n";
+#ifdef _WIN32
+    std::string mv_cmd = "move /Y \"" + tmp_path + "\" \"" + self_path + "\"";
+#else
     std::string mv_cmd = "mv \"" + tmp_path + "\" \"" + self_path + "\"";
+#endif
     int mv_status = system(mv_cmd.c_str());
     if (mv_status != 0) {
-        std::cerr << "Error: Could not install update (try running as root)\n";
+        std::cerr << "Error: Could not install update (try running as admin)\n";
+#ifdef _WIN32
+        _unlink(tmp_path.c_str());
+#else
         unlink(tmp_path.c_str());
-        return;
+#endif
     }
 
     std::cout << "Updated to v" << latest_version << "!\n";

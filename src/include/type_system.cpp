@@ -3,18 +3,18 @@
 namespace alphabet {
 
 TypeManager::TypeManager() {
-    register_primitive(VOID, "void");
+    register_primitive(TYPE_VOID, "void");
     register_primitive(I8, "i8");
     register_primitive(I16, "i16");
     register_primitive(I32, "i32");
     register_primitive(I64, "i64");
-    register_primitive(INT, "int");
+    register_primitive(TYPE_INT, "int");
     register_primitive(F32, "f32");
     register_primitive(F64, "f64");
     register_primitive(FLOAT, "float");
     register_primitive(DEC, "dec");
     register_primitive(CPX, "cpx");
-    register_primitive(BOOL, "bool");
+    register_primitive(TYPE_BOOL, "bool");
     register_primitive(STR, "str");
     register_primitive(LIST, "list");
     register_primitive(MAP, "map");

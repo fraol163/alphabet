@@ -72,7 +72,7 @@ bool Compiler::types_compatible(uint16_t source, uint16_t target) {
     if (source == target) return true;
     
     // INT(5) as source means "unknown/any type" from function calls
-    if (source == TypeManager::INT) return true;
+    if (source == TypeManager::TYPE_INT) return true;
     
     // All numeric types (I8-FLOAT, ids 1-8) are compatible with each other
     bool source_is_numeric = (source >= TypeManager::I8 && source <= TypeManager::FLOAT);
@@ -157,7 +157,7 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
         // Return type of function/method calls unknown at inference time.
         // Use the class_map_ entry if it's a known function, otherwise
         // return INT which signals "any" to types_compatible.
-        return TypeManager::INT;
+        return TypeManager::TYPE_INT;
     }
 
     if (auto* list = dynamic_cast<const ListLiteral*>(expr.get())) {

@@ -35,18 +35,18 @@ public:
     bool implements_interface(uint16_t type_id, uint16_t interface_id) const;
     [[nodiscard]] uint16_t next_custom_id() const { return next_custom_id_; }
 
-    static constexpr uint16_t VOID = 0;
+    static constexpr uint16_t TYPE_VOID = 0;
     static constexpr uint16_t I8 = 1;
     static constexpr uint16_t I16 = 2;
     static constexpr uint16_t I32 = 3;
     static constexpr uint16_t I64 = 4;
-    static constexpr uint16_t INT = 5;
+    static constexpr uint16_t TYPE_INT = 5;
     static constexpr uint16_t F32 = 6;
     static constexpr uint16_t F64 = 7;
     static constexpr uint16_t FLOAT = 8;
     static constexpr uint16_t DEC = 9;
     static constexpr uint16_t CPX = 10;
-    static constexpr uint16_t BOOL = 11;
+    static constexpr uint16_t TYPE_BOOL = 11;
     static constexpr uint16_t STR = 12;
     static constexpr uint16_t LIST = 13;
     static constexpr uint16_t MAP = 14;

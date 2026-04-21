@@ -24,7 +24,7 @@ const char* token_type_to_string(TokenType type) {
         case TokenType::TRY: return "TRY";
         case TokenType::HANDLE: return "HANDLE";
         case TokenType::SYSTEM: return "SYSTEM";
-        case TokenType::CONST: return "CONST";
+        case TokenType::TOK_CONST: return "CONST";
         case TokenType::IDENTIFIER: return "IDENTIFIER";
         case TokenType::NUMBER: return "NUMBER";
         case TokenType::STRING: return "STRING";
@@ -369,7 +369,7 @@ void Lexer::identifier() {
 
     // Check for const keyword (single-word, not a keyword char)
     if (text == "const") {
-        add_token(TokenType::CONST);
+        add_token(TokenType::TOK_CONST);
         return;
     }
 

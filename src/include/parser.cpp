@@ -361,7 +361,7 @@ StmtPtr Parser::statement() {
     if (match({TokenType::RETURN})) return return_statement();
     if (match({TokenType::LOOP})) return loop_statement();
     if (match({TokenType::TRY})) return try_statement();
-    if (match({TokenType::CONST})) return const_statement();
+    if (match({TokenType::TOK_CONST})) return const_statement();
     if (match({TokenType::BREAK})) return std::make_shared<BreakStmt>(previous());
     if (match({TokenType::CONTINUE})) return std::make_shared<ContinueStmt>(previous());
     if (match({TokenType::LBRACE})) return std::make_shared<Block>(block());

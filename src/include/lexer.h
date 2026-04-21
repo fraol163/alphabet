@@ -32,7 +32,7 @@ enum class TokenType : int {
     SYSTEM = 116,
     IMPORT = 117,
     MATCH = 118,
-    CONST = 119,
+    TOK_CONST = 119,
     
     // Operators and special chars
     EXTENDS = '^',

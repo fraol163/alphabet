@@ -84,7 +84,7 @@ Alphabet is a **beginner-friendly programming language** with only **19 single-l
 
 | Task | Alphabet | Python | C |
 |------|----------|--------|---|
-| Keywords to learn | 17 | 35 | 32 |
+| Keywords to learn | 19 | 35 | 32 |
 | Time to hello world | 2 min | 5 min | 10 min |
 | Best for | Education | Scripts | Systems |
 
@@ -454,7 +454,7 @@ z.o(last(nums))             # 4
 
 | Feature | C | Python | Zig | **Alphabet** |
 |---------|---|--------|-----|--------------|
-| Keywords | 32 | 35 | 25 | **17** |
+| Keywords | 32 | 35 | 25 | **19** |
 | Type System | Manual | Dynamic | Static | **Numeric IDs** |
 | Learning Curve | Steep | Medium | Medium | **Flat** |
 | Best For | Systems | Scripts | Systems | **Education** |

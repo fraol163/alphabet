@@ -61,7 +61,7 @@ void Lexer::scan_token() {
         case 'l': add_token(TokenType::LOOP); break;
         case 'c': add_token(TokenType::CLASS); break;
         case 'v': add_token(TokenType::PUBLIC); break;
-        // ... all 17 single-char keywords
+        // ... all 19 single-char keywords
     }
 }
 ```

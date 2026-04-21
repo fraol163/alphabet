@@ -27,7 +27,7 @@ test_lang() {
     fi
 }
 
-cd /home/fraol/Desktop/All\ In\ One/Alphabet_Language
+cd "$(dirname "$0")"
 
 echo "=== BASIC OUTPUT TESTS ==="
 test_lang "English-Basic" '#alphabet<en>
@@ -155,7 +155,7 @@ done"
 
 echo ""
 echo "=== IMPORT TESTS ==="
-export ALPHABET_PATH="/home/fraol/Desktop/All In One/Alphabet_Language"
+export ALPHABET_PATH="$(cd "$(dirname "$0")" && pwd)"
 test_lang "English-Import" '#alphabet<en>
 import "test.abc"
 z.o("ok")' "ok"

@@ -992,4 +992,72 @@ void Compiler::load_module(const std::string& path) {
     }
 }
 
+std::string Compiler::dump_program(const Program& program) {
+    std::ostringstream oss;
+    
+    auto dump_instructions = [&](const std::vector<Instruction>& bytecode, const std::string& label) {
+        oss << "=== " << label << " ===\n";
+        for (size_t i = 0; i < bytecode.size(); ++i) {
+            const auto& instr = bytecode[i];
+            oss << "  " << i << ": " << opcode_to_string(instr.op);
+            std::visit([&oss](const auto& op) {
+                using T = std::decay_t<decltype(op)>;
+                if constexpr (std::is_same_v<T, int64_t>) {
+                    oss << " " << op;
+                } else if constexpr (std::is_same_v<T, double>) {
+                    oss << " " << op;
+                } else if constexpr (std::is_same_v<T, std::string>) {
+                    oss << " \"" << op << "\"";
+                } else if constexpr (std::is_same_v<T, std::pair<std::string, int>>) {
+                    oss << " " << op.first << "/" << op.second;
+                }
+            }, instr.operand);
+            if (instr.line > 0) oss << "  (line " << instr.line << ")";
+            oss << "\n";
+        }
+    };
+    
+    dump_instructions(program.main, "MAIN");
+    
+    if (!program.static_init.empty()) {
+        dump_instructions(program.static_init, "STATIC_INIT");
+    }
+    
+    for (const auto& [name, func] : program.functions) {
+        std::string params;
+        for (size_t i = 0; i < func.param_names.size(); ++i) {
+            if (i > 0) params += ", ";
+            params += func.param_names[i];
+        }
+        dump_instructions(func.bytecode, "FUNCTION " + name + "(" + params + ")");
+    }
+    
+    for (const auto& [id, cls] : program.classes) {
+        oss << "\n=== CLASS " << cls.name << " (id=" << id << ") ===\n";
+        if (!cls.superclass.empty()) {
+            oss << "  extends " << cls.superclass << "\n";
+        }
+        for (const auto& [mname, method] : cls.methods) {
+            std::string params;
+            for (size_t i = 0; i < method.param_names.size(); ++i) {
+                if (i > 0) params += ", ";
+                params += method.param_names[i];
+            }
+            dump_instructions(method.bytecode, "  METHOD " + mname + "(" + params + ")");
+        }
+        for (const auto& [mname, method] : cls.static_methods) {
+            dump_instructions(method.bytecode, "  STATIC " + mname);
+        }
+    }
+    
+    if (!program.globals.empty()) {
+        oss << "\n=== GLOBALS ===\n";
+        for (size_t i = 0; i < program.globals.size(); ++i) {
+            oss << "  " << i << ": " << program.globals[i] << "\n";
+        }
+    }
+    
+    return oss.str();
+}
+
 }

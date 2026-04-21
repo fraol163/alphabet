@@ -24,10 +24,11 @@
 #include "type_system.h"
 #include "ffi.h"
 #include "lsp.h"
+#include "version.h"
 
 namespace {
 
-constexpr const char* VERSION = "2.2.0";
+constexpr const char* VERSION = ALPHABET_VERSION;
 constexpr const char* DEVELOPER = "Fraol Teshome (fraolteshome444@gmail.com)";
 
 constexpr const char* LOGO = R"(
@@ -57,15 +58,19 @@ void print_help() {
     std::cout << "  -c, --compile     Compile only, don't run\n";
     std::cout << "  -o, --output      Output file for compiled bytecode\n";
     std::cout << "  --repl            Start interactive REPL\n";
-    std::cout << "  --lsp             Start Language Server Protocol server\n\n";
+    std::cout << "  --lsp             Start Language Server Protocol server\n";
+    std::cout << "  --debug           Run in debug mode (breakpoints)\n";
+    std::cout << "  --sandbox         Sandbox mode: block FFI and file access\n";
+    std::cout << "  --dump-bytecode   Print compiled bytecode and exit\n\n";
+    std::cout << "Subcommands:\n";
+    std::cout << "  alphabet update   Self-update to latest version\n\n";
     std::cout << "Examples:\n";
     std::cout << "  alphabet program.abc          Run a program\n";
     std::cout << "  alphabet -c program.abc       Compile only\n";
     std::cout << "  alphabet --repl               Interactive mode\n";
     std::cout << "  alphabet --lsp                LSP server for VS Code\n";
-    std::cout << "  --debug              Run in debug mode\n";
-    std::cout << "  --sandbox            Sandbox mode: block FFI and file access\n";
-    std::cout << "  alphabet update      Self-update to latest version\n";
+    std::cout << "  alphabet --dump-bytecode prog.abc  Inspect bytecode\n";
+    std::cout << "  alphabet --debug program.abc  Debug with breakpoints\n";
 }
 
 void run_source(const std::string& source, bool debug_mode = false, const std::string& source_dir = "", bool sandbox_mode = false) {
@@ -233,12 +238,41 @@ void start_repl() {
                 }
             } catch (const alphabet::MissingLanguageHeader&) {
                 std::cerr << "Error: Missing header\n";
+                // Roll back
+                size_t last_newline = all_source.rfind('\n', all_source.size() - 2);
+                if (last_newline != std::string::npos) {
+                    all_source = all_source.substr(0, last_newline + 1);
+                } else {
+                    all_source.clear();
+                }
             } catch (const alphabet::ParseError& e) {
                 std::cerr << "Parse Error: " << e.what() << "\n";
+                size_t last_newline = all_source.rfind('\n', all_source.size() - 2);
+                if (last_newline != std::string::npos) {
+                    all_source = all_source.substr(0, last_newline + 1);
+                } else {
+                    all_source.clear();
+                }
             } catch (const alphabet::CompileError& e) {
                 std::cerr << "Compile Error: " << e.what() << "\n";
+                size_t last_newline = all_source.rfind('\n', all_source.size() - 2);
+                if (last_newline != std::string::npos) {
+                    all_source = all_source.substr(0, last_newline + 1);
+                } else {
+                    all_source.clear();
+                }
             } catch (const alphabet::RuntimeError& e) {
                 std::cerr << "Runtime Error: " << e.what() << "\n";
+                // Restore globals to last known good state (before this line)
+                // Don't roll back source so user can fix in-place
+            } catch (const std::exception& e) {
+                std::cerr << "Error: " << e.what() << "\n";
+                size_t last_newline = all_source.rfind('\n', all_source.size() - 2);
+                if (last_newline != std::string::npos) {
+                    all_source = all_source.substr(0, last_newline + 1);
+                } else {
+                    all_source.clear();
+                }
             }
             
             buffer.clear();
@@ -403,6 +437,7 @@ int main(int argc, char* argv[]) {
     bool lsp_mode = false;
     bool debug_mode = false;
     bool sandbox_mode = false;
+    bool dump_bytecode = false;
     std::string output_file;
     std::string input_file;
 
@@ -441,6 +476,11 @@ int main(int argc, char* argv[]) {
 
         if (arg == "--sandbox") {
             sandbox_mode = true;
+            continue;
+        }
+
+        if (arg == "--dump-bytecode") {
+            dump_bytecode = true;
             continue;
         }
 
@@ -572,6 +612,25 @@ int main(int argc, char* argv[]) {
                 std::cout << "Compilation successful: " 
                           << program.main.size() << " instructions\n";
             }
+        } else if (dump_bytecode) {
+            alphabet::Lexer lexer(source);
+            std::vector<alphabet::Token> tokens = lexer.scan_tokens();
+
+            alphabet::Parser parser(tokens, source);
+            std::vector<alphabet::StmtPtr> statements = parser.parse();
+
+            if (parser.had_errors()) {
+                std::string msg = parser.first_error().empty() ? "Syntax errors in source code" : parser.first_error();
+                throw alphabet::ParseError(msg);
+            }
+
+            alphabet::Compiler compiler;
+            size_t last_sl = input_file.find_last_of("/\\");
+            if (last_sl != std::string::npos) {
+                compiler.set_source_dir(input_file.substr(0, last_sl));
+            }
+            alphabet::Program program = compiler.compile(statements);
+            std::cout << alphabet::Compiler::dump_program(program);
         } else {
             // Extract source file directory for resolving relative imports
             std::string source_dir;

@@ -11,7 +11,7 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
                 d88
                 ?8P
 ```
-# Alphabet Programming Language V2.1
+# Alphabet Programming Language V2.3
 
 **The fastest way to learn programming.**
 
@@ -65,6 +65,10 @@ Alphabet is a **beginner-friendly programming language** with only **17 single-l
 - **LSP Support** - Works with VS Code and other editors
 - **FFI** - Call native C functions from Alphabet code
 - **Cross-Platform** - Works on Windows, Linux, and macOS
+- **Built-in Debugger** - Breakpoints, step, locals, globals, stack trace
+- **REPL** - Interactive mode with persistent state and error recovery
+- **Standard Library** - Math, I/O, String, and List modules included
+- **30+ Built-in Functions** - Range, split, join, replace, contains, keys, and more
 
 ### Why Choose Alphabet?
 
@@ -280,11 +284,46 @@ z.o(result)  # Output: 30
 
 ```alphabet
 #alphabet<en>
+// Math
 z.o(z.sqrt(144))    # 12
 z.o(z.abs(-42))     # 42
 z.o(z.pow(2, 10))   # 1024
+z.o(z.floor(3.7))   # 3
+z.o(z.ceil(3.2))    # 4
+
+// Type info
 z.o(z.len("hello")) # 5
 z.o(z.type(42))     # "number"
+
+// String operations
+z.o(z.upper("hi"))          # "HI"
+z.o(z.lower("HI"))          # "hi"
+z.o(z.trim("  hi  "))       # "hi"
+z.o(z.replace("a+b", "+", "-"))  # "a-b"
+13 parts = z.split("a,b", ",")   # ["a", "b"]
+z.o(z.join(parts, "-"))     # "a-b"
+z.o(z.substr("hello", 1, 3))    # "ell"
+z.o(z.chr(65))              # "A"
+z.o(z.ord("A"))             # 65
+z.o(z.starts_with("hello", "hel"))  # 1
+z.o(z.ends_with("hello", "llo"))    # 1
+z.o(z.contains("hello", "ell"))     # 1
+
+// List operations
+13 nums = [1, 2, 3]
+z.append(nums, 4)           # [1,2,3,4]
+z.o(z.pop_back(nums))       # 4
+z.o(z.contains(nums, 2))    # 1
+13 rev = z.reverse(nums)    # [3,2,1]
+
+// Range
+13 r = z.range(5)           # [0,1,2,3,4]
+13 r2 = z.range(2, 7)       # [2,3,4,5,6]
+
+// Map operations
+14 m = {"a": 1, "b": 2}
+13 k = z.keys(m)            # ["a", "b"]
+13 v = z.values(m)          # [1, 2]
 ```
 
 ### Multilingual Keywords
@@ -381,6 +420,34 @@ print("hello")
 12 content = read_file("data.txt")
 ```
 
+### string.abc
+
+```alphabet
+#alphabet<en>
+x "../stdlib/string.abc"
+z.o(upper("hello"))              # "HELLO"
+z.o(trim("  hi  "))              # "hi"
+z.o(replace("a+b", "+", "-"))    # "a-b"
+13 parts = split("a,b,c", ",")   # ["a","b","c"]
+z.o(join(parts, "-"))            # "a-b-c"
+z.o(starts_with("hello", "hel")) # 1
+z.o(substr("hello", 1, 3))       # "ell"
+```
+
+### list.abc
+
+```alphabet
+#alphabet<en>
+x "../stdlib/list.abc"
+13 nums = range(5)          # [0,1,2,3,4]
+push(nums, 99)              # [0,1,2,3,4,99]
+z.o(pop(nums))              # 99
+z.o(contains(nums, 2))      # 1
+13 rev = reverse(nums)      # reversed copy
+z.o(first(nums))            # 0
+z.o(last(nums))             # 4
+```
+
 ---
 
 ## Language Comparison
@@ -405,6 +472,21 @@ alphabet --repl
 
 # Start LSP server for editor integration
 alphabet --lsp
+
+# Debug with breakpoints
+alphabet --debug program.abc
+
+# Inspect compiled bytecode
+alphabet --dump-bytecode program.abc
+
+# Sandbox mode (block FFI and file access)
+alphabet --sandbox program.abc
+
+# Compile to binary bytecode
+alphabet -c -o output.bin program.abc
+
+# Self-update to latest version
+alphabet update
 
 # Show version
 alphabet --version

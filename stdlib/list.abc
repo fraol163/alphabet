@@ -1,0 +1,63 @@
+#alphabet<en>
+// List Library for Alphabet v2.3.0
+// Wraps built-in z.* list functions for cleaner API
+
+// Get list length
+m 5 length(13 lst) {
+  r z.len(lst)
+}
+
+// Append value to list (mutates)
+m 13 push(13 lst, 5 val) {
+  r z.append(lst, val)
+}
+
+// Remove and return last element
+m 5 pop(13 lst) {
+  r z.pop_back(lst)
+}
+
+// Check if list contains value
+m 11 contains(13 lst, 5 val) {
+  r z.contains(lst, val)
+}
+
+// Reverse a list (returns new)
+m 13 reverse(13 lst) {
+  r z.reverse(lst)
+}
+
+// Get first element
+m 5 first(13 lst) {
+  r lst[0]
+}
+
+// Get last element
+m 5 last(13 lst) {
+  r lst[-1]
+}
+
+// Create range [0, stop)
+m 13 range(5 stop) {
+  r z.range(stop)
+}
+
+// Create range [start, stop)
+m 13 range_from(5 start, 5 stop) {
+  r z.range(start, stop)
+}
+
+// Create range [start, stop) with step
+m 13 range_step(5 start, 5 stop, 5 step) {
+  r z.range(start, stop, step)
+}
+
+// Get keys from map
+m 13 keys(14 m) {
+  r z.keys(m)
+}
+
+// Get values from map
+m 13 values(14 m) {
+  r z.values(m)
+}

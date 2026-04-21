@@ -3,6 +3,8 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
+#include <iostream>
 #include "lexer.h"
 #include "parser.h"
 #include "compiler.h"
@@ -25,7 +27,7 @@ inline std::vector<StmtPtr> parse(const std::string& source) {
     return parser.parse();
 }
 
-// Helper: compile and run source, capture output (returns VM state)
+// Helper: compile and run source
 inline void run(const std::string& source) {
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
@@ -35,6 +37,40 @@ inline void run(const std::string& source) {
     auto program = compiler.compile(stmts);
     VM vm(program);
     vm.run();
+}
+
+// Helper: compile and run source, capture stdout
+inline std::string run_capture(const std::string& source) {
+    std::ostringstream oss;
+    std::streambuf* old = std::cout.rdbuf(oss.rdbuf());
+    try {
+        Lexer lexer(source);
+        auto tokens = lexer.scan_tokens();
+        Parser parser(tokens, source);
+        auto stmts = parser.parse();
+        Compiler compiler;
+        auto program = compiler.compile(stmts);
+        VM vm(program);
+        vm.run();
+    } catch (...) {
+        std::cout.rdbuf(old);
+        throw;
+    }
+    std::cout.rdbuf(old);
+    return oss.str();
+}
+
+// Helper: compile and run, return globals
+inline std::unordered_map<std::string, Value> run_get_globals(const std::string& source) {
+    Lexer lexer(source);
+    auto tokens = lexer.scan_tokens();
+    Parser parser(tokens, source);
+    auto stmts = parser.parse();
+    Compiler compiler;
+    auto program = compiler.compile(stmts);
+    VM vm(program);
+    vm.run();
+    return vm.get_globals();
 }
 
 }  // namespace test

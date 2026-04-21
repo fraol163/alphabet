@@ -1,5 +1,14 @@
 cmake_minimum_required(VERSION 3.16)
-project(Alphabet VERSION 2.1.0 LANGUAGES CXX)
+
+# Read version from VERSION file (single source of truth)
+file(READ "${CMAKE_SOURCE_DIR}/VERSION" ALPHABET_VERSION_RAW)
+string(STRIP "${ALPHABET_VERSION_RAW}" ALPHABET_VERSION)
+string(REPLACE "." ";" VERSION_LIST "${ALPHABET_VERSION}")
+list(GET VERSION_LIST 0 PROJECT_VERSION_MAJOR)
+list(GET VERSION_LIST 1 PROJECT_VERSION_MINOR)
+list(GET VERSION_LIST 2 PROJECT_VERSION_PATCH)
+
+project(Alphabet VERSION ${ALPHABET_VERSION} LANGUAGES CXX)
 
 # C++17 standard required for std::variant, std::string_view, etc.
 set(CMAKE_CXX_STANDARD 17)
@@ -30,6 +39,13 @@ if(ENABLE_ASAN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 endif()
+
+# Generate version header from VERSION file
+configure_file(
+    ${CMAKE_SOURCE_DIR}/src/include/version.h.in
+    ${CMAKE_BINARY_DIR}/generated/version.h
+    @ONLY
+)
 
 # Export compile commands for IDE integration
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -80,6 +96,7 @@ add_executable(alphabet ${ALPHABET_SOURCES} ${ALPHABET_HEADERS})
 target_include_directories(alphabet PRIVATE
     ${CMAKE_SOURCE_DIR}/src/include
     ${CMAKE_SOURCE_DIR}/third_party
+    ${CMAKE_BINARY_DIR}/generated
 )
 
 # Platform-specific settings
@@ -148,6 +165,27 @@ if(BUILD_TESTS)
     add_test(NAME LexerTests COMMAND test_lexer)
     add_test(NAME ParserTests COMMAND test_parser)
     add_test(NAME VMTests COMMAND test_vm)
+
+    # Golden file tests - compare output against .expected files
+    file(GLOB GOLDEN_TESTS "${CMAKE_SOURCE_DIR}/tests/golden_files/*.abc")
+    foreach(golden_file ${GOLDEN_TESTS})
+        get_filename_component(test_name ${golden_file} NAME_WE)
+        set(expected_file "${CMAKE_SOURCE_DIR}/tests/golden_files/${test_name}.expected")
+        if(EXISTS ${expected_file})
+            add_test(NAME Golden_${test_name}
+                COMMAND bash "${CMAKE_SOURCE_DIR}/tests/golden_test_runner.sh"
+                    "$<TARGET_FILE:alphabet>" "${golden_file}" "${expected_file}"
+            )
+        endif()
+    endforeach()
+
+    # Language tests (only on Unix)
+    if(UNIX)
+        add_test(NAME LanguageTests
+            COMMAND bash "${CMAKE_SOURCE_DIR}/test_all_languages.sh"
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        )
+    endif()
 endif()
 
 # ============================================================================

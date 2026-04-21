@@ -95,6 +95,10 @@ private:
 
     CompiledClass compile_class_def(const ClassStmt& stmt);
     std::vector<Instruction> compile_method(const FunctionStmt& method);
+
+public:
+    // Debug: dump bytecode in human-readable form
+    static std::string dump_program(const Program& program);
 };
 
 }

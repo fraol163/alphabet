@@ -26,34 +26,23 @@
 | `v` | Public | `v m 1 f() { }` | Public access |
 | `z` | System | `z.o("Hello")` | System functions |
 
-**Unused (Reserved):** d, f, g, q, u, w, x, y
-
 ---
 
 ## Type IDs
 
 ### Integers (1-5)
-
 ```
-1 = i8      (8-bit)
-2 = i16     (16-bit)
-3 = i32     (32-bit)
-4 = i64     (64-bit)
-5 = int     (generic)
+5 = int     (generic integer)
 ```
 
 ### Floats (6-10)
-
 ```
 6 = f32     (32-bit float)
 7 = f64     (64-bit float)
 8 = float   (generic float)
-9 = dec     (decimal)
-10 = cpx    (complex)
 ```
 
 ### Other (11-14)
-
 ```
 11 = bool   (true/false)
 12 = str    (string)
@@ -62,7 +51,6 @@
 ```
 
 ### Custom (15+)
-
 ```
 15+ = First custom class, second class, etc.
 ```
@@ -71,29 +59,96 @@
 
 ## Operators
 
-### Arithmetic
 ```
-+  -  *  /  %
-```
-
-### Comparison
-```
-==  !=  >  <  >=  <=
+Arithmetic:  +  -  *  /  %
+Comparison:  ==  !=  >  <  >=  <=
+Logical:     &&  ||  !
+Access:      .  @  ^
 ```
 
-### Logical
+---
+
+## System Functions (z.*)
+
+### I/O
 ```
-&&  ||  !
+z.o(x)          # Print/output
+z.i()           # Read input (returns string or number)
+z.f(path)       # Read file contents
 ```
 
-### Assignment
+### Math
 ```
-=  +=  -=  *=  /=
+z.sqrt(x)       # Square root
+z.abs(x)        # Absolute value
+z.pow(a, b)     # a^b
+z.floor(x)      # Floor
+z.ceil(x)       # Ceiling
+z.sin(x)        # Sine
+z.cos(x)        # Cosine
 ```
 
-### Access
+### Type & Conversion
 ```
-.  @  ^
+z.type(x)       # "number", "string", "null", etc.
+z.len(x)        # Length of string or list
+z.tostr(x)      # Convert to string
+z.tonum(x)      # Convert to number
+```
+
+### String Operations
+```
+z.upper(s)          # UPPERCASE
+z.lower(s)          # lowercase
+z.trim(s)           # Remove whitespace
+z.split(s, delim)   # Split into list
+z.join(list, sep)   # Join list to string
+z.replace(s, old, new)  # Replace all
+z.substr(s, start, len) # Substring
+z.chr(code)         # Char from code
+z.ord(char)         # Code from char
+z.starts_with(s, p) # Check prefix (1/0)
+z.ends_with(s, s)   # Check suffix (1/0)
+z.contains(s, sub)  # Check substring (1/0)
+z.reverse(s)        # Reverse string
+```
+
+### List Operations
+```
+z.append(list, val)     # Add to end (mutates)
+z.pop_back(list)        # Remove last, return it
+z.contains(list, val)   # Check membership (1/0)
+z.reverse(list)         # New reversed list
+```
+
+### Range Generation
+```
+z.range(stop)           # [0, 1, ..., stop-1]
+z.range(start, stop)    # [start, ..., stop-1]
+z.range(start, stop, step)  # With step
+```
+
+### Map Operations
+```
+z.keys(map)             # List of keys
+z.values(map)           # List of values
+```
+
+### Errors
+```
+z.t()                   # Throw error
+z.t("msg")              # Throw with message
+```
+
+---
+
+## Standard Library
+
+```
+x "stdlib/math.abc"     # factorial, gcd, lcm, max, min, clamp, sign
+x "stdlib/io.abc"       # print, println, read_file
+x "stdlib/string.abc"   # contains, split, join, replace, trim, upper, lower, ...
+x "stdlib/list.abc"     # length, push, pop, contains, reverse, range, keys, ...
 ```
 
 ---
@@ -109,27 +164,32 @@ z.o(msg)
 
 ### Variables
 ```alphabet
-5 x = 10          # int
-6 pi = 3.14       # float
+5 x = 10              # int
+6 pi = 3.14           # float
 12 name = "Alphabet"  # string
-11 ok = (1 == 1)  # bool
+13 nums = [1, 2, 3]   # list
+14 cfg = {"k": 100}   # map
 ```
 
-### If Statement
+### Negative Indexing
 ```alphabet
-i (x > 0) {
-  z.o("positive")
-} e {
-  z.o("non-positive")
+13 nums = [10, 20, 30]
+z.o(nums[-1])  # 30 (last element)
+z.o(nums[-2])  # 20
+```
+
+### For-Style Loop
+```alphabet
+l (5 j = 0 : j < 5 : j = j + 1) {
+  z.o(j)
 }
 ```
 
-### Loop
+### Range Loop
 ```alphabet
-5 i = 0
-l (i < 10) {
-  z.o(i)
-  5 i = i + 1
+13 r = z.range(5)
+l (5 i = 0 : i < z.len(r) : i = i + 1) {
+  z.o(r[i])
 }
 ```
 
@@ -140,208 +200,63 @@ c Calculator {
     r a + b
   }
 }
-
 15 calc = n Calculator()
-5 result = calc.add(15, 25)
+z.o(calc.add(15, 25))  # 40
 ```
 
-### Exception Handling
+### Pattern Matching
 ```alphabet
-t {
-  # risky code
-  z.t()
-} h (12 e) {
-  z.o("Error: " + e)
+q (x) {
+  1: z.o("one")
+  2: z.o("two")
+  e: z.o("other")
 }
 ```
-
----
-
-## System Functions
-
-### Input/Output
-```
-z.o(x)        # Print/output
-z.i()         # Read input
-```
-
-### Files
-```
-z.f(path)     # Read file
-z.w(path,d)   # Write file
-```
-
-### Errors
-```
-z.t()         # Throw error
-```
-
-### External (FFI)
-```
-z.load_lib(p) # Load library
-lib.call(f)   # Call function
-```
-
----
-
-## Common Patterns
-
-### Swap Variables
-```alphabet
-5 temp = a
-5 a = b
-5 b = temp
-```
-
-### Increment
-```alphabet
-5 x = x + 1
-```
-
-### Check Even
-```alphabet
-i (x % 2 == 0) {
-  z.o("even")
-}
-```
-
-### Array Length
-```alphabet
-13 arr = [1, 2, 3]
-5 len = arr.length()
-```
-
----
-
-## Error Messages
-
-| Error | Meaning | Fix |
-|-------|---------|-----|
-| `MissingLanguageHeader` | No `#alphabet<lang>` | Add magic header |
-| `TypeMismatch` | Wrong type | Check type IDs |
-| `UndefinedVariable` | Variable not declared | Declare first |
-| `StackOverflow` | Too much recursion | Reduce depth |
 
 ---
 
 ## Command Line
 
 ```bash
-# Run program
-alphabet program.abc
-
-# REPL mode
-alphabet --repl
-
-# LSP server
-alphabet --lsp
-
-# Show version
-alphabet --version
-
-# Show help
-alphabet --help
+alphabet program.abc              # Run program
+alphabet --repl                   # Interactive REPL
+alphabet --lsp                    # LSP server
+alphabet --debug program.abc      # Debug with breakpoints
+alphabet --dump-bytecode prog.abc # Inspect bytecode
+alphabet --sandbox program.abc    # Sandboxed execution
+alphabet -c -o out.bin prog.abc   # Compile to bytecode
+alphabet update                   # Self-update
+alphabet --version                # Show version
+alphabet --help                   # Show help
 ```
 
 ---
 
-## Build from Source
+## Debugger Commands (in --debug mode)
 
-```bash
-git clone https://github.com/fraol163/alphabet.git
-cd alphabet
-mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-make -j$(nproc)
-sudo make install
-alphabet --version
+```
+continue (c)      Resume execution
+step (s)          Step to next line
+locals (l)        Show local variables
+globals (g)       Show global variables
+stack (bt)        Show call stack trace
+print (p)         Show stack contents
+add_break N (b)   Set breakpoint at line N
+del_break N (db)  Remove breakpoint
+breakpoints (bl)  List breakpoints
+help (?)          Show help
 ```
 
 ---
 
 ## Quick Tips
 
-✅ **Do:**
-- Start every file with `#alphabet<en>`
-- Use ASCII for class/method names
-- Use appropriate type IDs
-- Keep recursion under 1000 levels
-
-❌ **Don't:**
-- Forget the magic header
-- Use semicolons (not needed!)
-- Mix types without conversion
-- Use Unicode identifiers (not supported)
+Start every file with `#alphabet<en>`
+Use type 5 for integers, 12 for strings, 13 for lists
+Negative indexing: list[-1] gets last element
+String concat: "hello" + 42 = "hello42"
 
 ---
 
-## File Extension
-
-All Alphabet files use: **`.abc`**
-
----
-
-## Magic Header
-
-Must be first line: **`#alphabet<lang>`**
-
-Valid lang codes: `en`, `es`, `fr`, `de`, etc.
-
----
-
-## Memory Layout
-
-```
-Stack: 65536 slots (~3MB fixed)
-Heap: Dynamic (strings, lists, maps, objects)
-```
-
----
-
-## Performance Tips
-
-1. Use smaller type IDs when possible
-2. Minimize object creation in loops
-3. Use local variables
-4. Prefer iteration over recursion
-
----
-
-## Learning Path
-
-1. **GETTING_STARTED.md** - 10 minutes
-2. **TUTORIAL.md** - 2 hours (10 lessons)
-3. **REFERENCE.md** - Complete syntax
-4. **ADVANCED.md** - FFI, LSP, architecture
-5. **BENCHMARKS.md** - Performance data
-
----
-
-## Resources
-
-- **GitHub:** https://github.com/fraol163/alphabet
-- **Issues:** https://github.com/fraol163/alphabet/issues
-- **Discussions:** https://github.com/fraol163/alphabet/discussions
-- **Docs:** See `docs/` folder
-
----
-
-## Contact
-
-**Fraol Teshome**  
-Email: fraolteshome444@gmail.com
-
----
-
-**License:** MIT  
-**Version:** 2.0.0  
-**Implementation:** Native C++17
-
----
-
-**Print date:** _______________  
-**Your name:** _______________
-
----
-
-*Cut along the line to fit in your wallet!*
+**Version:** 2.3.0 | **Implementation:** Native C++17 | **License:** MIT
+**GitHub:** https://github.com/fraol163/alphabet

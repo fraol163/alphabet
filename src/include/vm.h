@@ -1,7 +1,6 @@
 #ifndef ALPHABET_VM_H
 #define ALPHABET_VM_H
 
-#include <array>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -122,7 +121,7 @@ public:
 
 class VM {
 public:
-    VM() = default;
+    VM();
     explicit VM(const Program& program);
 
     void run();
@@ -139,7 +138,8 @@ public:
     void remove_breakpoint(int line) { breakpoints_.erase(line); }
 
 private:
-    std::array<Value, 65536> stack_;
+    std::vector<Value> stack_;
+    static constexpr size_t INITIAL_STACK_SIZE = 4096;
     size_t stack_top_ = 0;
 
     std::unordered_map<std::string, Value> globals_;

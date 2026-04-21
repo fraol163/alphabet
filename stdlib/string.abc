@@ -1,0 +1,78 @@
+#alphabet<en>
+// String Library for Alphabet v2.3.0
+// Wraps built-in z.* string functions for cleaner API
+
+// Check if string contains substring
+m 11 contains(12 haystack, 12 needle) {
+  r z.contains(haystack, needle)
+}
+
+// Check if string starts with prefix
+m 11 starts_with(12 s, 12 prefix) {
+  r z.starts_with(s, prefix)
+}
+
+// Check if string ends with suffix
+m 11 ends_with(12 s, 12 suffix) {
+  r z.ends_with(s, suffix)
+}
+
+// Split string by delimiter, returns list
+m 13 split(12 s, 12 delim) {
+  r z.split(s, delim)
+}
+
+// Join list elements with separator
+m 12 join(13 items, 12 sep) {
+  r z.join(items, sep)
+}
+
+// Replace all occurrences of old with new
+m 12 replace(12 s, 12 old, 12 new_str) {
+  r z.replace(s, old, new_str)
+}
+
+// Trim whitespace from both ends
+m 12 trim(12 s) {
+  r z.trim(s)
+}
+
+// Convert to uppercase
+m 12 upper(12 s) {
+  r z.upper(s)
+}
+
+// Convert to lowercase
+m 12 lower(12 s) {
+  r z.lower(s)
+}
+
+// Get substring starting at index
+m 12 substr(12 s, 5 start) {
+  r z.substr(s, start)
+}
+
+// Get substring with length
+m 12 slice(12 s, 5 start, 5 length) {
+  r z.substr(s, start, length)
+}
+
+// Reverse a string
+m 12 reverse(12 s) {
+  r z.reverse(s)
+}
+
+// Get string length
+m 5 length(12 s) {
+  r z.len(s)
+}
+
+// Character from ASCII code
+m 12 chr(5 code) {
+  r z.chr(code)
+}
+
+// ASCII code from character
+m 5 ord(12 c) {
+  r z.ord(c)
+}

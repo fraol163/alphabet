@@ -56,7 +56,12 @@ std::string value_to_string(const Value& value) {
     }, value.data);
 }
 
+VM::VM() {
+    stack_.resize(INITIAL_STACK_SIZE);
+}
+
 VM::VM(const Program& program) {
+    stack_.resize(INITIAL_STACK_SIZE);
     init(program);
 }
 
@@ -87,7 +92,7 @@ void VM::run() {
 
 void VM::push(const Value& value) {
     if (stack_top_ >= stack_.size()) {
-        throw RuntimeError("Stack overflow");
+        stack_.resize(stack_.size() * 2);
     }
     stack_[stack_top_++] = value;
 }
@@ -897,7 +902,11 @@ void VM::execute_instruction(CallFrame& frame) {
 
 void VM::check_breakpoints(const Instruction& instr) {
     if (step_over_ || (breakpoints_.find(instr.line) != breakpoints_.end())) {
-        std::cout << "BREAKPOINT_HIT " << instr.line << std::endl;
+        // Output structured JSON event for debugger to parse
+        std::cout << "{\"event\":\"stopped\",\"line\":" << instr.line
+                  << ",\"reason\":\""
+                  << (step_over_ ? "step" : "breakpoint")
+                  << "\"}" << std::endl;
         step_over_ = false;
         wait_for_debugger_command();
     }
@@ -906,38 +915,85 @@ void VM::check_breakpoints(const Instruction& instr) {
 void VM::wait_for_debugger_command() {
     std::string line;
     while (std::getline(std::cin, line)) {
-        if (line == "continue") {
+        if (line == "continue" || line == "c") {
             break;
-        } else if (line == "step") {
+        } else if (line == "step" || line == "s") {
             step_over_ = true;
             break;
-        } else if (line == "locals") {
+        } else if (line == "locals" || line == "l") {
             if (!frames_.empty()) {
                 std::cout << get_locals_json(frames_.back()) << std::endl;
             } else {
                 std::cout << "{}" << std::endl;
             }
-        } else if (line == "stack") {
+        } else if (line == "stack" || line == "bt") {
             std::cout << get_stack_trace() << std::endl;
-        } else if (line.find("add_break ") == 0) {
-            int l = std::stoi(line.substr(10));
+        } else if (line == "globals" || line == "g") {
+            std::ostringstream oss;
+            oss << "{";
+            bool first = true;
+            for (const auto& [name, val] : globals_) {
+                if (!first) oss << ",";
+                oss << "\"" << name << "\": \"" << value_to_string(val) << "\"";
+                first = false;
+            }
+            oss << "}";
+            std::cout << oss.str() << std::endl;
+        } else if (line == "print" || line == "p") {
+            // Print current stack
+            std::ostringstream oss;
+            oss << "[";
+            for (size_t i = 0; i < stack_top_; ++i) {
+                if (i > 0) oss << ", ";
+                oss << "\"" << value_to_string(stack_[i]) << "\"";
+            }
+            oss << "]";
+            std::cout << oss.str() << std::endl;
+        } else if (line.find("add_break ") == 0 || line.find("b ") == 0) {
+            size_t space_pos = line.find(' ');
+            int l = std::stoi(line.substr(space_pos + 1));
             add_breakpoint(l);
-        } else if (line.find("del_break ") == 0) {
-            int l = std::stoi(line.substr(10));
+            std::cout << "{\"ok\":true,\"breakpoint\":" << l << "}" << std::endl;
+        } else if (line.find("del_break ") == 0 || line.find("db ") == 0) {
+            size_t space_pos = line.find(' ');
+            int l = std::stoi(line.substr(space_pos + 1));
             remove_breakpoint(l);
+            std::cout << "{\"ok\":true,\"removed\":" << l << "}" << std::endl;
+        } else if (line == "breakpoints" || line == "bl") {
+            std::ostringstream oss;
+            oss << "[";
+            bool first = true;
+            for (int bp : breakpoints_) {
+                if (!first) oss << ",";
+                oss << bp;
+                first = false;
+            }
+            oss << "]";
+            std::cout << oss.str() << std::endl;
+        } else if (line == "help" || line == "?") {
+            std::cout << "Debugger commands:\n"
+                      << "  continue (c)      Resume execution\n"
+                      << "  step (s)          Step to next line\n"
+                      << "  locals (l)        Show local variables\n"
+                      << "  globals (g)       Show global variables\n"
+                      << "  stack (bt)        Show call stack trace\n"
+                      << "  print (p)         Show stack contents\n"
+                      << "  add_break N (b N) Set breakpoint at line N\n"
+                      << "  del_break N (db)  Remove breakpoint at line N\n"
+                      << "  breakpoints (bl)  List all breakpoints\n"
+                      << "  help (?)          Show this help\n";
         }
     }
 }
 
 std::string VM::get_stack_trace() {
     std::ostringstream oss;
-    oss << "[";
+    oss << "{\"frames\":[";
     for (size_t i = 0; i < frames_.size(); ++i) {
         if (i > 0) oss << ",";
-        // In a real implementation, we'd have method names here
-        oss << "\"Frame " << i << "\"";
+        oss << "{\"index\":" << i << ",\"ip\":" << frames_[i].ip << "}";
     }
-    oss << "]";
+    oss << "],\"depth\":" << frames_.size() << "}";
     return oss.str();
 }
 
@@ -1180,6 +1236,184 @@ void VM::system_call(const std::string& method, int arg_count) {
             push(Value(std::move(s)));
         } else {
             push(Value(value_to_string(str)));
+        }
+    } else if (method == "range") {
+        // z.range(stop) -> list [0, 1, ..., stop-1]
+        // z.range(start, stop) -> list [start, ..., stop-1]
+        // z.range(start, stop, step) -> list [start, start+step, ...]
+        double start = 0, stop = 0, step = 1;
+        if (arg_count == 1) {
+            Value v = pop();
+            stop = v.is_number() ? v.as_number() : 0;
+        } else if (arg_count == 2) {
+            Value v_stop = pop();
+            Value v_start = pop();
+            start = v_start.is_number() ? v_start.as_number() : 0;
+            stop = v_stop.is_number() ? v_stop.as_number() : 0;
+        } else if (arg_count >= 3) {
+            Value v_step = pop();
+            Value v_stop = pop();
+            Value v_start = pop();
+            start = v_start.is_number() ? v_start.as_number() : 0;
+            stop = v_stop.is_number() ? v_stop.as_number() : 0;
+            step = v_step.is_number() ? v_step.as_number() : 1;
+        }
+        if (step == 0) step = 1;
+        std::vector<Value> result;
+        if (step > 0) {
+            for (double i = start; i < stop; i += step) {
+                result.push_back(Value(i));
+            }
+        } else {
+            for (double i = start; i > stop; i += step) {
+                result.push_back(Value(i));
+            }
+        }
+        push(Value(std::move(result)));
+    } else if (method == "append" && arg_count >= 2) {
+        // z.append(list, value) -> list (mutates and returns)
+        Value val = pop();
+        Value list_val = pop();
+        if (list_val.is_list()) {
+            list_val.as_list().push_back(val);
+            push(list_val);
+        } else {
+            push(Value(std::vector<Value>{val}));
+        }
+    } else if (method == "pop_back" && arg_count >= 1) {
+        // z.pop_back(list) -> value (removes and returns last element)
+        Value list_val = pop();
+        if (list_val.is_list() && !list_val.as_list().empty()) {
+            auto& lst = list_val.as_list();
+            Value back = lst.back();
+            lst.pop_back();
+            push(back);
+        } else {
+            push(Value(nullptr));
+        }
+    } else if (method == "contains" && arg_count >= 2) {
+        // z.contains(collection, value) -> bool (1 or 0)
+        Value needle = pop();
+        Value haystack = pop();
+        if (haystack.is_list()) {
+            bool found = false;
+            for (const auto& item : haystack.as_list()) {
+                if (item == needle) { found = true; break; }
+            }
+            push(Value(found ? 1.0 : 0.0));
+        } else if (haystack.is_string() && needle.is_string()) {
+            push(Value(haystack.as_string().find(needle.as_string()) != std::string::npos ? 1.0 : 0.0));
+        } else {
+            push(Value(0.0));
+        }
+    } else if (method == "keys" && arg_count >= 1) {
+        // z.keys(map) -> list of keys
+        Value map_val = pop();
+        if (map_val.is_map()) {
+            std::vector<Value> result;
+            for (const auto& [k, _] : map_val.as_map()) {
+                result.push_back(Value(k));
+            }
+            push(Value(std::move(result)));
+        } else {
+            push(Value(std::vector<Value>()));
+        }
+    } else if (method == "values" && arg_count >= 1) {
+        // z.values(map) -> list of values
+        Value map_val = pop();
+        if (map_val.is_map()) {
+            std::vector<Value> result;
+            for (const auto& [_, v] : map_val.as_map()) {
+                result.push_back(v);
+            }
+            push(Value(std::move(result)));
+        } else {
+            push(Value(std::vector<Value>()));
+        }
+    } else if (method == "reverse" && arg_count >= 1) {
+        // z.reverse(list) -> new reversed list
+        Value list_val = pop();
+        if (list_val.is_list()) {
+            auto lst = list_val.as_list();  // copy
+            std::reverse(lst.begin(), lst.end());
+            push(Value(std::move(lst)));
+        } else if (list_val.is_string()) {
+            std::string s = list_val.as_string();
+            std::reverse(s.begin(), s.end());
+            push(Value(std::move(s)));
+        } else {
+            push(list_val);
+        }
+    } else if (method == "substr" && arg_count >= 2) {
+        // z.substr(string, start, [length]) -> string
+        if (arg_count >= 3) {
+            Value len_val = pop();
+            Value start_val = pop();
+            Value str_val = pop();
+            if (str_val.is_string() && start_val.is_number()) {
+                std::string s = str_val.as_string();
+                size_t start_idx = static_cast<size_t>(start_val.as_number());
+                size_t sub_len = len_val.is_number() ? static_cast<size_t>(len_val.as_number()) : std::string::npos;
+                if (start_idx < s.size()) {
+                    push(Value(s.substr(start_idx, sub_len)));
+                } else {
+                    push(Value(std::string("")));
+                }
+            } else {
+                push(Value(std::string("")));
+            }
+        } else {
+            Value start_val = pop();
+            Value str_val = pop();
+            if (str_val.is_string() && start_val.is_number()) {
+                std::string s = str_val.as_string();
+                size_t start_idx = static_cast<size_t>(start_val.as_number());
+                if (start_idx < s.size()) {
+                    push(Value(s.substr(start_idx)));
+                } else {
+                    push(Value(std::string("")));
+                }
+            } else {
+                push(Value(std::string("")));
+            }
+        }
+    } else if (method == "chr" && arg_count >= 1) {
+        // z.chr(code) -> single character string
+        Value v = pop();
+        if (v.is_number()) {
+            push(Value(std::string(1, static_cast<char>(v.as_number()))));
+        } else {
+            push(Value(std::string("")));
+        }
+    } else if (method == "ord" && arg_count >= 1) {
+        // z.ord(char) -> code point
+        Value v = pop();
+        if (v.is_string() && !v.as_string().empty()) {
+            push(Value(static_cast<double>(static_cast<unsigned char>(v.as_string()[0]))));
+        } else {
+            push(Value(0.0));
+        }
+    } else if (method == "starts_with" && arg_count >= 2) {
+        // z.starts_with(string, prefix) -> bool
+        Value prefix = pop();
+        Value str = pop();
+        if (str.is_string() && prefix.is_string()) {
+            const auto& s = str.as_string();
+            const auto& p = prefix.as_string();
+            push(Value(s.size() >= p.size() && s.compare(0, p.size(), p) == 0 ? 1.0 : 0.0));
+        } else {
+            push(Value(0.0));
+        }
+    } else if (method == "ends_with" && arg_count >= 2) {
+        // z.ends_with(string, suffix) -> bool
+        Value suffix = pop();
+        Value str = pop();
+        if (str.is_string() && suffix.is_string()) {
+            const auto& s = str.as_string();
+            const auto& suf = suffix.as_string();
+            push(Value(s.size() >= suf.size() && s.compare(s.size() - suf.size(), suf.size(), suf) == 0 ? 1.0 : 0.0));
+        } else {
+            push(Value(0.0));
         }
     }
 }

@@ -3,11 +3,13 @@
 #include <string>
 #include <sstream>
 #include <streambuf>
+#include <cmath>
 
 #include "lexer.h"
 #include "parser.h"
 #include "compiler.h"
 #include "vm.h"
+#include "test_helpers.h"
 
 using namespace alphabet;
 
@@ -32,7 +34,19 @@ static int tests_failed = 0;
 
 #define ASSERT_EQ(expected, actual) do { \
     if ((expected) != (actual)) { \
-        throw std::runtime_error("Assertion failed: " #expected " != " #actual); \
+        throw std::runtime_error("Expected " + std::to_string(expected) + " but got " + std::to_string(actual)); \
+    } \
+} while(0)
+
+#define ASSERT_STREQ(expected, actual) do { \
+    if (std::string(expected) != std::string(actual)) { \
+        throw std::runtime_error("Expected \"" + std::string(expected) + "\" but got \"" + std::string(actual) + "\""); \
+    } \
+} while(0)
+
+#define ASSERT_CONTAINS(needle, haystack) do { \
+    if (std::string(haystack).find(std::string(needle)) == std::string::npos) { \
+        throw std::runtime_error("Expected output to contain \"" + std::string(needle) + "\" but got: " + std::string(haystack)); \
     } \
 } while(0)
 
@@ -42,459 +56,369 @@ static int tests_failed = 0;
     } \
 } while(0)
 
-// Helper to run source and capture output
-std::string run_source_capture(const std::string& source) {
-    // Capture stdout
-    std::ostringstream oss;
-    std::streambuf* old = std::cout.rdbuf(oss.rdbuf());
-    
-    try {
-        Lexer lexer(source);
-        Parser parser(lexer.scan_tokens());
-        auto statements = parser.parse();
-        
-        Compiler compiler;
-        Program program = compiler.compile(statements);
-        
-        VM vm(program);
-        vm.run();
-    } catch (...) {
-        std::cout.rdbuf(old);
-        throw;
-    }
-    
-    std::cout.rdbuf(old);
-    return oss.str();
+// Helper to run source and get a global variable value
+double get_number_global(const std::string& source, const std::string& varname) {
+    auto globals = test::run_get_globals(source);
+    auto it = globals.find(varname);
+    if (it == globals.end()) throw std::runtime_error("Global '" + varname + "' not found");
+    if (!it->second.is_number()) throw std::runtime_error("Global '" + varname + "' is not a number");
+    return it->second.as_number();
 }
 
-// Helper to run source without capturing
-void run_source(const std::string& source) {
-    Lexer lexer(source);
-    Parser parser(lexer.scan_tokens());
-    auto statements = parser.parse();
-    
-    Compiler compiler;
-    Program program = compiler.compile(statements);
-    
-    VM vm(program);
-    vm.run();
-}
-
-// ============================================================================
-// Basic VM Operation Tests
-// ============================================================================
-
-TEST(test_vm_push_and_halt) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 42.0));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    // If we get here without crash, test passes
-    ASSERT_TRUE(true);
-}
-
-TEST(test_vm_push_null) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, nullptr));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
-}
-
-TEST(test_vm_push_string) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, std::string("hello")));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+std::string get_string_global(const std::string& source, const std::string& varname) {
+    auto globals = test::run_get_globals(source);
+    auto it = globals.find(varname);
+    if (it == globals.end()) throw std::runtime_error("Global '" + varname + "' not found");
+    if (!it->second.is_string()) throw std::runtime_error("Global '" + varname + "' is not a string");
+    return it->second.as_string();
 }
 
 // ============================================================================
 // Arithmetic Tests
 // ============================================================================
 
-TEST(test_vm_add) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 10.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 5.0));
-    program.main.push_back(Instruction(OpCode::ADD));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_arithmetic_add) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(10 + 20)");
+    ASSERT_CONTAINS("30", output);
 }
 
-TEST(test_vm_sub) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 10.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 3.0));
-    program.main.push_back(Instruction(OpCode::SUB));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_arithmetic_sub) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(50 - 13)");
+    ASSERT_CONTAINS("37", output);
 }
 
-TEST(test_vm_mul) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 4.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 5.0));
-    program.main.push_back(Instruction(OpCode::MUL));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_arithmetic_mul) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(6 * 7)");
+    ASSERT_CONTAINS("42", output);
 }
 
-TEST(test_vm_div) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 20.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 4.0));
-    program.main.push_back(Instruction(OpCode::DIV));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_arithmetic_div) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(100 / 4)");
+    ASSERT_CONTAINS("25", output);
 }
 
-TEST(test_vm_percent) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 17.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 5.0));
-    program.main.push_back(Instruction(OpCode::PERCENT));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_arithmetic_mod) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(17 % 5)");
+    ASSERT_CONTAINS("2", output);
+}
+
+TEST(test_arithmetic_precedence) {
+    // 2 + 3 * 4 = 14, not 20
+    std::string output = test::run_capture("#alphabet<test>\nz.o(2 + 3 * 4)");
+    ASSERT_CONTAINS("14", output);
+}
+
+TEST(test_arithmetic_parentheses) {
+    // (2 + 3) * 4 = 20
+    std::string output = test::run_capture("#alphabet<test>\nz.o((2 + 3) * 4)");
+    ASSERT_CONTAINS("20", output);
+}
+
+// ============================================================================
+// Variable Tests
+// ============================================================================
+
+TEST(test_variable_assignment) {
+    double val = get_number_global("#alphabet<test>\n5 x = 99", "x");
+    ASSERT_EQ(99.0, val);
+}
+
+TEST(test_variable_expression) {
+    double val = get_number_global("#alphabet<test>\n5 x = 10 + 5 * 2", "x");
+    ASSERT_EQ(20.0, val);
+}
+
+TEST(test_string_variable) {
+    std::string val = get_string_global("#alphabet<test>\n12 s = \"hello\"", "s");
+    ASSERT_STREQ("hello", val);
 }
 
 // ============================================================================
 // Comparison Tests
 // ============================================================================
 
-TEST(test_vm_eq_true) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 5.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 5.0));
-    program.main.push_back(Instruction(OpCode::EQ));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_comparison_gt_true) {
+    std::string output = test::run_capture("#alphabet<test>\n5 b = 10 > 5\nz.o(b)");
+    ASSERT_CONTAINS("1", output);
 }
 
-TEST(test_vm_gt) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 10.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 5.0));
-    program.main.push_back(Instruction(OpCode::GT));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_comparison_gt_false) {
+    std::string output = test::run_capture("#alphabet<test>\n5 b = 3 > 7\nz.o(b)");
+    ASSERT_CONTAINS("0", output);
 }
 
-TEST(test_vm_lt) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 3.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 7.0));
-    program.main.push_back(Instruction(OpCode::LT));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_comparison_eq) {
+    std::string output = test::run_capture("#alphabet<test>\n5 b = 5 == 5\nz.o(b)");
+    ASSERT_CONTAINS("1", output);
 }
 
-TEST(test_vm_not) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 0.0));
-    program.main.push_back(Instruction(OpCode::NOT));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_comparison_ne) {
+    std::string output = test::run_capture("#alphabet<test>\n5 b = 5 != 3\nz.o(b)");
+    ASSERT_CONTAINS("1", output);
 }
 
 // ============================================================================
 // Control Flow Tests
 // ============================================================================
 
-TEST(test_vm_jump) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 1.0));
-    program.main.push_back(Instruction(OpCode::JUMP, static_cast<int64_t>(3)));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 2.0));  // Skipped
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 3.0));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_if_true_branch) {
+    std::string output = test::run_capture("#alphabet<test>\ni (1 > 0) { z.o(\"yes\") }");
+    ASSERT_CONTAINS("yes", output);
 }
 
-TEST(test_vm_jump_if_false_take_jump) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 0.0));  // false
-    program.main.push_back(Instruction(OpCode::JUMP_IF_FALSE, static_cast<int64_t>(3)));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 1.0));  // Skipped
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 2.0));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_if_else_false_branch) {
+    std::string output = test::run_capture("#alphabet<test>\ni (0 > 1) { z.o(\"yes\") } e { z.o(\"no\") }");
+    ASSERT_CONTAINS("no", output);
 }
 
-TEST(test_vm_jump_if_false_skip_jump) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 1.0));  // true
-    program.main.push_back(Instruction(OpCode::JUMP_IF_FALSE, static_cast<int64_t>(3)));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 2.0));  // Executed
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 3.0));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_loop_count) {
+    std::string output = test::run_capture("#alphabet<test>\n5 i = 0\nl (i < 5) { z.o(i) 5 i = i + 1 }");
+    ASSERT_CONTAINS("0", output);
+    ASSERT_CONTAINS("4", output);
 }
 
 // ============================================================================
-// Stack Operations Tests
+// Function Tests
 // ============================================================================
 
-TEST(test_vm_pop) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 42.0));
-    program.main.push_back(Instruction(OpCode::POP));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_function_return) {
+    std::string output = test::run_capture(R"(#alphabet<test>
+m 5 add(5 a, 5 b) {
+  r a + b
+}
+z.o(add(3, 4)))");
+    ASSERT_CONTAINS("7", output);
 }
 
-// ============================================================================
-// Data Structure Tests
-// ============================================================================
-
-TEST(test_vm_build_list) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 1.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 2.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 3.0));
-    program.main.push_back(Instruction(OpCode::BUILD_LIST, static_cast<int64_t>(3)));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_function_recursion) {
+    std::string output = test::run_capture(R"(#alphabet<test>
+m 5 fact(5 num) {
+  i (num <= 1) { r 1 }
+  r num * fact(num - 1)
 }
-
-TEST(test_vm_build_map) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, std::string("key1")));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 100.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, std::string("key2")));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 200.0));
-    program.main.push_back(Instruction(OpCode::BUILD_MAP, static_cast<int64_t>(2)));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
-}
-
-TEST(test_vm_load_index_list) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 1.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 2.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 3.0));
-    program.main.push_back(Instruction(OpCode::BUILD_LIST, static_cast<int64_t>(3)));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 1.0));  // index
-    program.main.push_back(Instruction(OpCode::LOAD_INDEX));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+5 result = fact(4)
+z.o(result))");
+    ASSERT_CONTAINS("24", output);
 }
 
 // ============================================================================
-// Object Tests
+// List Tests
 // ============================================================================
 
-TEST(test_vm_new_object) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::NEW, std::string("TestClass")));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_list_create_and_access) {
+    std::string output = test::run_capture("#alphabet<test>\n13 nums = [10, 20, 30]\nz.o(nums[1])");
+    ASSERT_CONTAINS("20", output);
 }
 
-TEST(test_vm_load_field) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::NEW, std::string("TestClass")));
-    program.main.push_back(Instruction(OpCode::LOAD_FIELD, std::string("field")));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_list_negative_index) {
+    std::string output = test::run_capture("#alphabet<test>\n13 nums = [10, 20, 30]\nz.o(nums[-1])");
+    ASSERT_CONTAINS("30", output);
 }
 
-TEST(test_vm_store_field) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::NEW, std::string("TestClass")));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 42.0));
-    program.main.push_back(Instruction(OpCode::STORE_FIELD, std::string("field")));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_list_length) {
+    std::string output = test::run_capture("#alphabet<test>\n13 nums = [1, 2, 3, 4, 5]\nz.o(z.len(nums))");
+    ASSERT_CONTAINS("5", output);
+}
+
+TEST(test_list_append) {
+    std::string output = test::run_capture("#alphabet<test>\n13 nums = [1, 2]\nz.append(nums, 3)\nz.o(nums[2])");
+    ASSERT_CONTAINS("3", output);
+}
+
+// ============================================================================
+// Map Tests
+// ============================================================================
+
+TEST(test_map_create_and_access) {
+    std::string output = test::run_capture("#alphabet<test>\n14 m = {\"name\": \"Alphabet\"}\nz.o(m[\"name\"])");
+    ASSERT_CONTAINS("Alphabet", output);
+}
+
+// ============================================================================
+// String Tests
+// ============================================================================
+
+TEST(test_string_concat) {
+    std::string output = test::run_capture("#alphabet<test>\n12 s = \"Hello\" + \" World\"\nz.o(s)");
+    ASSERT_CONTAINS("Hello World", output);
+}
+
+TEST(test_string_number_concat) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(\"x=\" + 42)");
+    ASSERT_CONTAINS("x=42", output);
+}
+
+TEST(test_string_upper) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(z.upper(\"hello\"))");
+    ASSERT_CONTAINS("HELLO", output);
+}
+
+TEST(test_string_lower) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(z.lower(\"HELLO\"))");
+    ASSERT_CONTAINS("hello", output);
+}
+
+TEST(test_string_trim) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(z.trim(\"  hi  \"))");
+    ASSERT_CONTAINS("hi", output);
+}
+
+TEST(test_string_split) {
+    std::string output = test::run_capture("#alphabet<test>\n13 parts = z.split(\"a,b,c\", \",\")\nz.o(parts[1])");
+    ASSERT_CONTAINS("b", output);
+}
+
+TEST(test_string_replace) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(z.replace(\"hello world\", \"world\", \"ABC\"))");
+    ASSERT_CONTAINS("hello ABC", output);
+}
+
+// ============================================================================
+// Built-in Function Tests
+// ============================================================================
+
+TEST(test_builtin_sqrt) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(z.sqrt(144))");
+    ASSERT_CONTAINS("12", output);
+}
+
+TEST(test_builtin_abs) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(z.abs(-42))");
+    ASSERT_CONTAINS("42", output);
+}
+
+TEST(test_builtin_pow) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(z.pow(2, 10))");
+    ASSERT_CONTAINS("1024", output);
+}
+
+TEST(test_builtin_type_number) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(z.type(42))");
+    ASSERT_CONTAINS("number", output);
+}
+
+TEST(test_builtin_type_string) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(z.type(\"hi\"))");
+    ASSERT_CONTAINS("string", output);
+}
+
+// ============================================================================
+// New Built-in Tests (added in this version)
+// ============================================================================
+
+TEST(test_range_basic) {
+    std::string output = test::run_capture("#alphabet<test>\n13 r = z.range(5)\nz.o(r[0])");
+    ASSERT_CONTAINS("0", output);
+}
+
+TEST(test_range_with_start) {
+    std::string output = test::run_capture("#alphabet<test>\n13 r = z.range(3, 7)\nz.o(r[0])");
+    ASSERT_CONTAINS("3", output);
+}
+
+TEST(test_range_length) {
+    std::string output = test::run_capture("#alphabet<test>\n13 r = z.range(5)\nz.o(z.len(r))");
+    ASSERT_CONTAINS("5", output);
+}
+
+TEST(test_contains_list) {
+    std::string output = test::run_capture("#alphabet<test>\n13 nums = [1, 2, 3]\nz.o(z.contains(nums, 2))");
+    ASSERT_CONTAINS("1", output);
+}
+
+TEST(test_contains_string) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(z.contains(\"hello world\", \"world\"))");
+    ASSERT_CONTAINS("1", output);
+}
+
+TEST(test_keys_map) {
+    std::string output = test::run_capture("#alphabet<test>\n14 m = {\"a\": 1}\n13 k = z.keys(m)\nz.o(k[0])");
+    ASSERT_CONTAINS("a", output);
+}
+
+TEST(test_reverse_list) {
+    std::string output = test::run_capture("#alphabet<test>\n13 r = z.reverse([1, 2, 3])\nz.o(r[0])");
+    ASSERT_CONTAINS("3", output);
+}
+
+TEST(test_substr) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(z.substr(\"hello\", 1, 3))");
+    ASSERT_CONTAINS("ell", output);
+}
+
+TEST(test_chr_ord) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(z.chr(65))");
+    ASSERT_CONTAINS("A", output);
+}
+
+TEST(test_starts_with) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(z.starts_with(\"hello\", \"hel\"))");
+    ASSERT_CONTAINS("1", output);
+}
+
+TEST(test_ends_with) {
+    std::string output = test::run_capture("#alphabet<test>\nz.o(z.ends_with(\"hello\", \"llo\"))");
+    ASSERT_CONTAINS("1", output);
 }
 
 // ============================================================================
 // Exception Handling Tests
 // ============================================================================
 
-TEST(test_vm_setup_try) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::SETUP_TRY, static_cast<int64_t>(3)));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 1.0));
-    program.main.push_back(Instruction(OpCode::POP_TRY));
-    program.main.push_back(Instruction(OpCode::JUMP, static_cast<int64_t>(5)));
-    program.main.push_back(Instruction(OpCode::POP));  // Handler
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_try_catch_no_throw) {
+    std::string output = test::run_capture("#alphabet<test>\nt { z.o(\"try\") } h (12 e) { z.o(\"caught\") }\nz.o(\"done\")");
+    ASSERT_CONTAINS("try", output);
+    ASSERT_CONTAINS("done", output);
 }
 
 // ============================================================================
-// Integration Tests (Full Pipeline)
+// Class Tests
 // ============================================================================
 
-TEST(test_integration_simple_print) {
-    std::string source = R"(#alphabet<test>
-z.o("Hello from VM test!")
-)";
-    
-    std::string output = run_source_capture(source);
-    ASSERT_TRUE(output.find("Hello from VM test!") != std::string::npos);
+TEST(test_class_basic) {
+    std::string output = test::run_capture(R"(#alphabet<test>
+c Point {
+  5 x = 0
+  5 y = 0
+  v m 5 get_x() { r x }
 }
-
-TEST(test_integration_variable) {
-    std::string source = R"(#alphabet<test>
-5 x = 42
-z.o(x)
-)";
-    
-    run_source(source);
-    ASSERT_TRUE(true);
-}
-
-TEST(test_integration_arithmetic_expr) {
-    std::string source = R"(#alphabet<test>
-5 result = 10 + 20 * 3
-z.o(result)
-)";
-    
-    run_source(source);
-    ASSERT_TRUE(true);
-}
-
-TEST(test_integration_if_statement) {
-    std::string source = R"(#alphabet<test>
-5 x = 10
-i (x > 5) {
-    z.o("x is greater than 5")
-}
-)";
-    
-    run_source(source);
-    ASSERT_TRUE(true);
-}
-
-TEST(test_integration_loop) {
-    std::string source = R"(#alphabet<test>
-5 i = 0
-l (i < 5) {
-    5 i = i + 1
-}
-z.o(i)
-)";
-    
-    run_source(source);
-    ASSERT_TRUE(true);
-}
-
-TEST(test_integration_list) {
-    std::string source = R"(#alphabet<test>
-13 nums = [1, 2, 3, 4, 5]
-z.o(nums)
-)";
-    
-    run_source(source);
-    ASSERT_TRUE(true);
-}
-
-TEST(test_integration_map) {
-    std::string source = R"(#alphabet<test>
-14 data = {"name": "test", "value": 42}
-z.o(data)
-)";
-    
-    run_source(source);
-    ASSERT_TRUE(true);
+15 p = n Point()
+z.o(p.get_x()))");
+    ASSERT_CONTAINS("0", output);
 }
 
 // ============================================================================
-// Edge Case Tests
+// Pattern Matching Tests
 // ============================================================================
 
-TEST(test_vm_empty_program) {
-    Program program;
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+TEST(test_match_basic) {
+    std::string output = test::run_capture(R"(#alphabet<test>
+5 x = 2
+q (x) {
+  1: z.o("one")
+  2: z.o("two")
+  e: z.o("other")
+})");
+    ASSERT_CONTAINS("two", output);
 }
 
-TEST(test_vm_nested_operations) {
-    Program program;
-    // (10 + 5) * (3 - 1)
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 10.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 5.0));
-    program.main.push_back(Instruction(OpCode::ADD));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 3.0));
-    program.main.push_back(Instruction(OpCode::PUSH_CONST, 1.0));
-    program.main.push_back(Instruction(OpCode::SUB));
-    program.main.push_back(Instruction(OpCode::MUL));
-    program.main.push_back(Instruction(OpCode::HALT));
-    
-    VM vm(program);
-    vm.run();
-    ASSERT_TRUE(true);
+// ============================================================================
+// Logical Operator Tests
+// ============================================================================
+
+TEST(test_logical_and) {
+    std::string output = test::run_capture("#alphabet<test>\n5 b = 1 && 1\nz.o(b)");
+    ASSERT_CONTAINS("1", output);
+}
+
+TEST(test_logical_or) {
+    std::string output = test::run_capture("#alphabet<test>\n5 b = 0 || 1\nz.o(b)");
+    ASSERT_CONTAINS("1", output);
+}
+
+TEST(test_logical_not) {
+    std::string output = test::run_capture("#alphabet<test>\n5 b = !0\nz.o(b)");
+    ASSERT_CONTAINS("1", output);
 }
 
 // ============================================================================
@@ -502,65 +426,94 @@ TEST(test_vm_nested_operations) {
 // ============================================================================
 
 int main() {
-    std::cout << "=== Alphabet VM Tests ===\n\n";
-    
-    // Basic operations
-    RUN_TEST(test_vm_push_and_halt);
-    RUN_TEST(test_vm_push_null);
-    RUN_TEST(test_vm_push_string);
-    
-    // Arithmetic
-    RUN_TEST(test_vm_add);
-    RUN_TEST(test_vm_sub);
-    RUN_TEST(test_vm_mul);
-    RUN_TEST(test_vm_div);
-    RUN_TEST(test_vm_percent);
-    
-    // Comparison
-    RUN_TEST(test_vm_eq_true);
-    RUN_TEST(test_vm_gt);
-    RUN_TEST(test_vm_lt);
-    RUN_TEST(test_vm_not);
-    
-    // Control flow
-    RUN_TEST(test_vm_jump);
-    RUN_TEST(test_vm_jump_if_false_take_jump);
-    RUN_TEST(test_vm_jump_if_false_skip_jump);
-    
-    // Stack operations
-    RUN_TEST(test_vm_pop);
-    
-    // Data structures
-    RUN_TEST(test_vm_build_list);
-    RUN_TEST(test_vm_build_map);
-    RUN_TEST(test_vm_load_index_list);
-    
-    // Objects
-    RUN_TEST(test_vm_new_object);
-    RUN_TEST(test_vm_load_field);
-    RUN_TEST(test_vm_store_field);
-    
-    // Exception handling
-    RUN_TEST(test_vm_setup_try);
-    
-    // Integration tests
-    RUN_TEST(test_integration_simple_print);
-    RUN_TEST(test_integration_variable);
-    RUN_TEST(test_integration_arithmetic_expr);
-    RUN_TEST(test_integration_if_statement);
-    RUN_TEST(test_integration_loop);
-    RUN_TEST(test_integration_list);
-    RUN_TEST(test_integration_map);
-    
-    // Edge cases
-    RUN_TEST(test_vm_empty_program);
-    RUN_TEST(test_vm_nested_operations);
-    
+    std::cout << "=== Alphabet VM Tests (with assertions) ===\n\n";
+
+    std::cout << "--- Arithmetic ---\n";
+    RUN_TEST(test_arithmetic_add);
+    RUN_TEST(test_arithmetic_sub);
+    RUN_TEST(test_arithmetic_mul);
+    RUN_TEST(test_arithmetic_div);
+    RUN_TEST(test_arithmetic_mod);
+    RUN_TEST(test_arithmetic_precedence);
+    RUN_TEST(test_arithmetic_parentheses);
+
+    std::cout << "\n--- Variables ---\n";
+    RUN_TEST(test_variable_assignment);
+    RUN_TEST(test_variable_expression);
+    RUN_TEST(test_string_variable);
+
+    std::cout << "\n--- Comparisons ---\n";
+    RUN_TEST(test_comparison_gt_true);
+    RUN_TEST(test_comparison_gt_false);
+    RUN_TEST(test_comparison_eq);
+    RUN_TEST(test_comparison_ne);
+
+    std::cout << "\n--- Control Flow ---\n";
+    RUN_TEST(test_if_true_branch);
+    RUN_TEST(test_if_else_false_branch);
+    RUN_TEST(test_loop_count);
+
+    std::cout << "\n--- Functions ---\n";
+    RUN_TEST(test_function_return);
+    RUN_TEST(test_function_recursion);
+
+    std::cout << "\n--- Lists ---\n";
+    RUN_TEST(test_list_create_and_access);
+    RUN_TEST(test_list_negative_index);
+    RUN_TEST(test_list_length);
+    RUN_TEST(test_list_append);
+
+    std::cout << "\n--- Maps ---\n";
+    RUN_TEST(test_map_create_and_access);
+
+    std::cout << "\n--- Strings ---\n";
+    RUN_TEST(test_string_concat);
+    RUN_TEST(test_string_number_concat);
+    RUN_TEST(test_string_upper);
+    RUN_TEST(test_string_lower);
+    RUN_TEST(test_string_trim);
+    RUN_TEST(test_string_split);
+    RUN_TEST(test_string_replace);
+
+    std::cout << "\n--- Built-ins ---\n";
+    RUN_TEST(test_builtin_sqrt);
+    RUN_TEST(test_builtin_abs);
+    RUN_TEST(test_builtin_pow);
+    RUN_TEST(test_builtin_type_number);
+    RUN_TEST(test_builtin_type_string);
+
+    std::cout << "\n--- New Built-ins (v2.3.0) ---\n";
+    RUN_TEST(test_range_basic);
+    RUN_TEST(test_range_with_start);
+    RUN_TEST(test_range_length);
+    RUN_TEST(test_contains_list);
+    RUN_TEST(test_contains_string);
+    RUN_TEST(test_keys_map);
+    RUN_TEST(test_reverse_list);
+    RUN_TEST(test_substr);
+    RUN_TEST(test_chr_ord);
+    RUN_TEST(test_starts_with);
+    RUN_TEST(test_ends_with);
+
+    std::cout << "\n--- Exception Handling ---\n";
+    RUN_TEST(test_try_catch_no_throw);
+
+    std::cout << "\n--- Classes ---\n";
+    RUN_TEST(test_class_basic);
+
+    std::cout << "\n--- Pattern Matching ---\n";
+    RUN_TEST(test_match_basic);
+
+    std::cout << "\n--- Logical Operators ---\n";
+    RUN_TEST(test_logical_and);
+    RUN_TEST(test_logical_or);
+    RUN_TEST(test_logical_not);
+
     std::cout << "\n========================================\n";
     std::cout << "Tests run: " << tests_run << "\n";
     std::cout << "Passed: " << tests_passed << "\n";
     std::cout << "Failed: " << tests_failed << "\n";
     std::cout << "========================================\n";
-    
+
     return tests_failed > 0 ? 1 : 0;
 }

@@ -5,7 +5,6 @@
 #include <cmath>
 #include <algorithm>
 #ifdef _WIN32
-    #define NOMINMAX
     #include <windows.h>
 #else
     #include <dlfcn.h>
@@ -1223,7 +1222,7 @@ void VM::system_call(const std::string& method, int arg_count) {
         Value str = pop();
         if (str.is_string()) {
             std::string s = str.as_string();
-            std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+            std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
             push(Value(std::move(s)));
         } else {
             push(Value(value_to_string(str)));
@@ -1233,7 +1232,7 @@ void VM::system_call(const std::string& method, int arg_count) {
         Value str = pop();
         if (str.is_string()) {
             std::string s = str.as_string();
-            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+            std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
             push(Value(std::move(s)));
         } else {
             push(Value(value_to_string(str)));

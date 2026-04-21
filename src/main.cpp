@@ -6,7 +6,6 @@
 #include <cstring>
 #include <cstdlib>
 #ifdef _WIN32
-    #define NOMINMAX
     #include <io.h>
     #include <windows.h>
     #define popen _popen

@@ -5,8 +5,17 @@
 #include <vector>
 #include <cstring>
 #include <cstdlib>
-#include <unistd.h>
-#include <sys/stat.h>
+#ifdef _WIN32
+    #include <io.h>
+    #include <windows.h>
+    #define popen _popen
+    #define pclose _pclose
+    #define unlink _unlink
+    #define chmod _chmod
+#else
+    #include <unistd.h>
+    #include <sys/stat.h>
+#endif
 
 #include "lexer.h"
 #include "parser.h"
@@ -112,7 +121,11 @@ void start_repl() {
 
     // Load history from file
     std::vector<std::string> history;
+#ifdef _WIN32
+    const char* home = std::getenv("USERPROFILE");
+#else
     const char* home = std::getenv("HOME");
+#endif
     std::string history_path = home ? (std::string(home) + "/.alphabet_history") : ".alphabet_history";
     {
         std::ifstream hist_file(history_path);
@@ -326,6 +339,15 @@ void do_update() {
     // Get current binary path
     std::string self_path;
     char self_buf[4096];
+#ifdef _WIN32
+    DWORD len = GetModuleFileName(NULL, self_buf, sizeof(self_buf) - 1);
+    if (len > 0) {
+        self_buf[len] = '\0';
+        self_path = self_buf;
+    } else {
+        self_path = "C:\\Program Files\\alphabet\\alphabet.exe";
+    }
+#else
     ssize_t len = readlink("/proc/self/exe", self_buf, sizeof(self_buf) - 1);
     if (len > 0) {
         self_buf[len] = '\0';
@@ -333,6 +355,7 @@ void do_update() {
     } else {
         self_path = "/usr/local/bin/alphabet";
     }
+#endif
 
     std::string tmp_path = self_path + ".tmp";
 

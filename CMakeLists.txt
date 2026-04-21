@@ -23,7 +23,7 @@ endif()
 # Compiler flags (platform-specific)
 if(MSVC)
     # MSVC compiler flags
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /permissive-")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /D_CRT_SECURE_NO_WARNINGS /DNOMINMAX")
     set(CMAKE_CXX_FLAGS_DEBUG "/Zi /Od /DDEBUG")
     set(CMAKE_CXX_FLAGS_RELEASE "/O2 /DNDEBUG")
 else()

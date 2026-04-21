@@ -14,16 +14,20 @@ jobs:
           - os: ubuntu-latest
             target: linux-amd64
             artifact: alphabet
+            build_path: build
           - os: macos-latest
             target: macos-amd64
             artifact: alphabet
+            build_path: build
           - os: macos-latest
             target: macos-arm64
             artifact: alphabet
+            build_path: build
             extra_flags: -DCMAKE_OSX_ARCHITECTURES=arm64
           - os: windows-latest
             target: windows-amd64
             artifact: alphabet.exe
+            build_path: build/Release
 
     runs-on: ${{ matrix.os }}
     
@@ -38,11 +42,11 @@ jobs:
 
       - name: Strip (Unix)
         if: runner.os != 'Windows'
-        run: strip build/${{ matrix.artifact }}
+        run: strip ${{ matrix.build_path }}/${{ matrix.artifact }}
 
       - name: Upload to Release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: build/${{ matrix.artifact }}
+          files: ${{ matrix.build_path }}/${{ matrix.artifact }}
           asset_name: alphabet-${{ matrix.target }}${{ runner.os == 'Windows' && '.exe' || '' }}

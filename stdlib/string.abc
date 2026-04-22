@@ -1,5 +1,5 @@
 #alphabet<en>
-// String Library for Alphabet v2.3.1
+// String Library for Alphabet v2.3.2
 // Wraps built-in z.* string functions for cleaner API
 
 // Check if string contains substring

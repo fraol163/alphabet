@@ -566,7 +566,7 @@ int main()
     RUN_TEST(test_builtin_type_number);
     RUN_TEST(test_builtin_type_string);
 
-    std::cout << "\n--- New Built-ins (v2.3.1) ---\n";
+    std::cout << "\n--- New Built-ins (v2.3.2) ---\n";
     RUN_TEST(test_range_basic);
     RUN_TEST(test_range_with_start);
     RUN_TEST(test_range_length);

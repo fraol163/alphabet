@@ -315,7 +315,7 @@ void do_update()
     std::cout << "Checking for updates...\n";
 
     // Get latest release info from GitHub
-    std::string api_cmd = "curl -s https://api.github.com/repos/fraol163/alphabet/releases/latest";
+    std::string api_cmd = "curl -fsSL https://api.github.com/repos/fraol163/alphabet/releases/latest";
     FILE *pipe = popen(api_cmd.c_str(), "r");
     if (!pipe) {
         std::cerr << "Error: Failed to check for updates\n";
@@ -329,7 +329,7 @@ void do_update()
     }
     int status = pclose(pipe);
 
-    if (status != 0) {
+    if (status != 0 || response.empty()) {
         std::cerr << "Error: Could not reach GitHub\n";
         return;
     }
@@ -338,23 +338,14 @@ void do_update()
     std::string latest_version;
     size_t tag_pos = response.find("\"tag_name\"");
     if (tag_pos != std::string::npos) {
-        size_t quote_start = response.find('"', tag_pos + 10);
-        if (quote_start != std::string::npos) {
-            quote_start++;
-            // Skip whitespace and "v" prefix
-            while (quote_start < response.size() &&
-                   (response[quote_start] == '"' || response[quote_start] == 'v'))
-                quote_start++;
-            // Actually, find the value between quotes
-            size_t val_start = response.find('"', tag_pos + 10);
-            if (val_start != std::string::npos) {
-                val_start++;
-                size_t val_end = response.find('"', val_start);
-                if (val_end != std::string::npos) {
-                    latest_version = response.substr(val_start, val_end - val_start);
-                    // Strip leading 'v'
-                    if (!latest_version.empty() && latest_version[0] == 'v')
-                        latest_version = latest_version.substr(1);
+        size_t val_start = response.find('"', tag_pos + 10);
+        if (val_start != std::string::npos) {
+            ++val_start;
+            size_t val_end = response.find('"', val_start);
+            if (val_end != std::string::npos) {
+                latest_version = response.substr(val_start, val_end - val_start);
+                if (!latest_version.empty() && latest_version[0] == 'v') {
+                    latest_version = latest_version.substr(1);
                 }
             }
         }
@@ -368,7 +359,6 @@ void do_update()
     std::cout << "Current version: " << VERSION << "\n";
     std::cout << "Latest version:  " << latest_version << "\n";
 
-    // Simple version comparison: split on '.'
     auto version_tuple = [](const std::string &v) -> std::tuple<int, int, int> {
         int a = 0, b = 0, c = 0;
         sscanf(v.c_str(), "%d.%d.%d", &a, &b, &c);
@@ -383,18 +373,23 @@ void do_update()
     // Determine OS and arch
     std::string os = "linux";
     std::string arch = "amd64";
-#ifdef __APPLE__
+    std::string ext;
+#ifdef _WIN32
+    os = "windows";
+    ext = ".exe";
+#elif defined(__APPLE__)
     os = "macos";
-#ifdef __aarch64__
-    arch = "arm64";
-#endif
-#elif defined(__aarch64__)
+    #if defined(__aarch64__) || defined(__arm64__) || defined(_M_ARM64)
+        arch = "arm64";
+    #else
+        arch = "amd64";
+    #endif
+#elif defined(__aarch64__) || defined(__arm64__)
     arch = "arm64";
 #endif
 
-    // Download URL
-    std::string download_url = "https://github.com/fraol163/alphabet/releases/download/v" +
-                               latest_version + "/alphabet-" + os + "-" + arch;
+    std::string asset_name = "alphabet-" + os + "-" + arch + ext;
+    std::string download_url = "https://github.com/fraol163/alphabet/releases/download/v" + latest_version + "/" + asset_name;
 
     std::cout << "Downloading " << download_url << "...\n";
 
@@ -424,7 +419,7 @@ void do_update()
     std::string tmp_path = self_path + ".tmp";
 
     // Download to temp file
-    std::string dl_cmd = "curl -sL -o \"" + tmp_path + "\" \"" + download_url + "\"";
+    std::string dl_cmd = "curl -fsSL -o \"" + tmp_path + "\" \"" + download_url + "\"";
     int dl_status = system(dl_cmd.c_str());
     if (dl_status != 0) {
         std::cerr << "Error: Download failed\n";
@@ -436,27 +431,31 @@ void do_update()
         return;
     }
 
-    // Make executable (no-op on Windows)
 #ifndef _WIN32
     chmod(tmp_path.c_str(), 0755);
-#endif
 
-    // Replace self (use a shell wrapper since we can't replace running binary)
     std::cout << "Installing update...\n";
-#ifdef _WIN32
-    std::string mv_cmd = "move /Y \"" + tmp_path + "\" \"" + self_path + "\"";
-#else
     std::string mv_cmd = "mv \"" + tmp_path + "\" \"" + self_path + "\"";
-#endif
     int mv_status = system(mv_cmd.c_str());
     if (mv_status != 0) {
-        std::cerr << "Error: Could not install update (try running as admin)\n";
-#ifdef _WIN32
-        _unlink(tmp_path.c_str());
-#else
+        std::cerr << "Error: Could not install update\n";
         unlink(tmp_path.c_str());
-#endif
+        return;
     }
+#else
+    std::cout << "Installing update...\n";
+    std::string pid = std::to_string(GetCurrentProcessId());
+    std::string ps_script =
+        "while (Get-Process -Id " + pid + " -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 500 }; "
+        "Move-Item -Force '" + tmp_path + "' '" + self_path + "'";
+    std::string ps_cmd = "start \"\" /b powershell -NoProfile -WindowStyle Hidden -Command \"" + ps_script + "\"";
+    int ps_status = system(ps_cmd.c_str());
+    if (ps_status != 0) {
+        std::cerr << "Error: Could not schedule update installation\n";
+        _unlink(tmp_path.c_str());
+        return;
+    }
+#endif
 
     std::cout << "Updated to v" << latest_version << "!\n";
 }

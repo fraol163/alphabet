@@ -48,6 +48,19 @@ jobs:
       - name: Build
         run: cmake --build build --config Release --target alphabet
 
+      - name: Prepare raw release binary
+        shell: bash
+        run: |
+          mkdir -p dist
+          case "${{ runner.os }}" in
+            Windows)
+              cp build/Release/alphabet.exe "dist/alphabet-${{ matrix.target }}.exe"
+              ;;
+            *)
+              cp build/alphabet "dist/alphabet-${{ matrix.target }}"
+              ;;
+          esac
+
       - name: Strip (Unix)
         if: runner.os != 'Windows'
         run: strip ${{ matrix.build_path }}/${{ matrix.artifact }}
@@ -63,5 +76,6 @@ jobs:
         if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v')
         with:
           files: |
+            dist/alphabet-${{ matrix.target }}*
             build/alphabet-*.*
           fail_on_unmatched_files: false

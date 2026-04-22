@@ -461,8 +461,14 @@ void do_update()
     std::cout << "Updated to v" << latest_version << "!\n";
 }
 
-std::string read_file(const std::string &path)
+std::string read_input(const std::string &path)
 {
+    if (path == "-") {
+        std::ostringstream oss;
+        oss << std::cin.rdbuf();
+        return oss.str();
+    }
+
     std::ifstream file(path);
     if (!file.is_open()) {
         throw std::runtime_error("Cannot open file: " + path);
@@ -540,7 +546,7 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        if (arg[0] == '-') {
+        if (arg[0] == '-' && arg.size() > 1) {
             std::cerr << "Unknown option: " << arg << "\n";
             std::cerr << "Use --help for usage information\n";
             return 1;
@@ -573,7 +579,7 @@ int main(int argc, char *argv[])
     }
 
     try {
-        std::string source = read_file(input_file);
+        std::string source = read_input(input_file);
 
         if (compile_only) {
             alphabet::Lexer lexer(source);

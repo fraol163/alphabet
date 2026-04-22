@@ -14,7 +14,19 @@ test_lang() {
     local code="$2"
     local expected="$3"
     
-    result=$(echo "$code" | ./build/alphabet /dev/stdin 2>&1)
+    # Try to find alphabet binary (handle .exe on Windows)
+    local bin="./build/alphabet"
+    if [ ! -f "$bin" ]; then
+        if [ -f "./build/alphabet.exe" ]; then
+            bin="./build/alphabet.exe"
+        elif [ -f "./build/Release/alphabet.exe" ]; then
+            bin="./build/Release/alphabet.exe"
+        fi
+    fi
+    
+    # Use '-' for stdin instead of /dev/stdin
+    # Strip \r from output to handle Windows line endings
+    result=$(echo "$code" | "$bin" - 2>&1 | tr -d '\r')
     
     if [ "$result" = "$expected" ]; then
         echo "✓ $name: PASS"

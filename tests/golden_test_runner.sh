@@ -5,8 +5,9 @@ ALPHABET="$1"
 SOURCE="$2"
 EXPECTED="$3"
 
-OUTPUT=$("$ALPHABET" "$SOURCE" 2>/dev/null)
-EXPECTED_CONTENT=$(cat "$EXPECTED")
+# Use tr to remove \r for cross-platform comparison
+OUTPUT=$("$ALPHABET" "$SOURCE" 2>/dev/null | tr -d '\r')
+EXPECTED_CONTENT=$(cat "$EXPECTED" | tr -d '\r')
 
 if [ "$OUTPUT" = "$EXPECTED_CONTENT" ]; then
     exit 0

@@ -22,8 +22,8 @@ endif()
 
 # Compiler flags (platform-specific)
 if(MSVC)
-    # MSVC compiler flags
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /D_CRT_SECURE_NO_WARNINGS /DNOMINMAX")
+    # MSVC compiler flags - add /utf-8 to ensure string literals are UTF-8
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /D_CRT_SECURE_NO_WARNINGS /DNOMINMAX /utf-8")
     set(CMAKE_CXX_FLAGS_DEBUG "/Zi /Od /DDEBUG")
     set(CMAKE_CXX_FLAGS_RELEASE "/O2 /DNDEBUG")
 else()
@@ -179,8 +179,8 @@ if(BUILD_TESTS)
         endif()
     endforeach()
 
-    # Language tests (only on Unix)
-    if(UNIX)
+    # Language tests
+    if(UNIX OR WIN32)
         add_test(NAME LanguageTests
             COMMAND bash "${CMAKE_SOURCE_DIR}/test_all_languages.sh"
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

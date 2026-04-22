@@ -38,7 +38,7 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
         {"match", "q"},
         {"extends", "^"},
         {"export", "@"},
-        {"const", "\x80"}  // Special marker — maps to CONST token
+        {"const", "\x80"}
     }},
     
     // Amharic keywords
@@ -57,13 +57,16 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
         {"አዲስ", "n"},        // new
         {"ግልጽ", "v"},        // public
         {"ግል", "p"},         // private
-        {"ቋሚ", "s"},        // static
+        {"ቋሚ", "s"},        // static (also used for const sometimes)
         {"ሞክር", "t"},        // try
         {"ያዟ", "h"},         // catch/handle
         {"ውጤት", "z"},       // print/output
         {"ግብአት", "z.i"},    // input
         {"አስገባ", "x"},       // import
-        {"ምረጥ", "q"}         // match
+        {"ምረጥ", "q"},        // match
+        {"ወራሽ", "^"},        // extends
+        {"ላክ", "@"},         // export
+        {"ቋሚ-እሴት", "\x80"}   // const
     }},
 
     // Spanish keywords
@@ -89,7 +92,10 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
         {"salida", "z"},
         {"entrada", "z.i"},
         {"importar", "x"},
-        {"coincidir", "q"}
+        {"coincidir", "q"},
+        {"extiende", "^"},
+        {"exportar", "@"},
+        {"constante", "\x80"}
     }},
 
     // French keywords
@@ -114,7 +120,10 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
         {"afficher", "z"},
         {"entrer", "z.i"},
         {"importer", "x"},
-        {"correspondre", "q"}
+        {"correspondre", "q"},
+        {"etend", "^"},
+        {"exporter", "@"},
+        {"constante", "\x80"}
     }},
 
     // German keywords
@@ -139,7 +148,10 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
         {"ausgeben", "z"},
         {"eingabe", "z.i"},
         {"importieren", "x"},
-        {"ubereinstimmen", "q"}
+        {"ubereinstimmen", "q"},
+        {"erweitert", "^"},
+        {"exportieren", "@"},
+        {"konstante", "\x80"}
     }}
 };
 

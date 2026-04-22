@@ -12,22 +12,17 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            target: linux-amd64
-            artifact: alphabet
-            build_path: build
+            target: linux
+            generator: "DEB;TGZ"
+            artifact: "alphabet-*.deb"
           - os: macos-latest
-            target: macos-amd64
-            artifact: alphabet
-            build_path: build
-          - os: macos-latest
-            target: macos-arm64
-            artifact: alphabet
-            build_path: build
-            extra_flags: -DCMAKE_OSX_ARCHITECTURES=arm64
+            target: macos
+            generator: "DragNDrop;TGZ"
+            artifact: "alphabet-*.dmg"
           - os: windows-latest
-            target: windows-amd64
-            artifact: alphabet.exe
-            build_path: build/Release
+            target: windows
+            generator: "NSIS;ZIP"
+            artifact: "alphabet-*-win64.exe"
 
     runs-on: ${{ matrix.os }}
     
@@ -35,18 +30,19 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Configure
-        run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release ${{ matrix.extra_flags }}
+        run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build build --config Release --target alphabet
+        run: cmake --build build --config Release
 
-      - name: Strip (Unix)
-        if: runner.os != 'Windows'
-        run: strip ${{ matrix.build_path }}/${{ matrix.artifact }}
+      - name: Package
+        shell: bash
+        run: |
+          cd build
+          cpack -G ${{ matrix.generator }}
 
       - name: Upload to Release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ matrix.build_path }}/${{ matrix.artifact }}
-          asset_name: alphabet-${{ matrix.target }}${{ runner.os == 'Windows' && '.exe' || '' }}
+          files: build/${{ matrix.artifact }}

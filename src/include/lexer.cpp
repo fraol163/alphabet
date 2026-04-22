@@ -389,6 +389,10 @@ void Lexer::identifier() {
                 tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
                 return;
             }
+            if (translated == "\x80") {
+                add_token(TokenType::TOK_CONST);
+                return;
+            }
             // For other translated keywords, check first char
             if (translated.size() == 1 && is_keyword_char(translated[0])) {
                 add_token(keyword_type(translated[0]));
@@ -410,6 +414,10 @@ void Lexer::identifier() {
         }
         if (translated == "z.i") {
             tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
+            return;
+        }
+        if (translated == "\x80") {
+            add_token(TokenType::TOK_CONST);
             return;
         }
         // Handle multi-char translated keywords only (class->c, method->m, new->n, etc.)

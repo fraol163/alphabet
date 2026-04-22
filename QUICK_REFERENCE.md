@@ -258,5 +258,5 @@ String concat: "hello" + 42 = "hello42"
 
 ---
 
-**Version:** 2.3.0 | **Implementation:** Native C++17 | **License:** MIT
+**Version:** 2.3.1 | **Implementation:** Native C++17 | **License:** MIT
 **GitHub:** https://github.com/fraol163/alphabet

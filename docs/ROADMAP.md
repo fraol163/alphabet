@@ -1,8 +1,8 @@
-# Alphabet Project Roadmap - v2.3.0
+# Alphabet Project Roadmap - v2.3.1
 
 **Project Owner: Fraol Teshome**
 
-## Completed (v2.0.0 - v2.3.0)
+## Completed (v2.0.0 - v2.3.1)
 
 ### Core Language
 - [x] Lexer with 19 single-letter keywords
@@ -113,4 +113,4 @@
 
 ---
 
-*Status: v2.3.0 Released. Core language and standard library complete. Focus on ecosystem and internationalization.*
+*Status: v2.3.1 Released. Core language and standard library complete. Focus on ecosystem and internationalization.*

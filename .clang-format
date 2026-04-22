@@ -1,0 +1,35 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 100
+AllowShortFunctionsOnASingleLine: Empty
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: false
+  AfterFunction: true
+  AfterNamespace: false
+  AfterObjCDeclaration: false
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+Standard: c++17
+IncludeCategories:
+  - Regex:           '^"alphabet_ast\.h"'
+    Priority:        1
+  - Regex:           '^"lexer\.h"'
+    Priority:        2
+  - Regex:           '^"parser\.h"'
+    Priority:        3
+  - Regex:           '^"compiler\.h"'
+    Priority:        4
+  - Regex:           '^"vm\.h"'
+    Priority:        5
+  - Regex:           '^<.*'
+    Priority:        10
+  - Regex:           '.*'
+    Priority:        20

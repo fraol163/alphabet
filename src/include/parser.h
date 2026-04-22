@@ -1,46 +1,54 @@
 #ifndef ALPHABET_PARSER_H
 #define ALPHABET_PARSER_H
 
-#include <vector>
-#include <stdexcept>
-#include <memory>
-#include "lexer.h"
 #include "alphabet_ast.h"
+#include "lexer.h"
+#include <memory>
+#include <stdexcept>
+#include <vector>
 
 namespace alphabet {
 
-class ParseError : public std::runtime_error {
-public:
-    explicit ParseError(const std::string& msg) : std::runtime_error(msg) {}
+class ParseError : public std::runtime_error
+{
+  public:
+    explicit ParseError(const std::string &msg) : std::runtime_error(msg) {}
 };
 
-class Parser {
-public:
+class Parser
+{
+  public:
     explicit Parser(std::vector<Token> tokens, std::string_view source = "");
-    
-    std::vector<StmtPtr> parse();
-    
-    [[nodiscard]] bool had_errors() const { return had_errors_; }
-    [[nodiscard]] const std::string& first_error() const { return first_error_; }
 
-private:
+    std::vector<StmtPtr> parse();
+
+    [[nodiscard]] bool had_errors() const
+    {
+        return had_errors_;
+    }
+    [[nodiscard]] const std::string &first_error() const
+    {
+        return first_error_;
+    }
+
+  private:
     std::vector<Token> tokens_;
-    std::string_view source_;  // Original source for error context
+    std::string_view source_; // Original source for error context
     size_t current_ = 0;
     bool had_errors_ = false;
-    std::string first_error_;  // Store first error for reporting
-    
+    std::string first_error_; // Store first error for reporting
+
     [[nodiscard]] bool is_at_end() const;
-    [[nodiscard]] const Token& peek() const;
-    [[nodiscard]] const Token& previous() const;
+    [[nodiscard]] const Token &peek() const;
+    [[nodiscard]] const Token &previous() const;
     Token advance();
     bool match(std::initializer_list<TokenType> types);
     [[nodiscard]] bool check(TokenType type) const;
-    Token consume(TokenType type, const std::string& message);
-    [[nodiscard]] ParseError error(const Token& token, const std::string& message) const;
+    Token consume(TokenType type, const std::string &message);
+    [[nodiscard]] ParseError error(const Token &token, const std::string &message) const;
     void synchronize();
     [[nodiscard]] bool is_identifier() const;
-    Token consume_identifier(const std::string& message);
+    Token consume_identifier(const std::string &message);
     [[nodiscard]] bool check_next_is_identifier() const;
 
     std::optional<StmtPtr> declaration();
@@ -77,6 +85,6 @@ private:
     ExprPtr finish_call(ExprPtr callee);
 };
 
-}
+} // namespace alphabet
 
 #endif

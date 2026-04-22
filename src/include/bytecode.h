@@ -3,9 +3,9 @@
 
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
-#include <unordered_map>
 
 namespace alphabet {
 
@@ -53,35 +53,42 @@ enum class OpCode : uint8_t {
     JUMP_IF_TRUE = 41,
 };
 
-using Operand = std::variant<std::monostate, int64_t, double, std::string,
-                              std::nullptr_t, std::pair<std::string, int>>;
+using Operand = std::variant<std::monostate, int64_t, double, std::string, std::nullptr_t,
+                             std::pair<std::string, int>>;
 
-struct Instruction {
+struct Instruction
+{
     OpCode op;
     Operand operand;
     int line;
 
     Instruction() : op(OpCode::HALT), operand(std::monostate{}), line(0) {}
     Instruction(OpCode opcode, int l = 0) : op(opcode), operand(std::monostate{}), line(l) {}
-    Instruction(OpCode opcode, Operand opnd, int l = 0) : op(opcode), operand(std::move(opnd)), line(l) {}
+    Instruction(OpCode opcode, Operand opnd, int l = 0)
+        : op(opcode), operand(std::move(opnd)), line(l)
+    {
+    }
 };
 
-struct CompiledMethod {
+struct CompiledMethod
+{
     std::vector<Instruction> bytecode;
     std::vector<std::string> param_names;
 };
 
-struct CompiledClass {
+struct CompiledClass
+{
     std::string name;
     std::string superclass;
     uint16_t id;
     std::unordered_map<std::string, CompiledMethod> methods;
     std::unordered_map<std::string, CompiledMethod> static_methods;
     std::vector<Instruction> static_init;
-    std::vector<Instruction> field_init;  // Bytecode to initialize instance fields
+    std::vector<Instruction> field_init; // Bytecode to initialize instance fields
 };
 
-struct Program {
+struct Program
+{
     std::vector<Instruction> main;
     std::vector<Instruction> static_init;
     std::unordered_map<uint16_t, CompiledClass> classes;
@@ -89,53 +96,96 @@ struct Program {
     std::vector<std::string> globals;
 };
 
-inline const char* opcode_to_string(OpCode op) {
+inline const char *opcode_to_string(OpCode op)
+{
     switch (op) {
-        case OpCode::PUSH_CONST: return "PUSH_CONST";
-        case OpCode::LOAD_VAR: return "LOAD_VAR";
-        case OpCode::STORE_VAR: return "STORE_VAR";
-        case OpCode::LOAD_FIELD: return "LOAD_FIELD";
-        case OpCode::STORE_FIELD: return "STORE_FIELD";
-        case OpCode::ADD: return "ADD";
-        case OpCode::SUB: return "SUB";
-        case OpCode::MUL: return "MUL";
-        case OpCode::DIV: return "DIV";
-        case OpCode::PERCENT: return "PERCENT";
-        case OpCode::EQ: return "EQ";
-        case OpCode::NE: return "NE";
-        case OpCode::GT: return "GT";
-        case OpCode::GE: return "GE";
-        case OpCode::LT: return "LT";
-        case OpCode::LE: return "LE";
-        case OpCode::AND: return "AND";
-        case OpCode::OR: return "OR";
-        case OpCode::NOT: return "NOT";
-        case OpCode::JUMP: return "JUMP";
-        case OpCode::JUMP_IF_FALSE: return "JUMP_IF_FALSE";
-        case OpCode::CALL: return "CALL";
-        case OpCode::RET: return "RET";
-        case OpCode::NEW: return "NEW";
-        case OpCode::POP: return "POP";
-        case OpCode::PRINT: return "PRINT";
-        case OpCode::HALT: return "HALT";
-        case OpCode::SETUP_TRY: return "SETUP_TRY";
-        case OpCode::POP_TRY: return "POP_TRY";
-        case OpCode::THROW: return "THROW";
-        case OpCode::GET_STATIC: return "GET_STATIC";
-        case OpCode::SET_STATIC: return "SET_STATIC";
-        case OpCode::BUILD_LIST: return "BUILD_LIST";
-        case OpCode::BUILD_MAP: return "BUILD_MAP";
-        case OpCode::LOAD_INDEX: return "LOAD_INDEX";
-        case OpCode::STORE_INDEX: return "STORE_INDEX";
-        case OpCode::DUP: return "DUP";
-        case OpCode::LOOP_START: return "LOOP_START";
-        case OpCode::BREAK_JUMP: return "BREAK_JUMP";
-        case OpCode::CONTINUE_JUMP: return "CONTINUE_JUMP";
-        case OpCode::JUMP_IF_TRUE: return "JUMP_IF_TRUE";
-        default: return "UNKNOWN";
+    case OpCode::PUSH_CONST:
+        return "PUSH_CONST";
+    case OpCode::LOAD_VAR:
+        return "LOAD_VAR";
+    case OpCode::STORE_VAR:
+        return "STORE_VAR";
+    case OpCode::LOAD_FIELD:
+        return "LOAD_FIELD";
+    case OpCode::STORE_FIELD:
+        return "STORE_FIELD";
+    case OpCode::ADD:
+        return "ADD";
+    case OpCode::SUB:
+        return "SUB";
+    case OpCode::MUL:
+        return "MUL";
+    case OpCode::DIV:
+        return "DIV";
+    case OpCode::PERCENT:
+        return "PERCENT";
+    case OpCode::EQ:
+        return "EQ";
+    case OpCode::NE:
+        return "NE";
+    case OpCode::GT:
+        return "GT";
+    case OpCode::GE:
+        return "GE";
+    case OpCode::LT:
+        return "LT";
+    case OpCode::LE:
+        return "LE";
+    case OpCode::AND:
+        return "AND";
+    case OpCode::OR:
+        return "OR";
+    case OpCode::NOT:
+        return "NOT";
+    case OpCode::JUMP:
+        return "JUMP";
+    case OpCode::JUMP_IF_FALSE:
+        return "JUMP_IF_FALSE";
+    case OpCode::CALL:
+        return "CALL";
+    case OpCode::RET:
+        return "RET";
+    case OpCode::NEW:
+        return "NEW";
+    case OpCode::POP:
+        return "POP";
+    case OpCode::PRINT:
+        return "PRINT";
+    case OpCode::HALT:
+        return "HALT";
+    case OpCode::SETUP_TRY:
+        return "SETUP_TRY";
+    case OpCode::POP_TRY:
+        return "POP_TRY";
+    case OpCode::THROW:
+        return "THROW";
+    case OpCode::GET_STATIC:
+        return "GET_STATIC";
+    case OpCode::SET_STATIC:
+        return "SET_STATIC";
+    case OpCode::BUILD_LIST:
+        return "BUILD_LIST";
+    case OpCode::BUILD_MAP:
+        return "BUILD_MAP";
+    case OpCode::LOAD_INDEX:
+        return "LOAD_INDEX";
+    case OpCode::STORE_INDEX:
+        return "STORE_INDEX";
+    case OpCode::DUP:
+        return "DUP";
+    case OpCode::LOOP_START:
+        return "LOOP_START";
+    case OpCode::BREAK_JUMP:
+        return "BREAK_JUMP";
+    case OpCode::CONTINUE_JUMP:
+        return "CONTINUE_JUMP";
+    case OpCode::JUMP_IF_TRUE:
+        return "JUMP_IF_TRUE";
+    default:
+        return "UNKNOWN";
     }
 }
 
-}
+} // namespace alphabet
 
 #endif

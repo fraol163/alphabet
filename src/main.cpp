@@ -315,7 +315,8 @@ void do_update()
     std::cout << "Checking for updates...\n";
 
     // Get latest release info from GitHub
-    std::string api_cmd = "curl -fsSL https://api.github.com/repos/fraol163/alphabet/releases/latest";
+    std::string api_cmd =
+        "curl -fsSL https://api.github.com/repos/fraol163/alphabet/releases/latest";
     FILE *pipe = popen(api_cmd.c_str(), "r");
     if (!pipe) {
         std::cerr << "Error: Failed to check for updates\n";
@@ -379,17 +380,18 @@ void do_update()
     ext = ".exe";
 #elif defined(__APPLE__)
     os = "macos";
-    #if defined(__aarch64__) || defined(__arm64__) || defined(_M_ARM64)
-        arch = "arm64";
-    #else
-        arch = "amd64";
-    #endif
+#if defined(__aarch64__) || defined(__arm64__) || defined(_M_ARM64)
+    arch = "arm64";
+#else
+    arch = "amd64";
+#endif
 #elif defined(__aarch64__) || defined(__arm64__)
     arch = "arm64";
 #endif
 
     std::string asset_name = "alphabet-" + os + "-" + arch + ext;
-    std::string download_url = "https://github.com/fraol163/alphabet/releases/download/v" + latest_version + "/" + asset_name;
+    std::string download_url = "https://github.com/fraol163/alphabet/releases/download/v" +
+                               latest_version + "/" + asset_name;
 
     std::cout << "Downloading " << download_url << "...\n";
 
@@ -445,10 +447,12 @@ void do_update()
 #else
     std::cout << "Installing update...\n";
     std::string pid = std::to_string(GetCurrentProcessId());
-    std::string ps_script =
-        "while (Get-Process -Id " + pid + " -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 500 }; "
-        "Move-Item -Force '" + tmp_path + "' '" + self_path + "'";
-    std::string ps_cmd = "start \"\" /b powershell -NoProfile -WindowStyle Hidden -Command \"" + ps_script + "\"";
+    std::string ps_script = "while (Get-Process -Id " + pid +
+                            " -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 500 }; "
+                            "Move-Item -Force '" +
+                            tmp_path + "' '" + self_path + "'";
+    std::string ps_cmd =
+        "start \"\" /b powershell -NoProfile -WindowStyle Hidden -Command \"" + ps_script + "\"";
     int ps_status = system(ps_cmd.c_str());
     if (ps_status != 0) {
         std::cerr << "Error: Could not schedule update installation\n";

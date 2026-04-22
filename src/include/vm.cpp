@@ -801,7 +801,7 @@ void VM::execute_instruction(CallFrame &frame)
         std::visit(
             [&frame, this](const auto &op) {
                 if constexpr (std::is_same_v<std::decay_t<decltype(op)>, int64_t>) {
-                    frame.try_stack.emplace_back(static_cast<size_t>(op), stack_top_);
+                    frame.try_stack.emplace_back(static_cast<size_t>(op), (stack_ptr_ - stack_));
                 }
             },
             instr.operand);
@@ -1059,7 +1059,7 @@ void VM::wait_for_debugger_command()
             // Print current stack
             std::ostringstream oss;
             oss << "[";
-            for (size_t i = 0; i < stack_top_; ++i) {
+            for (size_t i = 0; i < (stack_ptr_ - stack_); ++i) {
                 if (i > 0)
                     oss << ", ";
                 oss << "\"" << value_to_string(stack_[i]) << "\"";
@@ -1670,7 +1670,7 @@ void VM::throw_exception(const Value &value)
             auto [handler_ip, stack_depth] = frame.try_stack.back();
             frame.try_stack.pop_back();
 
-            while (stack_top_ > stack_depth) {
+            while ((stack_ptr_ - stack_) > stack_depth) {
                 pop();
             }
 

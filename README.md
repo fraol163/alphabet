@@ -11,7 +11,7 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
                 d88
                 ?8P
 ```
-# Alphabet Programming Language V2.3.1
+# Alphabet Programming Language V2.3.2
 
 **The fastest way to learn programming.**
 

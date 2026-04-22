@@ -69,10 +69,9 @@ std::string value_to_string(const Value &value)
         value.data);
 }
 
-VM::VM() : stack_ptr_(stack_) {}
+VM::VM() : stack_(std::make_unique<Value[]>(STACK_MAX)), stack_ptr_(stack_.get()) {}
 
-VM::VM(const Program &program) : stack_ptr_(stack_)
-{
+VM::VM(const Program &program) : stack_(std::make_unique<Value[]>(STACK_MAX)), stack_ptr_(stack_.get()) {
     init(program);
 }
 
@@ -81,7 +80,7 @@ void VM::init(const Program &program)
     classes_ = program.classes;
     globals_by_index_ = program.globals;
     global_functions_ = program.functions;
-    stack_ptr_ = stack_; // Reset stack
+    stack_ptr_ = stack_.get(); // Reset stack
 
     // Build reverse lookup for class name → ID
     class_name_to_id_.clear();
@@ -106,7 +105,7 @@ void VM::run()
 
 void VM::push(const Value &value)
 {
-    if (stack_ptr_ - stack_ >= static_cast<ptrdiff_t>(STACK_MAX)) {
+    if (stack_ptr_ - stack_.get() >= static_cast<ptrdiff_t>(STACK_MAX)) {
         throw RuntimeError("Stack overflow");
     }
     *stack_ptr_++ = value;
@@ -114,7 +113,7 @@ void VM::push(const Value &value)
 
 Value VM::pop()
 {
-    if (stack_ptr_ == stack_) {
+    if (stack_ptr_ == stack_.get()) {
         throw RuntimeError("Stack underflow");
     }
     return *--stack_ptr_;
@@ -122,7 +121,7 @@ Value VM::pop()
 
 Value &VM::peek(size_t distance)
 {
-    if (stack_ptr_ - stack_ <= static_cast<ptrdiff_t>(distance)) {
+    if (stack_ptr_ - stack_.get() <= static_cast<ptrdiff_t>(distance)) {
         throw RuntimeError("Stack peek out of bounds");
     }
     return *(stack_ptr_ - 1 - distance);
@@ -801,7 +800,7 @@ void VM::execute_instruction(CallFrame &frame)
         std::visit(
             [&frame, this](const auto &op) {
                 if constexpr (std::is_same_v<std::decay_t<decltype(op)>, int64_t>) {
-                    frame.try_stack.emplace_back(static_cast<size_t>(op), (stack_ptr_ - stack_));
+                    frame.try_stack.emplace_back(static_cast<size_t>(op), (stack_ptr_ - stack_.get()));
                 }
             },
             instr.operand);
@@ -1059,7 +1058,7 @@ void VM::wait_for_debugger_command()
             // Print current stack
             std::ostringstream oss;
             oss << "[";
-            for (size_t i = 0; i < (stack_ptr_ - stack_); ++i) {
+            for (size_t i = 0; i < (stack_ptr_ - stack_.get()); ++i) {
                 if (i > 0)
                     oss << ", ";
                 oss << "\"" << value_to_string(stack_[i]) << "\"";
@@ -1670,7 +1669,7 @@ void VM::throw_exception(const Value &value)
             auto [handler_ip, stack_depth] = frame.try_stack.back();
             frame.try_stack.pop_back();
 
-            while ((stack_ptr_ - stack_) > stack_depth) {
+            while ((stack_ptr_ - stack_.get()) > stack_depth) {
                 pop();
             }
 

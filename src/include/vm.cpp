@@ -69,14 +69,10 @@ std::string value_to_string(const Value &value)
         value.data);
 }
 
-VM::VM()
-{
-    stack_.resize(INITIAL_STACK_SIZE);
-}
+VM::VM() : stack_ptr_(stack_) {}
 
-VM::VM(const Program &program)
+VM::VM(const Program &program) : stack_ptr_(stack_)
 {
-    stack_.resize(INITIAL_STACK_SIZE);
     init(program);
 }
 
@@ -85,6 +81,7 @@ void VM::init(const Program &program)
     classes_ = program.classes;
     globals_by_index_ = program.globals;
     global_functions_ = program.functions;
+    stack_ptr_ = stack_; // Reset stack
 
     // Build reverse lookup for class name → ID
     class_name_to_id_.clear();
@@ -109,26 +106,26 @@ void VM::run()
 
 void VM::push(const Value &value)
 {
-    if (stack_top_ >= stack_.size()) {
-        stack_.resize(stack_.size() * 2);
+    if (stack_ptr_ - stack_ >= static_cast<ptrdiff_t>(STACK_MAX)) {
+        throw RuntimeError("Stack overflow");
     }
-    stack_[stack_top_++] = value;
+    *stack_ptr_++ = value;
 }
 
 Value VM::pop()
 {
-    if (stack_top_ == 0) {
+    if (stack_ptr_ == stack_) {
         throw RuntimeError("Stack underflow");
     }
-    return stack_[--stack_top_];
+    return *--stack_ptr_;
 }
 
 Value &VM::peek(size_t distance)
 {
-    if (stack_top_ <= distance) {
+    if (stack_ptr_ - stack_ <= static_cast<ptrdiff_t>(distance)) {
         throw RuntimeError("Stack peek out of bounds");
     }
-    return stack_[stack_top_ - 1 - distance];
+    return *(stack_ptr_ - 1 - distance);
 }
 
 void VM::run_loop()

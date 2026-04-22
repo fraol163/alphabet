@@ -196,9 +196,9 @@ class VM
     }
 
   private:
-    std::vector<Value> stack_;
-    static constexpr size_t INITIAL_STACK_SIZE = 4096;
-    size_t stack_top_ = 0;
+    static constexpr size_t STACK_MAX = 65536;
+    Value stack_[STACK_MAX];
+    Value *stack_ptr_ = stack_;
 
     std::unordered_map<std::string, Value> globals_;
     std::vector<std::string> globals_by_index_;

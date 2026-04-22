@@ -375,7 +375,14 @@ StmtPtr Parser::top_level_function()
 
 VarStmt Parser::var_declaration(std::optional<Token> visibility, bool is_static)
 {
-    Token type_id = consume(TokenType::NUMBER, "Expect type ID.");
+    Token type_id;
+    if (check(TokenType::NUMBER)) {
+        type_id = advance();
+    }
+    else {
+        type_id = consume_identifier("Expect type ID or class name.");
+    }
+
     Token name = consume_identifier("Expect variable name.");
 
     ExprPtr initializer;
@@ -420,7 +427,7 @@ StmtPtr Parser::statement()
         return std::make_shared<ContinueStmt>(previous());
     if (match({TokenType::LBRACE}))
         return std::make_shared<Block>(block());
-    if (check(TokenType::NUMBER))
+    if (check(TokenType::NUMBER) || (is_identifier() && check_next_is_identifier()))
         return var_statement();
     if (match({TokenType::METHOD}))
         return top_level_function();

@@ -71,7 +71,9 @@ std::string value_to_string(const Value &value)
 
 VM::VM() : stack_(std::make_unique<Value[]>(STACK_MAX)), stack_ptr_(stack_.get()) {}
 
-VM::VM(const Program &program) : stack_(std::make_unique<Value[]>(STACK_MAX)), stack_ptr_(stack_.get()) {
+VM::VM(const Program &program)
+    : stack_(std::make_unique<Value[]>(STACK_MAX)), stack_ptr_(stack_.get())
+{
     init(program);
 }
 
@@ -800,7 +802,8 @@ void VM::execute_instruction(CallFrame &frame)
         std::visit(
             [&frame, this](const auto &op) {
                 if constexpr (std::is_same_v<std::decay_t<decltype(op)>, int64_t>) {
-                    frame.try_stack.emplace_back(static_cast<size_t>(op), (stack_ptr_ - stack_.get()));
+                    frame.try_stack.emplace_back(static_cast<size_t>(op),
+                                                 (stack_ptr_ - stack_.get()));
                 }
             },
             instr.operand);

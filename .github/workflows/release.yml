@@ -56,7 +56,7 @@ jobs:
         shell: bash
         run: |
           cd build
-          cpack -G ${{ matrix.generator }} -C Release
+          cpack -G "${{ matrix.generator }}" -C Release
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2

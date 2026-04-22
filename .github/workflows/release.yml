@@ -35,7 +35,7 @@ jobs:
             target: windows-amd64
             artifact: alphabet.exe
             build_path: build/Release
-            generator: "NSIS;ZIP"
+            generator: "ZIP"
 
     runs-on: ${{ matrix.os }}
     

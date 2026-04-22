@@ -511,7 +511,15 @@ void Lexer::identifier()
         // If translation is different from original, it's a keyword
         if (translated != text_str) {
             // It's a translated keyword - process the translation
+            if (translated == "\x80") {
+                add_token(TokenType::TOK_CONST);
+                return;
+            }
             if (translated == "z") {
+            if (translated == "\x80") {
+                add_token(TokenType::TOK_CONST);
+                return;
+            }
                 // Handle system functions - emit 'z' as SYSTEM token
                 tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
                 return;
@@ -540,7 +548,15 @@ void Lexer::identifier()
     std::string translated = translate_keyword(text_str, language_);
     if (translated != text_str) {
         // It's a translated ASCII keyword
+            if (translated == "\x80") {
+                add_token(TokenType::TOK_CONST);
+                return;
+            }
         if (translated == "z") {
+            if (translated == "\x80") {
+                add_token(TokenType::TOK_CONST);
+                return;
+            }
             tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
             return;
         }

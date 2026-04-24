@@ -16,3 +16,25 @@ Thumbs.db
 .vscode/
 *.swp
 
+
+# Build output
+build/
+
+# Compiled binaries
+alphabet-linux-amd64
+alphabet-*.tar.gz
+alphabet-*.zip
+
+# IDE
+.cache/
+.ide-state.json
+
+# One-off fix scripts
+fix.cpp
+fix.py
+fix_identifier.py
+vm_h_fix.py
+
+# Scratch test files
+test.abc
+test_crlf.abc

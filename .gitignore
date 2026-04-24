@@ -1,18 +1,38 @@
-# Build output
+# Build
 build/
 out/
+*.o
+*.obj
+*.exe
+*.bin
 
-# CMake generated
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
+# Compiled binary in root
+alphabet-linux-amd64
+alphabet-*
 
-# OS files
+# IDE / Editor
+.cache/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.ide-state.json
+
+# OS
 .DS_Store
 Thumbs.db
 
-# IDE
-.idea/
-.vscode/
-*.swp
+# One-off scripts
+fix.cpp
+fix.py
+fix_identifier.py
+vm_h_fix.py
+
+# Test scratch files
+test.abc
+test_crlf.abc
+
+# REPL history
+.alphabet_history
 

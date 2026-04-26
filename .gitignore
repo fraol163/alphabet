@@ -36,5 +36,4 @@ fix_identifier.py
 vm_h_fix.py
 
 # Scratch test files
-test.abc
 test_crlf.abc

@@ -1,0 +1,3 @@
+#alphabet<en>
+// Helper module for language import tests
+5 helper_value = 99

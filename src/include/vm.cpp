@@ -71,12 +71,18 @@ std::string value_to_string(const Value &value)
 
 static std::string value_type_name(const Value &value)
 {
-    if (value.is_null()) return "null";
-    if (value.is_number()) return "number";
-    if (value.is_string()) return "string";
-    if (value.is_list()) return "list";
-    if (value.is_map()) return "map";
-    if (value.is_object()) return "object";
+    if (value.is_null())
+        return "null";
+    if (value.is_number())
+        return "number";
+    if (value.is_string())
+        return "string";
+    if (value.is_list())
+        return "list";
+    if (value.is_map())
+        return "map";
+    if (value.is_object())
+        return "object";
     return "unknown";
 }
 
@@ -91,11 +97,13 @@ void VM::ffi_close_all()
 {
 #ifdef _WIN32
     for (auto &[path, handle] : ffi_library_cache_) {
-        if (handle) FreeLibrary(reinterpret_cast<HMODULE>(handle));
+        if (handle)
+            FreeLibrary(reinterpret_cast<HMODULE>(handle));
     }
 #else
     for (auto &[path, handle] : ffi_library_cache_) {
-        if (handle) dlclose(handle);
+        if (handle)
+            dlclose(handle);
     }
 #endif
     ffi_library_cache_.clear();
@@ -343,8 +351,8 @@ void VM::execute_instruction(CallFrame &frame)
             push(Value(nullptr));
         }
         else {
-            throw RuntimeError("Type error: cannot add " + value_type_name(a) +
-                               " and " + value_type_name(b));
+            throw RuntimeError("Type error: cannot add " + value_type_name(a) + " and " +
+                               value_type_name(b));
         }
         break;
     }
@@ -359,8 +367,8 @@ void VM::execute_instruction(CallFrame &frame)
             push(Value(nullptr));
         }
         else {
-            throw RuntimeError("Type error: cannot subtract " + value_type_name(b) +
-                               " from " + value_type_name(a) + " (both must be numbers)");
+            throw RuntimeError("Type error: cannot subtract " + value_type_name(b) + " from " +
+                               value_type_name(a) + " (both must be numbers)");
         }
         break;
     }
@@ -375,8 +383,8 @@ void VM::execute_instruction(CallFrame &frame)
             push(Value(nullptr));
         }
         else {
-            throw RuntimeError("Type error: cannot multiply " + value_type_name(a) +
-                               " and " + value_type_name(b) + " (both must be numbers)");
+            throw RuntimeError("Type error: cannot multiply " + value_type_name(a) + " and " +
+                               value_type_name(b) + " (both must be numbers)");
         }
         break;
     }
@@ -396,8 +404,8 @@ void VM::execute_instruction(CallFrame &frame)
             push(Value(nullptr));
         }
         else {
-            throw RuntimeError("Type error: cannot divide " + value_type_name(a) +
-                               " by " + value_type_name(b) + " (both must be numbers)");
+            throw RuntimeError("Type error: cannot divide " + value_type_name(a) + " by " +
+                               value_type_name(b) + " (both must be numbers)");
         }
         break;
     }
@@ -412,8 +420,8 @@ void VM::execute_instruction(CallFrame &frame)
             push(Value(nullptr));
         }
         else {
-            throw RuntimeError("Type error: cannot modulo " + value_type_name(a) +
-                               " by " + value_type_name(b) + " (both must be numbers)");
+            throw RuntimeError("Type error: cannot modulo " + value_type_name(a) + " by " +
+                               value_type_name(b) + " (both must be numbers)");
         }
         break;
     }
@@ -435,8 +443,8 @@ void VM::execute_instruction(CallFrame &frame)
             push(Value(nullptr));
         }
         else {
-            throw RuntimeError("Type error: cannot compare " + value_type_name(a) +
-                               " > " + value_type_name(b) + " (both must be numbers)");
+            throw RuntimeError("Type error: cannot compare " + value_type_name(a) + " > " +
+                               value_type_name(b) + " (both must be numbers)");
         }
         break;
     }
@@ -451,8 +459,8 @@ void VM::execute_instruction(CallFrame &frame)
             push(Value(nullptr));
         }
         else {
-            throw RuntimeError("Type error: cannot compare " + value_type_name(a) +
-                               " < " + value_type_name(b) + " (both must be numbers)");
+            throw RuntimeError("Type error: cannot compare " + value_type_name(a) + " < " +
+                               value_type_name(b) + " (both must be numbers)");
         }
         break;
     }
@@ -585,9 +593,10 @@ void VM::execute_instruction(CallFrame &frame)
                             auto cache_it = ffi_library_cache_.find(lib_path);
                             if (cache_it != ffi_library_cache_.end()) {
                                 handle = cache_it->second;
-                            } else {
+                            }
+                            else {
 #ifdef _WIN32
-                                handle = reinterpret_cast<void*>(LoadLibraryA(lib_path.c_str()));
+                                handle = reinterpret_cast<void *>(LoadLibraryA(lib_path.c_str()));
 #else
                                 handle = dlopen(lib_path.c_str(), RTLD_NOW);
 #endif
@@ -603,7 +612,8 @@ void VM::execute_instruction(CallFrame &frame)
                             }
 
 #ifdef _WIN32
-                            FARPROC raw_func = GetProcAddress(reinterpret_cast<HMODULE>(handle), func_name_str.c_str());
+                            FARPROC raw_func = GetProcAddress(reinterpret_cast<HMODULE>(handle),
+                                                              func_name_str.c_str());
 #else
                             void *raw_func = dlsym(handle, func_name_str.c_str());
 #endif
@@ -1289,7 +1299,6 @@ void VM::run_field_init(ObjectPtr obj, const CompiledClass &cls)
         }
     }
 }
-
 
 void VM::throw_exception(const Value &value)
 {

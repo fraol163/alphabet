@@ -697,8 +697,7 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
         }
 
         // Check for class: "c ClassName {"
-        if (fc == 'c' && first_nonspace + 1 < line.size() &&
-            line[first_nonspace + 1] == ' ') {
+        if (fc == 'c' && first_nonspace + 1 < line.size() && line[first_nonspace + 1] == ' ') {
             size_t name_start = first_nonspace + 2;
             while (name_start < line.size() && line[name_start] == ' ')
                 ++name_start;
@@ -762,18 +761,17 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
                     ++pos;
                 // Extract name
                 size_t name_start = pos;
-                while (pos < line.size() &&
-                       (std::isalnum(line[pos]) || line[pos] == '_'))
+                while (pos < line.size() && (std::isalnum(line[pos]) || line[pos] == '_'))
                     ++pos;
                 if (pos > name_start) {
                     std::string name = line.substr(name_start, pos - name_start);
-                    bool is_static = (line.find("s ") != std::string::npos &&
-                                      line.find("s ") < m_pos);
+                    bool is_static =
+                        (line.find("s ") != std::string::npos && line.find("s ") < m_pos);
 
                     JsonValue sym = JsonValue::object();
                     sym.set("name", JsonValue::string(name));
-                    sym.set("kind", JsonValue::integer(
-                                       current_class.empty() ? SK_FUNCTION : SK_METHOD));
+                    sym.set("kind",
+                            JsonValue::integer(current_class.empty() ? SK_FUNCTION : SK_METHOD));
                     JsonValue range = JsonValue::object();
                     JsonValue start_p = JsonValue::object();
                     start_p.set("line", JsonValue::integer(line_num));
@@ -782,8 +780,7 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
                     range.set("end", start_p);
                     sym.set("range", range);
                     sym.set("selectionRange", range);
-                    std::string detail =
-                        (current_class.empty() ? "function" : "method");
+                    std::string detail = (current_class.empty() ? "function" : "method");
                     if (is_static)
                         detail = "static " + detail;
                     sym.set("detail", JsonValue::string(detail));
@@ -793,8 +790,7 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
             }
         }
         // Check for interface: "j InterfaceName {"
-        else if (fc == 'j' && first_nonspace + 1 < line.size() &&
-                 line[first_nonspace + 1] == ' ') {
+        else if (fc == 'j' && first_nonspace + 1 < line.size() && line[first_nonspace + 1] == ' ') {
             size_t name_start = first_nonspace + 2;
             while (name_start < line.size() && line[name_start] == ' ')
                 ++name_start;
@@ -822,14 +818,12 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
         }
         // Check for const: "const name = ..."
         else if (line.substr(first_nonspace, 5) == "const" &&
-                 (first_nonspace + 5 >= line.size() ||
-                  line[first_nonspace + 5] == ' ')) {
+                 (first_nonspace + 5 >= line.size() || line[first_nonspace + 5] == ' ')) {
             size_t pos = first_nonspace + 5;
             while (pos < line.size() && line[pos] == ' ')
                 ++pos;
             size_t name_start = pos;
-            while (pos < line.size() &&
-                   (std::isalnum(line[pos]) || line[pos] == '_'))
+            while (pos < line.size() && (std::isalnum(line[pos]) || line[pos] == '_'))
                 ++pos;
             if (pos > name_start) {
                 std::string name = line.substr(name_start, pos - name_start);
@@ -859,8 +853,7 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
             while (pos < line.size() && line[pos] == ' ')
                 ++pos;
             size_t name_start = pos;
-            while (pos < line.size() &&
-                   (std::isalnum(line[pos]) || line[pos] == '_'))
+            while (pos < line.size() && (std::isalnum(line[pos]) || line[pos] == '_'))
                 ++pos;
             if (pos > name_start) {
                 // Verify this is an assignment (has '=' after name)
@@ -871,8 +864,8 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
                     std::string name = line.substr(name_start, pos - name_start);
 
                     // Extract type id
-                    std::string type_str = line.substr(
-                        first_nonspace, name_start - first_nonspace - 1);
+                    std::string type_str =
+                        line.substr(first_nonspace, name_start - first_nonspace - 1);
 
                     // Determine if it's a field (inside a class) or variable
                     int kind = current_class.empty() ? SK_VARIABLE : SK_FIELD;
@@ -968,8 +961,7 @@ JsonValue LanguageServer::handle_definition(int /*id*/, const JsonValue &params)
             while (ns < def_line.size() && def_line[ns] == ' ')
                 ++ns;
             size_t ne = ns;
-            while (ne < def_line.size() &&
-                   (std::isalnum(def_line[ne]) || def_line[ne] == '_'))
+            while (ne < def_line.size() && (std::isalnum(def_line[ne]) || def_line[ne] == '_'))
                 ++ne;
             if (ne > ns && def_line.substr(ns, ne - ns) == search_name) {
                 JsonValue loc = JsonValue::object();
@@ -995,8 +987,7 @@ JsonValue LanguageServer::handle_definition(int /*id*/, const JsonValue &params)
             while (ns < def_line.size() && def_line[ns] == ' ')
                 ++ns;
             size_t ne = ns;
-            while (ne < def_line.size() &&
-                   (std::isalnum(def_line[ne]) || def_line[ne] == '_'))
+            while (ne < def_line.size() && (std::isalnum(def_line[ne]) || def_line[ne] == '_'))
                 ++ne;
             if (ne > ns && def_line.substr(ns, ne - ns) == search_name) {
                 JsonValue loc = JsonValue::object();
@@ -1020,8 +1011,7 @@ JsonValue LanguageServer::handle_definition(int /*id*/, const JsonValue &params)
             size_t m_pos = def_line.find("m ");
             bool is_method = false;
             if (m_pos == first_nonspace ||
-                (m_pos > 0 && (def_line[m_pos - 1] == ' ' ||
-                                def_line[m_pos - 1] == '\t'))) {
+                (m_pos > 0 && (def_line[m_pos - 1] == ' ' || def_line[m_pos - 1] == '\t'))) {
                 size_t after_m = m_pos + 2;
                 while (after_m < def_line.size() && def_line[after_m] == ' ')
                     ++after_m;
@@ -1061,8 +1051,7 @@ JsonValue LanguageServer::handle_definition(int /*id*/, const JsonValue &params)
 
         // Check const: "const name = ..."
         if (def_line.substr(first_nonspace, 5) == "const" &&
-            (first_nonspace + 5 >= def_line.size() ||
-             def_line[first_nonspace + 5] == ' ')) {
+            (first_nonspace + 5 >= def_line.size() || def_line[first_nonspace + 5] == ' ')) {
             size_t pos2 = first_nonspace + 5;
             while (pos2 < def_line.size() && def_line[pos2] == ' ')
                 ++pos2;
@@ -1101,11 +1090,9 @@ JsonValue LanguageServer::handle_definition(int /*id*/, const JsonValue &params)
                 ++pos2;
             if (pos2 > name_start) {
                 size_t after_name = pos2;
-                while (after_name < def_line.size() &&
-                       def_line[after_name] == ' ')
+                while (after_name < def_line.size() && def_line[after_name] == ' ')
                     ++after_name;
-                if (after_name < def_line.size() &&
-                    def_line[after_name] == '=' &&
+                if (after_name < def_line.size() && def_line[after_name] == '=' &&
                     def_line.substr(name_start, pos2 - name_start) == search_name) {
                     JsonValue loc = JsonValue::object();
                     loc.set("uri", JsonValue::string(uri));

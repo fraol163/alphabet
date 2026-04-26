@@ -546,11 +546,10 @@ void Lexer::fstring()
 
             if (emitted_any) {
                 tokens_.emplace_back(TokenType::PLUS, std::string_view("+"), 0, line_,
-                                    start_column_);
+                                     start_column_);
             }
             string_pool_.push_back(part.value);
-            tokens_.emplace_back(TokenType::STRING, string_pool_.back(), 0, line_,
-                                start_column_);
+            tokens_.emplace_back(TokenType::STRING, string_pool_.back(), 0, line_, start_column_);
             emitted_any = true;
         }
         else {
@@ -560,11 +559,11 @@ void Lexer::fstring()
 
             if (emitted_any) {
                 tokens_.emplace_back(TokenType::PLUS, std::string_view("+"), 0, line_,
-                                    start_column_);
+                                     start_column_);
             }
             string_pool_.push_back(part.value);
             tokens_.emplace_back(TokenType::IDENTIFIER, string_pool_.back(), 0, line_,
-                                start_column_);
+                                 start_column_);
             emitted_any = true;
         }
     }

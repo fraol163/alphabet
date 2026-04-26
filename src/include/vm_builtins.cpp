@@ -72,7 +72,8 @@ void VM::system_call(const std::string &method, int arg_count)
     else if (method == "fw" && arg_count >= 2) {
         // z.fw(path, content) -> write content to file, returns success (1/0)
         if (sandbox_mode_) {
-            pop(); pop(); // discard args
+            pop();
+            pop(); // discard args
             push(Value(0.0));
         }
         else {

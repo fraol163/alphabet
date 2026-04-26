@@ -162,6 +162,7 @@ class VM
 {
   public:
     VM();
+    ~VM();
     explicit VM(const Program &program);
 
     void run();
@@ -239,6 +240,10 @@ class VM
                                ") exceeded");
         }
     }
+
+    // FFI library handle cache (avoids dlopen/dlclose on every z.dyn call)
+    std::unordered_map<std::string, void*> ffi_library_cache_;
+    void ffi_close_all();
 };
 
 std::string value_to_string(const Value &value);

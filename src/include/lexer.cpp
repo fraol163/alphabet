@@ -51,6 +51,8 @@ const char *token_type_to_string(TokenType type)
         return "NUMBER";
     case TokenType::STRING:
         return "STRING";
+    case TokenType::FSTRING:
+        return "FSTRING";
     case TokenType::PLUS:
         return "PLUS";
     case TokenType::MINUS:
@@ -130,7 +132,13 @@ std::vector<Token> Lexer::scan_tokens()
         if (source_[i] == '\\')
             escape_count++;
     }
-    string_pool_.reserve(escape_count);
+    // Count fstring patterns and reserve extra capacity for their string parts
+    size_t fstring_reserve = 0;
+    for (size_t i = current_; i + 1 < source_.size(); ++i) {
+        if (source_[i] == 'f' && source_[i + 1] == '"')
+            fstring_reserve++;
+    }
+    string_pool_.reserve(escape_count + fstring_reserve * 20);
 
     while (!is_at_end()) {
         start_ = current_;
@@ -303,8 +311,14 @@ void Lexer::scan_token()
         }
         else if (std::isalpha(static_cast<unsigned char>(c)) ||
                  static_cast<unsigned char>(c) > 127) {
-            // ASCII letters or UTF-8 characters
-            identifier();
+            // Check for fstring: f"..."
+            if (c == 'f' && peek() == '"') {
+                fstring();
+            }
+            else {
+                // ASCII letters or UTF-8 characters
+                identifier();
+            }
         }
         break;
     }
@@ -406,6 +420,159 @@ void Lexer::string()
     else {
         std::string_view value = source_.substr(start_ + 1, current_ - start_ - 2);
         tokens_.emplace_back(TokenType::STRING, value, 0, line_, start_column_);
+    }
+}
+
+void Lexer::fstring()
+{
+    // 'f' was consumed by advance() in scan_token()
+    // Current position is at the opening '"'
+    advance(); // consume opening '"'
+
+    // Collect parts: alternating string literals and identifier expressions
+    struct Part
+    {
+        bool is_string; // true = string literal, false = identifier
+        std::string value;
+    };
+    std::vector<Part> parts;
+
+    std::string current_literal;
+
+    while (peek() != '"' && !is_at_end()) {
+        if (peek() == '{') {
+            advance(); // consume '{'
+
+            if (peek() == '{') {
+                // Escaped brace: {{
+                advance();
+                current_literal += '{';
+                continue;
+            }
+
+            // Start of interpolation expression
+            // Save current literal part (even if empty, to preserve ordering)
+            parts.push_back({true, current_literal});
+            current_literal.clear();
+
+            // Read expression content until '}'
+            std::string expr;
+            while (peek() != '}' && !is_at_end()) {
+                expr += advance();
+            }
+            if (peek() == '}')
+                advance(); // consume '}'
+
+            // Trim whitespace from expression
+            size_t trim_start = expr.find_first_not_of(" \t\r\n");
+            size_t trim_end = expr.find_last_not_of(" \t\r\n");
+            if (trim_start != std::string::npos) {
+                expr = expr.substr(trim_start, trim_end - trim_start + 1);
+            }
+            else {
+                expr.clear();
+            }
+
+            parts.push_back({false, expr});
+        }
+        else if (peek() == '}') {
+            advance();
+            if (peek() == '}') {
+                // Escaped brace: }}
+                advance();
+                current_literal += '}';
+            }
+            else {
+                // Unmatched '}' - treat as literal
+                current_literal += '}';
+            }
+        }
+        else if (peek() == '\\') {
+            // Escape sequence
+            advance(); // consume backslash
+            if (is_at_end())
+                break;
+            char escaped = advance();
+            switch (escaped) {
+            case 'n':
+                current_literal += '\n';
+                break;
+            case 't':
+                current_literal += '\t';
+                break;
+            case '\\':
+                current_literal += '\\';
+                break;
+            case '"':
+                current_literal += '"';
+                break;
+            case '{':
+                current_literal += '{';
+                break;
+            case '}':
+                current_literal += '}';
+                break;
+            case '0':
+                current_literal += '\0';
+                break;
+            default:
+                current_literal += '\\';
+                current_literal += escaped;
+                break;
+            }
+        }
+        else {
+            current_literal += advance();
+        }
+    }
+
+    // Save trailing literal
+    parts.push_back({true, current_literal});
+
+    if (is_at_end())
+        return; // Unterminated fstring
+
+    advance(); // consume closing '"'
+
+    // Emit tokens: string parts as STRING, expression parts as IDENTIFIER,
+    // connected by PLUS tokens. Skip empty string parts when other parts exist.
+    bool emitted_any = false;
+
+    for (const auto &part : parts) {
+        if (part.is_string) {
+            // Skip empty string parts when there are other parts to emit
+            if (part.value.empty())
+                continue;
+
+            if (emitted_any) {
+                tokens_.emplace_back(TokenType::PLUS, std::string_view("+"), 0, line_,
+                                    start_column_);
+            }
+            string_pool_.push_back(part.value);
+            tokens_.emplace_back(TokenType::STRING, string_pool_.back(), 0, line_,
+                                start_column_);
+            emitted_any = true;
+        }
+        else {
+            // Skip empty identifiers (e.g., from {})
+            if (part.value.empty())
+                continue;
+
+            if (emitted_any) {
+                tokens_.emplace_back(TokenType::PLUS, std::string_view("+"), 0, line_,
+                                    start_column_);
+            }
+            string_pool_.push_back(part.value);
+            tokens_.emplace_back(TokenType::IDENTIFIER, string_pool_.back(), 0, line_,
+                                start_column_);
+            emitted_any = true;
+        }
+    }
+
+    // If nothing was emitted (e.g., f"" or f"{}"), emit empty string
+    if (!emitted_any) {
+        string_pool_.push_back("");
+        tokens_.emplace_back(TokenType::STRING, string_pool_.back(), 0, line_, start_column_);
     }
 }
 

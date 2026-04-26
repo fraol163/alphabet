@@ -1,5 +1,5 @@
 #alphabet<en>
-// List Library for Alphabet v2.3.2
+// List Library for Alphabet v2.3.3
 // Wraps built-in z.* list functions for cleaner API
 
 // Get list length
@@ -60,4 +60,99 @@ m 13 keys(14 m) {
 // Get values from map
 m 13 values(14 m) {
   r z.values(m)
+}
+
+// Get minimum value from a list of numbers
+m 5 min(13 lst) {
+  i (z.len(lst) == 0) { r 0 }
+  5 best = lst[0]
+  5 idx = 1
+  l (idx < z.len(lst)) {
+    i (lst[idx] < best) {
+      best = lst[idx]
+    }
+    idx = idx + 1
+  }
+  r best
+}
+
+// Get maximum value from a list of numbers
+m 5 max(13 lst) {
+  i (z.len(lst) == 0) { r 0 }
+  5 best = lst[0]
+  5 idx = 1
+  l (idx < z.len(lst)) {
+    i (lst[idx] > best) {
+      best = lst[idx]
+    }
+    idx = idx + 1
+  }
+  r best
+}
+
+// Sum all values in a list
+m 5 sum(13 lst) {
+  5 total = 0
+  5 idx = 0
+  l (idx < z.len(lst)) {
+    total = total + lst[idx]
+    idx = idx + 1
+  }
+  r total
+}
+
+// Return list with duplicates removed (preserves order)
+m 13 unique(13 lst) {
+  13 result = []
+  5 idx = 0
+  l (idx < z.len(lst)) {
+    5 val = lst[idx]
+    i (z.contains(result, val) == 0) {
+      result = z.append(result, val)
+    }
+    idx = idx + 1
+  }
+  r result
+}
+
+// Get a sublist from start index with given length
+m 13 slice(13 lst, 5 start, 5 len) {
+  13 result = []
+  5 idx = start
+  5 end = start + len
+  i (end > z.len(lst)) {
+    end = z.len(lst)
+  }
+  l (idx < end) {
+    result = z.append(result, lst[idx])
+    idx = idx + 1
+  }
+  r result
+}
+
+// Sort a list of numbers using bubble sort (returns new list)
+m 13 sort(13 lst) {
+  13 result = []
+  // Copy input list into result
+  5 i = 0
+  l (i < z.len(lst)) {
+    result = z.append(result, lst[i])
+    i = i + 1
+  }
+  // Bubble sort
+  5 n = z.len(result)
+  5 a = 0
+  l (a < n - 1) {
+    5 b = a + 1
+    l (b < n) {
+      i (result[a] > result[b]) {
+        5 tmp = result[a]
+        result[a] = result[b]
+        result[b] = tmp
+      }
+      b = b + 1
+    }
+    a = a + 1
+  }
+  r result
 }

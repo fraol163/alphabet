@@ -41,6 +41,7 @@ enum class TokenType : int {
     IDENTIFIER = 200,
     NUMBER = 201,
     STRING = 202,
+    FSTRING = 203,
 
     PLUS = '+',
     MINUS = '-',
@@ -124,6 +125,7 @@ class Lexer
     void multi_line_string();
     void number();
     void identifier();
+    void fstring();
     [[nodiscard]] bool is_keyword_char(char c) const;
     [[nodiscard]] TokenType keyword_type(char c) const;
     void validate_header();

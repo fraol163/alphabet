@@ -1,15 +1,15 @@
-# Alphabet Project Roadmap - v2.3.2
+# Alphabet Project Roadmap - v2.3.3
 
 **Project Owner: Fraol Teshome**
 
-## Completed (v2.0.0 - v2.3.2)
+## Completed (v2.0.0 - v2.3.3)
 
 ### Core Language
 - [x] Lexer with 19 single-letter keywords
 - [x] Recursive descent parser
 - [x] Stack-based bytecode compiler
 - [x] Virtual machine with 40+ opcodes
-- [x] Numeric type system (type IDs 0-14)
+- [x] Numeric type system (type IDs 0-14, all numbers stored as double internally)
 - [x] OOP: classes, methods, inheritance, interfaces, visibility
 - [x] Exception handling (try/handle)
 - [x] Pattern matching (match/case)
@@ -19,6 +19,7 @@
 - [x] FFI: call native C functions
 - [x] String escape sequences
 - [x] String concatenation with type coercion
+- [x] String interpolation (f"Hello {name}")
 - [x] Underscore identifiers
 - [x] Python-style negative list indexing (list[-1])
 - [x] Dynamic stack (vector-based, grows on demand)
@@ -27,23 +28,25 @@
 
 ### Standard Library
 - [x] math.abc (factorial, gcd, lcm, max, min, clamp, sign)
-- [x] io.abc (print, println, read_file)
+- [x] io.abc (print, println, read_file, write_file)
 - [x] string.abc (contains, starts_with, ends_with, split, join, replace, trim, upper, lower, substr, reverse, length, chr, ord)
-- [x] list.abc (length, push, pop, contains, reverse, first, last, range, range_from, range_step, keys, values)
+- [x] list.abc (length, push, pop, contains, reverse, first, last, range, range_from, range_step, keys, values, min, max, sum, unique, slice, sort)
 
 ### Built-In Functions
-- [x] Math: sqrt, abs, pow, floor, ceil, sin, cos
+- [x] Math: sqrt, abs, pow, floor, ceil, sin, cos, tan, round, min, max, log, log10
 - [x] String: len, tostr, tonum, type, split, join, replace, trim, upper, lower, substr, chr, ord, starts_with, ends_with
-- [x] List: append, pop_back, contains, reverse, range, keys, values
+- [x] List: append, pop_back, contains, reverse, range, keys, values, insert, remove
+- [x] File I/O: f (read), fw (write)
 
 ### Tooling
 - [x] CLI with --repl, --lsp, --version, --help, --dump-bytecode, --sandbox, --debug
 - [x] REPL with persistent state and error recovery
-- [x] LSP server (JSON-RPC, completions, hover, diagnostics)
+- [x] LSP server (JSON-RPC, completions, hover, diagnostics, goto-definition, document-symbols)
 - [x] Compile-only mode with bytecode serialization
 - [x] Error messages with line/column/source context
 - [x] Debug mode with breakpoints and step
 - [x] --dump-bytecode flag for inspecting compiled output
+- [x] Improved VM error messages for type mismatches (RuntimeError instead of silent null)
 
 ### Infrastructure
 - [x] CMake build system with unit, golden, and language tests
@@ -53,6 +56,8 @@
 - [x] Multilingual keywords (English, Amharic, Spanish, French, German)
 - [x] Version managed from single VERSION file
 - [x] Dynamic VM stack (no more fixed 64KB allocation)
+- [x] FFI library handle caching (no more dlopen/dlclose per call)
+- [x] Code quality: vm.cpp split into vm.cpp + vm_builtins.cpp, REPL error handling deduplicated
 
 ---
 
@@ -87,14 +92,12 @@
 ### Language Features
 - [ ] Lambda functions
 - [ ] Generics
-- [ ] String interpolation (`f"Hello {name}"`)
 - [ ] Range expressions in for loops
 - [ ] Destructuring assignment
 - [ ] Enum types
 
 ### Standard Library
 - [ ] Collections (sort, filter, map, reduce as stdlib functions)
-- [ ] File I/O (write, append, exists, delete)
 - [ ] JSON parsing
 - [ ] HTTP client
 - [ ] Date/time handling
@@ -113,4 +116,4 @@
 
 ---
 
-*Status: v2.3.2 Released. Core language and standard library complete. Focus on ecosystem and internationalization.*
+*Status: v2.3.3 Released. Core language and standard library complete. Focus on ecosystem and internationalization.*

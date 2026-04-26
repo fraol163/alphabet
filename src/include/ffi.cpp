@@ -200,33 +200,32 @@ void FFIBridge::unload_all()
 FFIArg FFIBridge::call(const std::string &lib_path, const std::string &func_name,
                        const std::vector<FFIArg> &args)
 {
-#ifdef _WIN32
-    void *handle = reinterpret_cast<void *>(LoadLibraryA(lib_path.c_str()));
+    // Find or load library handle
+    void *handle = nullptr;
+    for (auto &lib : libraries_) {
+        if (lib.path == lib_path) {
+            handle = lib.handle;
+            break;
+        }
+    }
     if (!handle) {
-        throw std::runtime_error("Failed to load library");
+        if (!load_library(lib_path)) {
+            throw std::runtime_error("Failed to load library: " + lib_path);
+        }
+        handle = libraries_.back().handle;
     }
 
+#ifdef _WIN32
     typedef FFIValue (*FuncType)(FFIValue *, int);
     FuncType f = reinterpret_cast<FuncType>(
         GetProcAddress(reinterpret_cast<HMODULE>(handle), func_name.c_str()));
 #else
-    void *handle = dlopen(lib_path.c_str(), RTLD_NOW);
-    if (!handle) {
-        throw std::runtime_error(dlerror());
-    }
-
     typedef FFIValue (*FuncType)(FFIValue *, int);
     FuncType f = reinterpret_cast<FuncType>(dlsym(handle, func_name.c_str()));
 #endif
 
     if (!f) {
-#ifdef _WIN32
-        FreeLibrary(reinterpret_cast<HMODULE>(handle));
-        throw std::runtime_error("Function not found");
-#else
-        dlclose(handle);
-        throw std::runtime_error(dlerror());
-#endif
+        throw std::runtime_error("Function '" + func_name + "' not found in " + lib_path);
     }
 
     std::vector<FFIValue> ffi_args(args.size());
@@ -241,12 +240,6 @@ FFIArg FFIBridge::call(const std::string &lib_path, const std::string &func_name
             free(const_cast<char *>(arg.data.string_val));
         }
     }
-
-#ifdef _WIN32
-    FreeLibrary(reinterpret_cast<HMODULE>(handle));
-#else
-    dlclose(handle);
-#endif
 
     return from_ffi_value(result);
 }

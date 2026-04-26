@@ -1,6 +1,6 @@
 # Alphabet Language - Complete Guide
 
-**Comprehensive tutorial for Alphabet Programming Language v2.1**
+**Comprehensive tutorial for Alphabet Programming Language v2.3.3**
 
 ---
 
@@ -10,7 +10,8 @@
 2. [Installation](#installation)
 3. [Getting Started](#getting-started)
 4. [Basic Syntax](#basic-syntax)
-5. [Data Types](#data-types)
+5. [String Interpolation](#string-interpolation)
+6. [Data Types](#data-types)
 6. [Control Flow](#control-flow)
 7. [Functions](#functions)
 8. [Classes & OOP](#classes--oop)
@@ -83,7 +84,7 @@ alphabet --version
 
 **Expected output:**
 ```
-Alphabet 2.1.0 (Native C++)
+Alphabet 2.3.3 (Native C++)
 Developer: Fraol Teshome (fraolteshome444@gmail.com)
 ```
 
@@ -149,6 +150,23 @@ z.o(x + y)        # Print expression
 
 ---
 
+## String Interpolation
+
+Use f-strings to embed expressions directly inside strings:
+
+```alphabet
+#alphabet<en>
+5 age = 25
+12 name = "Alice"
+z.o(f"Hello, {name}! You are {age} years old.")  # Hello, Alice! You are 25 years old.
+z.o(f"2 + 3 = {2 + 3}")                          # 2 + 3 = 5
+z.o(f"sqrt(144) = {z.sqrt(144)}")                 # sqrt(144) = 12
+```
+
+Any expression — variables, arithmetic, function calls — can appear inside `{ }`.
+
+---
+
 ## Data Types
 
 ### Numeric Type IDs
@@ -170,6 +188,8 @@ Alphabet identifies types by numeric ID:
 | 13 | list | Array | `13 arr = [1, 2, 3]` |
 | 14 | map | Dictionary | `14 m = {"id": 1}` |
 | 15+ | custom | Class | `15 obj = n MyClass()` |
+
+> **Note:** All numeric types are stored internally as `double` for simplicity. The type IDs affect validation but all numbers share the same representation at runtime.
 
 ---
 
@@ -304,15 +324,24 @@ t {
 | `z.o(x)` | Output | `z.o("Hello")` |
 | `z.i()` | Input | `5 x = z.i()` |
 | `z.f(p)` | Read file | `12 data = z.f("file.txt")` |
+| `z.fw(p, data)` | Write file | `z.fw("out.txt", "data")` |
 | `z.t()` | Throw error | `z.t()` |
 | `z.dyn(lib, func, ...)` | FFI call | `z.dyn("lib.so", "add", 1, 2)` |
 | `z.sqrt(x)` | Square root | `z.sqrt(144)` = 12 |
 | `z.abs(x)` | Absolute value | `z.abs(-42)` = 42 |
 | `z.pow(x, y)` | Power | `z.pow(2, 10)` = 1024 |
-| `z.len(x)` | Length | `z.len("hi")` = 2 |
-| `z.type(x)` | Type name | `z.type(42)` = "number" |
+| `z.tan(x)` | Tangent | `z.tan(0.785)` = ~1 |
+| `z.round(x)` | Round | `z.round(3.7)` = 4 |
+| `z.min(a, b)` | Minimum | `z.min(3, 7)` = 3 |
+| `z.max(a, b)` | Maximum | `z.max(3, 7)` = 7 |
+| `z.log(x)` | Natural log | `z.log(2.718)` = ~1 |
+| `z.log10(x)` | Base-10 log | `z.log10(100)` = 2 |
+| `z.len(x)` | Length | `z.len("hi")` = 2, also works on maps |
+| `z.type(x)` | Type name | `z.type(42)` = "number", returns "list", "map", "object" |
 | `z.tostr(x)` | To string | `z.tostr(42)` = "42" |
 | `z.tonum(x)` | To number | `z.tonum("42")` = 42 |
+| `z.insert(list, i, val)` | Insert in list | `z.insert(lst, 0, 99)` |
+| `z.remove(list, i)` | Remove from list | `z.remove(lst, 0)` |
 
 ---
 
@@ -331,7 +360,7 @@ z.o(result)  # Output: 30
 alphabet --lsp
 ```
 
-Enables real-time error highlighting in VS Code.
+Enables real-time error highlighting in VS Code, plus goto-definition, document-symbols, completions, hover, and diagnostics.
 
 ---
 

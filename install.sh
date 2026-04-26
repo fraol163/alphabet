@@ -159,6 +159,20 @@ main() {
     ARCH=$(detect_arch)
     info "Detected: $OS-$ARCH"
 
+    if command_exists alphabet; then
+        CURRENT=$(alphabet --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
+        info "Found existing Alphabet v$CURRENT"
+    else
+        CURRENT="none"
+    fi
+
+    info "Fetching latest version..."
+    LATEST=$(get_latest_version)
+    if [ -z "$LATEST" ]; then
+        error "Could not fetch latest version from GitHub"
+    fi
+    info "Latest version: v$LATEST"
+
     case "$OS-$ARCH" in
         linux-amd64)
             RAW_ASSET="alphabet-linux-amd64"
@@ -180,17 +194,6 @@ main() {
             error "Unsupported platform combination: $OS-$ARCH"
             ;;
     esac
-
-    if command_exists alphabet; then
-        CURRENT=$(alphabet --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "unknown")
-        info "Found existing Alphabet v$CURRENT"
-    else
-        CURRENT="none"
-    fi
-
-    info "Fetching latest version..."
-    LATEST=$(get_latest_version)
-    info "Latest version: v$LATEST"
 
     if [ "$CURRENT" = "$LATEST" ]; then
         success "Already up to date!"

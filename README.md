@@ -11,7 +11,7 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
                 d88
                 ?8P
 ```
-# Alphabet Programming Language V2.3.2
+# Alphabet Programming Language V2.3.3
 
 **The fastest way to learn programming.**
 
@@ -37,6 +37,7 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
   - [Exception Handling](#exception-handling)
   - [Import Modules](#import-modules)
   - [String Escapes and Concatenation](#string-escapes-and-concatenation)
+  - [String Interpolation](#string-interpolation)
   - [FFI - Call Native C Functions](#ffi---call-native-c-functions)
   - [Built-In Functions](#built-in-functions)
   - [Multilingual Keywords](#multilingual-keywords)
@@ -62,13 +63,14 @@ Alphabet is a **beginner-friendly programming language** with only **19 single-l
 - **Simple Syntax** - No semicolons, no boilerplate, no complex rules
 - **Type System** - Compile-time type checking with numeric type IDs
 - **Multilingual** - Write code in English, Amharic, Spanish, French, or German
-- **LSP Support** - Works with VS Code and other editors
+- **LSP Support** - Works with VS Code and other editors (goto-definition, document-symbols, completions, hover, diagnostics)
+- **String Interpolation** - f-strings: `f"Hello {name}"`
 - **FFI** - Call native C functions from Alphabet code
 - **Cross-Platform** - Works on Windows, Linux, and macOS
 - **Built-in Debugger** - Breakpoints, step, locals, globals, stack trace
 - **REPL** - Interactive mode with persistent state and error recovery
 - **Standard Library** - Math, I/O, String, and List modules included
-- **30+ Built-in Functions** - Range, split, join, replace, contains, keys, and more
+- **40+ Built-in Functions** - Range, split, join, replace, contains, keys, and more
 
 ### Why Choose Alphabet?
 
@@ -169,6 +171,8 @@ Hello, Alphabet!
 13 nums = [1, 2, 3]   # list
 14 cfg = {"k": 100}   # map
 ```
+
+> **Note:** All numeric types (int, float, i8, f32, etc.) are stored internally as `double` for simplicity. The type IDs affect validation but all numbers share the same representation at runtime.
 
 ### Control Flow
 
@@ -272,6 +276,21 @@ z.o("x=" + 5)              # x=5
 z.o(5 + " items")          # 5 items
 ```
 
+### String Interpolation
+
+Use f-strings to embed expressions directly inside strings:
+
+```alphabet
+#alphabet<en>
+5 age = 25
+12 name = "Alice"
+z.o(f"Hello, {name}! You are {age} years old.")  # Hello, Alice! You are 25 years old.
+z.o(f"2 + 3 = {2 + 3}")                          # 2 + 3 = 5
+z.o(f"sqrt(144) = {z.sqrt(144)}")                 # sqrt(144) = 12
+```
+
+Any expression — variables, arithmetic, function calls — can appear inside `{ }`.
+
 ### FFI - Call Native C Functions
 
 ```alphabet
@@ -290,10 +309,22 @@ z.o(z.abs(-42))     # 42
 z.o(z.pow(2, 10))   # 1024
 z.o(z.floor(3.7))   # 3
 z.o(z.ceil(3.2))    # 4
+z.o(z.sin(1.57))    # ~1
+z.o(z.cos(0))       # 1
+z.o(z.tan(0.785))   # ~1
+z.o(z.round(3.7))   # 4
+z.o(z.min(3, 7))    # 3
+z.o(z.max(3, 7))    # 7
+z.o(z.log(2.718))   # ~1 (natural log)
+z.o(z.log10(100))   # 2
 
 // Type info
 z.o(z.len("hello")) # 5
+14 m = {"a": 1}
+z.o(z.len(m))       # 1 (works on maps too)
 z.o(z.type(42))     # "number"
+z.o(z.type([1,2]))  # "list"
+z.o(z.type({"k":1}))  # "map"
 
 // String operations
 z.o(z.upper("hi"))          # "HI"
@@ -315,6 +346,8 @@ z.append(nums, 4)           # [1,2,3,4]
 z.o(z.pop_back(nums))       # 4
 z.o(z.contains(nums, 2))    # 1
 13 rev = z.reverse(nums)    # [3,2,1]
+z.insert(nums, 0, 99)       # [99,1,2,3]
+z.remove(nums, 0)           # [1,2,3]
 
 // Range
 13 r = z.range(5)           # [0,1,2,3,4]
@@ -324,6 +357,10 @@ z.o(z.contains(nums, 2))    # 1
 14 m = {"a": 1, "b": 2}
 13 k = z.keys(m)            # ["a", "b"]
 13 v = z.values(m)          # [1, 2]
+
+// File I/O
+z.fw("output.txt", "Hello!") # Write to file
+12 content = z.f("data.txt") # Read file
 ```
 
 ### Multilingual Keywords
@@ -417,7 +454,9 @@ z.o(sign(-5))          # -1
 #alphabet<en>
 x "../stdlib/io.abc"
 print("hello")
+println("hello")           # print with newline
 12 content = read_file("data.txt")
+write_file("out.txt", "data")  # write to file
 ```
 
 ### string.abc
@@ -446,6 +485,12 @@ z.o(contains(nums, 2))      # 1
 13 rev = reverse(nums)      # reversed copy
 z.o(first(nums))            # 0
 z.o(last(nums))             # 4
+z.o(min(nums))              # 0
+z.o(max(nums))              # 4
+z.o(sum(nums))              # 10
+13 u = unique(nums)         # remove duplicates
+13 s = sort(nums)           # sorted copy
+13 sl = slice(nums, 1, 3)   # sub-list
 ```
 
 ---

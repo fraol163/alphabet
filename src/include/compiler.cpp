@@ -400,6 +400,9 @@ void Compiler::visit_expr(const ExprPtr &expr)
     else if (auto *iae = dynamic_cast<const IndexAssign *>(expr.get())) {
         visit_index_assign(*iae);
     }
+    else if (auto *le = dynamic_cast<const LambdaExpr *>(expr.get())) {
+        visit_lambda(*le);
+    }
 }
 
 void Compiler::visit_return(const ReturnStmt &stmt)
@@ -866,14 +869,15 @@ void Compiler::visit_call(const Call &expr)
     else if (auto *var = dynamic_cast<const Variable *>(expr.callee.get())) {
         std::string var_name = sv_to_str(var->name.lexeme);
 
-        // Push callee first, then args
-        // VM pops args (from top), then pops callee (below args)
+        // Push callee value, then args
+        // For regular functions: LOAD_VAR pushes null, VM falls back to method_name lookup
+        // For lambdas: LOAD_VAR pushes the lambda function name string
         if (var_name == "z") {
             emit(OpCode::PUSH_CONST, std::string("SYSTEM_Z"));
         }
         else {
-            // Top-level function call: push function name as callee
-            emit(OpCode::PUSH_CONST, var_name);
+            // Load variable value (lambda name or null for named functions)
+            visit_expr(expr.callee);
         }
 
         for (const auto &arg : expr.arguments) {
@@ -881,6 +885,16 @@ void Compiler::visit_call(const Call &expr)
         }
 
         emit(OpCode::CALL, std::make_pair(var_name, static_cast<int>(expr.arguments.size())));
+    }
+    else {
+        // General callee (lambda expression, grouping, etc.)
+        // Push callee value (should evaluate to a function name string)
+        visit_expr(expr.callee);
+        for (const auto &arg : expr.arguments) {
+            visit_expr(arg);
+        }
+        emit(OpCode::CALL,
+             std::make_pair(std::string("lambda"), static_cast<int>(expr.arguments.size())));
     }
 }
 
@@ -930,6 +944,42 @@ void Compiler::visit_index_assign(const IndexAssign &expr)
     visit_expr(expr.index);
     visit_expr(expr.value);
     emit(OpCode::STORE_INDEX);
+}
+
+void Compiler::visit_lambda(const LambdaExpr &expr)
+{
+    // Generate unique name for this lambda
+    std::string lambda_name = "__lambda_" + std::to_string(lambda_counter_++);
+
+    // Build param names
+    std::vector<std::string> param_names;
+    for (const auto &param : expr.params) {
+        param_names.push_back(sv_to_str(param.name.lexeme));
+    }
+
+    // Compile the lambda body into bytecode (same as compile_method)
+    std::vector<Instruction> old_bytecode = std::move(bytecode_);
+    bytecode_.clear();
+
+    for (const auto &stmt : expr.body) {
+        visit(stmt);
+    }
+
+    if (bytecode_.empty() || bytecode_.back().op != OpCode::RET) {
+        emit(OpCode::PUSH_CONST, nullptr);
+        emit(OpCode::RET);
+    }
+
+    CompiledMethod info;
+    info.bytecode = std::move(bytecode_);
+    info.param_names = std::move(param_names);
+    pending_functions_[lambda_name] = std::move(info);
+
+    bytecode_ = std::move(old_bytecode);
+
+    // Push the lambda function name as a constant value
+    // The caller (e.g. variable assignment) will store this string
+    emit(OpCode::PUSH_CONST, lambda_name);
 }
 
 CompiledClass Compiler::compile_class_def(const ClassStmt &stmt)

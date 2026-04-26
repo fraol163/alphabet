@@ -35,6 +35,7 @@ class Compiler
     std::vector<Instruction> bytecode_;
     std::unordered_map<std::string, uint16_t> class_map_;
     uint16_t next_class_id_ = 15;
+    int lambda_counter_ = 0;
     std::vector<std::string> globals_;
     std::unordered_set<std::string> const_vars_;          // Track const variables
     std::unordered_map<std::string, uint16_t> var_types_; // Track declared variable types
@@ -98,6 +99,7 @@ class Compiler
     void visit_map(const MapLiteral &expr);
     void visit_index(const IndexExpr &expr);
     void visit_index_assign(const IndexAssign &expr);
+    void visit_lambda(const LambdaExpr &expr);
 
     CompiledClass compile_class_def(const ClassStmt &stmt);
     std::vector<Instruction> compile_method(const FunctionStmt &method);

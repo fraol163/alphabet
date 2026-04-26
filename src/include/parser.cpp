@@ -429,8 +429,10 @@ StmtPtr Parser::statement()
         return std::make_shared<Block>(block());
     if (check(TokenType::NUMBER) || (is_identifier() && check_next_is_identifier()))
         return var_statement();
-    if (match({TokenType::METHOD}))
+    if (check(TokenType::METHOD)) {
+        advance(); // consume METHOD
         return top_level_function();
+    }
     return expression_statement();
 }
 
@@ -803,6 +805,11 @@ ExprPtr Parser::primary()
         }
     }
 
+    if (match({TokenType::METHOD})) {
+        // Named function reference (should not reach here normally)
+        return std::make_shared<Variable>(previous());
+    }
+
     if (match({TokenType::SYSTEM})) {
         return std::make_shared<Variable>(previous());
     }
@@ -866,6 +873,29 @@ ExprPtr Parser::primary()
     }
 
     throw error(peek(), "Expect expression.");
+}
+
+ExprPtr Parser::lambda_expression()
+{
+    // METHOD token already consumed by primary()
+    consume(TokenType::LPAREN, "Expect '(' after 'm' in lambda.");
+
+    std::vector<VarStmt> parameters;
+    if (!check(TokenType::RPAREN)) {
+        while (true) {
+            Token type_id = consume(TokenType::NUMBER, "Expect parameter type ID.");
+            Token param_name = consume_identifier("Expect parameter name.");
+            parameters.emplace_back(type_id, param_name, nullptr, std::nullopt);
+            if (!match({TokenType::COMMA}))
+                break;
+        }
+    }
+    consume(TokenType::RPAREN, "Expect ')' after lambda parameters.");
+    consume(TokenType::LBRACE, "Expect '{' before lambda body.");
+
+    std::vector<StmtPtr> body = block();
+
+    return std::make_shared<LambdaExpr>(std::move(parameters), std::move(body));
 }
 
 } // namespace alphabet

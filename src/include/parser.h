@@ -83,6 +83,7 @@ class Parser
     ExprPtr primary();
 
     ExprPtr finish_call(ExprPtr callee);
+    ExprPtr lambda_expression();
 };
 
 } // namespace alphabet

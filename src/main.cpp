@@ -224,6 +224,17 @@ void start_repl()
             // Append new code to accumulated source
             all_source += buffer + "\n";
 
+            // Helper: roll back the last line from accumulated source
+            auto rollback_last_line = [&all_source]() {
+                size_t last_newline = all_source.rfind('\n', all_source.size() - 2);
+                if (last_newline != std::string::npos) {
+                    all_source = all_source.substr(0, last_newline + 1);
+                }
+                else {
+                    all_source.clear();
+                }
+            };
+
             try {
                 std::string full_source = "#alphabet<repl>\n" + all_source;
                 alphabet::Lexer lexer(full_source);
@@ -232,18 +243,10 @@ void start_repl()
                 auto statements = parser.parse();
 
                 if (parser.had_errors()) {
-                    // Show error but don't clear state
                     if (!parser.first_error().empty()) {
                         std::cerr << parser.first_error() << "\n";
                     }
-                    // Remove the bad line from accumulated source
-                    size_t last_newline = all_source.rfind('\n', all_source.size() - 2);
-                    if (last_newline != std::string::npos) {
-                        all_source = all_source.substr(0, last_newline + 1);
-                    }
-                    else {
-                        all_source.clear();
-                    }
+                    rollback_last_line();
                 }
                 else {
                     alphabet::Compiler compiler;
@@ -257,49 +260,23 @@ void start_repl()
             }
             catch (const alphabet::MissingLanguageHeader &) {
                 std::cerr << "Error: Missing header\n";
-                // Roll back
-                size_t last_newline = all_source.rfind('\n', all_source.size() - 2);
-                if (last_newline != std::string::npos) {
-                    all_source = all_source.substr(0, last_newline + 1);
-                }
-                else {
-                    all_source.clear();
-                }
+                rollback_last_line();
             }
             catch (const alphabet::ParseError &e) {
                 std::cerr << "Parse Error: " << e.what() << "\n";
-                size_t last_newline = all_source.rfind('\n', all_source.size() - 2);
-                if (last_newline != std::string::npos) {
-                    all_source = all_source.substr(0, last_newline + 1);
-                }
-                else {
-                    all_source.clear();
-                }
+                rollback_last_line();
             }
             catch (const alphabet::CompileError &e) {
                 std::cerr << "Compile Error: " << e.what() << "\n";
-                size_t last_newline = all_source.rfind('\n', all_source.size() - 2);
-                if (last_newline != std::string::npos) {
-                    all_source = all_source.substr(0, last_newline + 1);
-                }
-                else {
-                    all_source.clear();
-                }
+                rollback_last_line();
             }
             catch (const alphabet::RuntimeError &e) {
                 std::cerr << "Runtime Error: " << e.what() << "\n";
-                // Restore globals to last known good state (before this line)
                 // Don't roll back source so user can fix in-place
             }
             catch (const std::exception &e) {
                 std::cerr << "Error: " << e.what() << "\n";
-                size_t last_newline = all_source.rfind('\n', all_source.size() - 2);
-                if (last_newline != std::string::npos) {
-                    all_source = all_source.substr(0, last_newline + 1);
-                }
-                else {
-                    all_source.clear();
-                }
+                rollback_last_line();
             }
 
             buffer.clear();

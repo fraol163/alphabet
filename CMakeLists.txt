@@ -60,6 +60,7 @@ set(ALPHABET_SOURCES
     src/include/parser.cpp
     src/include/compiler.cpp
     src/include/vm.cpp
+    src/include/vm_builtins.cpp
     src/include/type_system.cpp
     src/include/ffi.cpp
     src/include/lsp.cpp
@@ -71,6 +72,7 @@ set(ALPHABET_LIB_SOURCES
     src/include/parser.cpp
     src/include/compiler.cpp
     src/include/vm.cpp
+    src/include/vm_builtins.cpp
     src/include/type_system.cpp
     src/include/ffi.cpp
     src/include/lsp.cpp

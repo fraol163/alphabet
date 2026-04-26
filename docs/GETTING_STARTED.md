@@ -28,7 +28,7 @@ alphabet --version
 
 **Expected output:**
 ```
-Alphabet 2.1.0 (Native C++)
+Alphabet 2.3.3 (Native C++)
 Developer: Fraol Teshome (fraolteshome444@gmail.com)
 Compiled with C++17
 ```
@@ -99,6 +99,15 @@ z.o(10 + 5)   # Print expression
 ```alphabet
 z.o("x=" + 5)      # Output: x=5
 z.o(5 + " items")  # Output: 5 items
+```
+
+### String Interpolation (f-strings)
+
+```alphabet
+5 name = "Alphabet"
+5 age = 25
+z.o(f"Hello, {name}!")          # Output: Hello, Alphabet!
+z.o(f"You are {age} years old") # Output: You are 25 years old
 ```
 
 ---

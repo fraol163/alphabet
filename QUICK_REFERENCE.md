@@ -75,6 +75,7 @@ Access:      .  @  ^
 z.o(x)          # Print/output
 z.i()           # Read input (returns string or number)
 z.f(path)       # Read file contents
+z.fw(path, data)# Write to file
 ```
 
 ### Math
@@ -86,12 +87,18 @@ z.floor(x)      # Floor
 z.ceil(x)       # Ceiling
 z.sin(x)        # Sine
 z.cos(x)        # Cosine
+z.tan(x)        # Tangent
+z.round(x)      # Round to nearest integer
+z.min(a, b)     # Minimum of two values
+z.max(a, b)     # Maximum of two values
+z.log(x)        # Natural logarithm
+z.log10(x)      # Base-10 logarithm
 ```
 
 ### Type & Conversion
 ```
-z.type(x)       # "number", "string", "null", etc.
-z.len(x)        # Length of string or list
+z.type(x)       # "number", "string", "list", "map", "object", "null", etc.
+z.len(x)        # Length of string, list, or map
 z.tostr(x)      # Convert to string
 z.tonum(x)      # Convert to number
 ```
@@ -119,6 +126,8 @@ z.append(list, val)     # Add to end (mutates)
 z.pop_back(list)        # Remove last, return it
 z.contains(list, val)   # Check membership (1/0)
 z.reverse(list)         # New reversed list
+z.insert(list, i, val)  # Insert val at index i (mutates)
+z.remove(list, i)       # Remove element at index i (mutates)
 ```
 
 ### Range Generation
@@ -169,6 +178,15 @@ z.o(msg)
 12 name = "Alphabet"  # string
 13 nums = [1, 2, 3]   # list
 14 cfg = {"k": 100}   # map
+```
+
+### String Interpolation (f-strings)
+```alphabet
+5 age = 25
+12 name = "Alice"
+z.o(f"Hello, {name}!")       # Hello, Alice!
+z.o(f"You are {age} old.")   # You are 25 old.
+z.o(f"2+3 = {2 + 3}")       # 2+3 = 5
 ```
 
 ### Negative Indexing
@@ -255,8 +273,11 @@ Start every file with `#alphabet<en>`
 Use type 5 for integers, 12 for strings, 13 for lists
 Negative indexing: list[-1] gets last element
 String concat: "hello" + 42 = "hello42"
+String interpolation: f"Hello {name}" embeds variables in strings
+All numbers are stored as double internally
+Type mismatches in arithmetic throw RuntimeError with clear messages
 
 ---
 
-**Version:** 2.3.2 | **Implementation:** Native C++17 | **License:** MIT
+**Version:** 2.3.3 | **Implementation:** Native C++17 | **License:** MIT
 **GitHub:** https://github.com/fraol163/alphabet

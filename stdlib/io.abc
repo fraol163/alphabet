@@ -7,8 +7,10 @@ m 5 print(5 val) {
   r 0
 }
 
+// Print value followed by a newline
 m 5 println(5 val) {
   z.o(val)
+  z.o("\n")
   r 0
 }
 
@@ -16,9 +18,10 @@ m 12 read_file(12 path) {
   r z.f(path)
 }
 
+// Write content to a file
+// TODO: z.fw is not a built-in in the current VM.
+// Once z.fw(path, content) is added to the interpreter, update this.
 m 5 write_file(12 path, 12 content) {
-  // Note: write_file uses FFI or is not yet available
-  // Placeholder for future implementation
-  z.o("write_file not yet implemented")
+  z.o("Error: write_file not yet supported (z.fw built-in missing)")
   r 0
 }

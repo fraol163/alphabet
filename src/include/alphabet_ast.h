@@ -151,6 +151,17 @@ struct IndexAssign : Expr
     }
 };
 
+struct LambdaExpr : Expr
+{
+    std::vector<VarStmt> params;
+    std::vector<StmtPtr> body;
+
+    LambdaExpr(std::vector<VarStmt> p, std::vector<StmtPtr> b)
+        : params(std::move(p)), body(std::move(b))
+    {
+    }
+};
+
 struct Stmt
 {
     virtual ~Stmt() = default;

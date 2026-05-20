@@ -453,7 +453,7 @@ z.o(o.g())
 // Non-English Keyword Translation Tests
 // ============================================================================
 
-static bool has_token(const std::vector<Token> &tokens, TokenType type)
+static bool has_token(const std::vector<Token> &tokens, alphabet::TokenType type)
 {
     for (const auto &tok : tokens) {
         if (tok.type == type)

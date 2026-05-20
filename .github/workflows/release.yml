@@ -46,7 +46,7 @@ jobs:
         run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release ${{ matrix.extra_flags }}
 
       - name: Build
-        run: cmake --build build --config Release --target alphabet
+        run: cmake --build build --config Release
 
       - name: Test
         shell: bash

@@ -8,23 +8,25 @@
 
 | Letter | Keyword | Example | Description |
 |--------|---------|---------|-------------|
-| `a` | Abstract | `a c Interface { }` | Abstract class |
-| `b` | Break | `b` | Exit loop |
-| `c` | Class | `c MyClass { }` | Define class |
-| `e` | Else | `i (x) { } e { }` | Else branch |
-| `h` | Handle | `h (5 e) { }` | Catch exception |
-| `i` | If | `i (x > 0) { }` | Conditional |
-| `j` | Interface | `j J { }` | Interface |
-| `k` | Continue | `k` | Next iteration |
-| `l` | Loop | `l (x > 0) { }` | While loop |
-| `m` | Method | `v m 1 f() { }` | Function |
-| `n` | New | `n MyClass()` | Instantiate |
-| `p` | Private | `p 1 x = 10` | Private access |
-| `r` | Return | `r x + y` | Return value |
-| `s` | Static | `s 1 x = 5` | Static member |
-| `t` | Try | `t { }` | Try block |
-| `v` | Public | `v m 1 f() { }` | Public access |
-| `z` | System | `z.o("Hello")` | System functions |
+|| `a` | Abstract | `a c Interface { }` | Abstract class |
+|| `b` | Break | `b` | Exit loop |
+|| `c` | Class | `c MyClass { }` | Define class |
+|| `e` | Else | `i (x) { } e { }` | Else branch |
+|| `h` | Handle | `h (5 e) { }` | Catch exception |
+|| `i` | If | `i (x > 0) { }` | Conditional |
+|| `j` | Interface | `j J { }` | Interface |
+|| `k` | Continue | `k` | Next iteration |
+|| `l` | Loop | `l (x > 0) { }` | While loop |
+|| `m` | Method | `v m 1 f() { }` | Function |
+|| `n` | New | `n MyClass()` | Instantiate |
+|| `p` | Private | `p 1 x = 10` | Private access |
+|| `q` | Match | `q (x) { 1: ... }` | Pattern match |
+|| `r` | Return | `r x + y` | Return value |
+|| `s` | Static | `s 1 x = 5` | Static member |
+|| `t` | Try | `t { }` | Try block |
+|| `v` | Public | `v m 1 f() { }` | Public access |
+|| `x` | Import | `x "module.abc"` | Import module |
+|| `z` | System | `z.o("Hello")` | System functions |
 
 ---
 
@@ -128,6 +130,7 @@ z.contains(list, val)   # Check membership (1/0)
 z.reverse(list)         # New reversed list
 z.insert(list, i, val)  # Insert val at index i (mutates)
 z.remove(list, i)       # Remove element at index i (mutates)
+z.sort(list)            # Return sorted copy of list
 ```
 
 ### Range Generation
@@ -279,5 +282,5 @@ Type mismatches in arithmetic throw RuntimeError with clear messages
 
 ---
 
-**Version:** 2.3.3 | **Implementation:** Native C++17 | **License:** MIT
+**Version:** 2.3.4 | **Implementation:** Native C++17 | **License:** MIT
 **GitHub:** https://github.com/fraol163/alphabet

@@ -48,6 +48,16 @@ jobs:
       - name: Build
         run: cmake --build build --config Release --target alphabet
 
+      - name: Test
+        shell: bash
+        run: |
+          cd build
+          ctest -C Release --output-on-failure
+
+      - name: Strip (Unix)
+        if: runner.os != 'Windows'
+        run: strip ${{ matrix.build_path }}/${{ matrix.artifact }}
+
       - name: Prepare raw release binary
         shell: bash
         run: |
@@ -60,10 +70,6 @@ jobs:
               cp build/alphabet "dist/alphabet-${{ matrix.target }}"
               ;;
           esac
-
-      - name: Strip (Unix)
-        if: runner.os != 'Windows'
-        run: strip ${{ matrix.build_path }}/${{ matrix.artifact }}
 
       - name: Package
         shell: bash

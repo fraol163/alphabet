@@ -28,7 +28,7 @@ alphabet --version
 
 **Expected output:**
 ```
-Alphabet 2.3.3 (Native C++)
+Alphabet 2.3.4 (Native C++)
 Developer: Fraol Teshome (fraolteshome444@gmail.com)
 Compiled with C++17
 ```

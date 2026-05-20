@@ -1,0 +1,7 @@
+#alphabet<es>
+5 x = 10
+si (x > 5) {
+    z.o("x es mayor")
+} sino {
+    z.o("x es menor")
+}

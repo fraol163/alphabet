@@ -8,11 +8,15 @@
     },
     {
       "name": "keyword.control.alphabet",
-      "match": "\\b(i|e|l|b|k|r|t|h)\\b"
+      "match": "\\b(i|e|l|b|k|r|t|h|q)\\b"
     },
     {
       "name": "keyword.declaration.alphabet",
-      "match": "\\b(c|a|j|n|s|v|p|m)\\b"
+      "match": "\\b(c|a|j|n|s|v|p|m|x)\\b"
+    },
+    {
+      "name": "variable.other.alphabet",
+      "match": "\\b(z)\\b"
     },
     {
       "name": "string.quoted.double.alphabet",
@@ -28,6 +32,10 @@
     {
       "name": "constant.numeric.alphabet",
       "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+    },
+    {
+      "name": "keyword.operator.alphabet",
+      "match": "(==|!=|<=|>=|&&|\\|\\||[+\\-*/%=<>!&|])"
     }
   ]
 }

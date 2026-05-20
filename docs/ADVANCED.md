@@ -19,8 +19,8 @@ Call external C/C++ libraries:
 
 ```alphabet
 #alphabet<en>
-15 libc = z.load_lib("libc.so.6")
-libc.call("printf", "Hello from C!\n")
+5 result = z.dyn("/path/to/lib.so", "add", 10, 20)
+z.o(result)  # Output: 30
 ```
 
 ---
@@ -49,23 +49,23 @@ Add to `.vscode/settings.json`:
 ## Architecture
 
 ```
-Source (.abc) → Lexer → Parser → Compiler → VM → Output
+Source (.abc) → Lexer → Tokens → Parser → AST → Compiler → Bytecode → VM → Output
 ```
 
 ### Components
 
 | Component | File | Purpose |
 |-----------|------|---------|
-| Lexer | src/include/lexer.h/cpp | Tokenization |
-| Parser | src/include/parser.h/cpp | AST generation |
-| Compiler | src/include/compiler.h/cpp | Bytecode |
-| VM | src/include/vm.h/cpp | Execution |
+| Lexer | src/lexer.cpp + src/include/lexer.h | Tokenization |
+| Parser | src/parser.cpp + src/include/parser.h | AST generation |
+| Compiler | src/compiler.cpp + src/include/compiler.h | Bytecode |
+| VM | src/vm.cpp + src/vm_builtins.cpp + src/include/vm.h | Execution |
 
 ---
 
 ## Memory Model
 
-- **Stack:** 65536 slots (fixed, ~3MB)
+- **Stack:** Fixed-size array (STACK_MAX=65536) with unique_ptr
 - **Heap:** Dynamic (strings, lists, objects)
 
 ---

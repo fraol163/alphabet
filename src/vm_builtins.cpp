@@ -1,5 +1,4 @@
-// vm_builtins.cpp -- Extracted VM system_call built-in methods
-// Part of the Alphabet Language v2.3.3
+
 
 #include "vm.h"
 #include <algorithm>
@@ -12,9 +11,8 @@ namespace alphabet {
 
 void VM::system_call(const std::string &method, int arg_count)
 {
-    // =====================================================================
-    // I/O
-    // =====================================================================
+    
+    
     if (method == "o" && arg_count >= 1) {
         Value val = pop();
         std::cout << value_to_string(val) << std::endl;
@@ -27,7 +25,7 @@ void VM::system_call(const std::string &method, int arg_count)
             double num = std::stod(input);
             push(Value(num));
         }
-        catch (...) {
+        catch (const std::exception &) {
             push(Value(input));
         }
     }
@@ -42,14 +40,15 @@ void VM::system_call(const std::string &method, int arg_count)
     }
     else if (method == "f" && arg_count >= 1) {
         if (sandbox_mode_) {
-            pop(); // discard path arg
+            pop(); 
             push(Value(std::string("")));
         }
         else {
             Value path_val = pop();
             if (path_val.is_string()) {
                 std::string path = path_val.as_string();
-                if (path.find("..") != std::string::npos) {
+                if (path.find("..") != std::string::npos || (!path.empty() && path[0] == '/') ||
+                    path.find('\0') != std::string::npos) {
                     push(Value(std::string("")));
                 }
                 else {
@@ -70,10 +69,10 @@ void VM::system_call(const std::string &method, int arg_count)
         }
     }
     else if (method == "fw" && arg_count >= 2) {
-        // z.fw(path, content) -> write content to file, returns success (1/0)
+
         if (sandbox_mode_) {
             pop();
-            pop(); // discard args
+            pop();
             push(Value(0.0));
         }
         else {
@@ -81,7 +80,8 @@ void VM::system_call(const std::string &method, int arg_count)
             Value path_val = pop();
             if (path_val.is_string() && content_val.is_string()) {
                 std::string path = path_val.as_string();
-                if (path.find("..") != std::string::npos) {
+                if (path.find("..") != std::string::npos || (!path.empty() && path[0] == '/') ||
+                    path.find('\0') != std::string::npos) {
                     push(Value(0.0));
                 }
                 else {
@@ -101,9 +101,7 @@ void VM::system_call(const std::string &method, int arg_count)
         }
     }
 
-    // =====================================================================
-    // Math
-    // =====================================================================
+    
     else if (method == "sqrt" && arg_count >= 1) {
         Value v = pop();
         push(Value(v.is_number() ? std::sqrt(v.as_number()) : 0.0));
@@ -146,16 +144,24 @@ void VM::system_call(const std::string &method, int arg_count)
         Value a = pop();
         if (a.is_number() && b.is_number())
             push(Value(std::min(a.as_number(), b.as_number())));
+        else if (a.is_number())
+            push(a);
+        else if (b.is_number())
+            push(b);
         else
-            push(a.is_number() ? a : b);
+            throw_exception(Value("min requires at least one number argument"));
     }
     else if (method == "max" && arg_count >= 2) {
         Value b = pop();
         Value a = pop();
         if (a.is_number() && b.is_number())
             push(Value(std::max(a.as_number(), b.as_number())));
+        else if (a.is_number())
+            push(a);
+        else if (b.is_number())
+            push(b);
         else
-            push(a.is_number() ? a : b);
+            throw_exception(Value("max requires at least one number argument"));
     }
     else if (method == "log" && arg_count >= 1) {
         Value v = pop();
@@ -166,9 +172,7 @@ void VM::system_call(const std::string &method, int arg_count)
         push(Value(v.is_number() ? std::log10(v.as_number()) : 0.0));
     }
 
-    // =====================================================================
-    // Type & Conversion
-    // =====================================================================
+    
     else if (method == "len" && arg_count >= 1) {
         Value v = pop();
         if (v.is_string())
@@ -193,7 +197,7 @@ void VM::system_call(const std::string &method, int arg_count)
             try {
                 push(Value(std::stod(v.as_string())));
             }
-            catch (...) {
+            catch (const std::exception &) {
                 push(Value(0.0));
             }
         }
@@ -205,6 +209,10 @@ void VM::system_call(const std::string &method, int arg_count)
         Value v = pop();
         if (v.is_null())
             push(Value(std::string("null")));
+        else if (v.is_bool())
+            push(Value(std::string("bool")));
+        else if (v.is_integer())
+            push(Value(std::string("integer")));
         else if (v.is_number())
             push(Value(std::string("number")));
         else if (v.is_string())
@@ -219,9 +227,7 @@ void VM::system_call(const std::string &method, int arg_count)
             push(Value(std::string("unknown")));
     }
 
-    // =====================================================================
-    // String Operations
-    // =====================================================================
+    
     else if (method == "split" && arg_count >= 2) {
         Value delim = pop();
         Value str = pop();
@@ -411,9 +417,7 @@ void VM::system_call(const std::string &method, int arg_count)
         }
     }
 
-    // =====================================================================
-    // Collection Operations
-    // =====================================================================
+    
     else if (method == "range") {
         double start = 0, stop = 0, step = 1;
         if (arg_count == 1) {
@@ -476,13 +480,9 @@ void VM::system_call(const std::string &method, int arg_count)
         Value needle = pop();
         Value haystack = pop();
         if (haystack.is_list()) {
-            bool found = false;
-            for (const auto &item : haystack.as_list()) {
-                if (item == needle) {
-                    found = true;
-                    break;
-                }
-            }
+            const auto &lst = haystack.as_list();
+            bool found = std::any_of(lst.begin(), lst.end(),
+                                     [&needle](const Value &item) { return item == needle; });
             push(Value(found ? 1.0 : 0.0));
         }
         else if (haystack.is_string() && needle.is_string()) {
@@ -522,7 +522,7 @@ void VM::system_call(const std::string &method, int arg_count)
     else if (method == "reverse" && arg_count >= 1) {
         Value list_val = pop();
         if (list_val.is_list()) {
-            auto lst = list_val.as_list(); // copy
+            auto lst = list_val.as_list(); 
             std::reverse(lst.begin(), lst.end());
             push(Value(std::move(lst)));
         }
@@ -535,8 +535,26 @@ void VM::system_call(const std::string &method, int arg_count)
             push(list_val);
         }
     }
+    else if (method == "sort" && arg_count >= 1) {
+        
+        Value list_val = pop();
+        if (list_val.is_list()) {
+            auto lst = list_val.as_list(); 
+            std::sort(lst.begin(), lst.end(), [](const Value &a, const Value &b) {
+                if (a.is_number() && b.is_number())
+                    return a.as_number() < b.as_number();
+                if (a.is_string() && b.is_string())
+                    return a.as_string() < b.as_string();
+                return false;
+            });
+            push(Value(std::move(lst)));
+        }
+        else {
+            push(list_val);
+        }
+    }
     else if (method == "insert" && arg_count >= 3) {
-        // z.insert(list, index, value) -> inserts value at index
+        
         Value val = pop();
         Value idx_val = pop();
         Value list_val = pop();
@@ -553,7 +571,7 @@ void VM::system_call(const std::string &method, int arg_count)
         }
     }
     else if (method == "remove" && arg_count >= 2) {
-        // z.remove(list, index) -> removes element at index, returns it
+        
         Value idx_val = pop();
         Value list_val = pop();
         if (list_val.is_list() && idx_val.is_number()) {
@@ -574,4 +592,4 @@ void VM::system_call(const std::string &method, int arg_count)
     }
 }
 
-} // namespace alphabet
+} 

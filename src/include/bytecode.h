@@ -51,6 +51,7 @@ enum class OpCode : uint8_t {
     BREAK_JUMP = 39,
     CONTINUE_JUMP = 40,
     JUMP_IF_TRUE = 41,
+    MARK_CONST = 42,
 };
 
 using Operand = std::variant<std::monostate, int64_t, double, std::string, std::nullptr_t,
@@ -84,7 +85,7 @@ struct CompiledClass
     std::unordered_map<std::string, CompiledMethod> methods;
     std::unordered_map<std::string, CompiledMethod> static_methods;
     std::vector<Instruction> static_init;
-    std::vector<Instruction> field_init; // Bytecode to initialize instance fields
+    std::vector<Instruction> field_init; 
 };
 
 struct Program
@@ -181,11 +182,13 @@ inline const char *opcode_to_string(OpCode op)
         return "CONTINUE_JUMP";
     case OpCode::JUMP_IF_TRUE:
         return "JUMP_IF_TRUE";
+    case OpCode::MARK_CONST:
+        return "MARK_CONST";
     default:
         return "UNKNOWN";
     }
 }
 
-} // namespace alphabet
+} 
 
 #endif

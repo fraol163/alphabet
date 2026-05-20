@@ -1,0 +1,18 @@
+#alphabet<en>
+x "../../stdlib/list.abc"
+13 r = range(5)
+z.o(length(r))
+push(r, 99)
+z.o(pop(r))
+z.o(contains(r, 2))
+13 rev = reverse(r)
+z.o(first(rev))
+z.o(last(rev))
+z.o(min(r))
+z.o(max(r))
+z.o(sum(r))
+13 u = unique([1, 2, 2, 3, 3])
+z.o(length(u))
+13 s = sort([3, 1, 2])
+z.o(first(s))
+z.o(last(s))

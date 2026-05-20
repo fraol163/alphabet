@@ -11,7 +11,7 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
                 d88
                 ?8P
 ```
-# Alphabet Programming Language V2.3.3
+# Alphabet Programming Language V2.3.4
 
 **The fastest way to learn programming.**
 
@@ -63,8 +63,8 @@ Alphabet is a **beginner-friendly programming language** with only **19 single-l
 - **Simple Syntax** - No semicolons, no boilerplate, no complex rules
 - **Type System** - Compile-time type checking with numeric type IDs
 - **Multilingual** - Write code in English, Amharic, Spanish, French, or German
-- **LSP Support** - Works with VS Code and other editors (goto-definition, document-symbols, completions, hover, diagnostics)
-- **String Interpolation** - f-strings: `f"Hello {name}"`
+- **LSP Support** - Works with VS Code and other editors (document-symbols, completions, hover, diagnostics)
+- **String Interpolation** - f-strings: `f"Hello {name}"` (concatenation-based)
 - **FFI** - Call native C functions from Alphabet code
 - **Cross-Platform** - Works on Windows, Linux, and macOS
 - **Built-in Debugger** - Breakpoints, step, locals, globals, stack trace
@@ -106,26 +106,53 @@ This installs to `~/.local/bin` (no sudo needed) and:
 - Adds `~/.local/bin` to your PATH
 - Shows version and usage instructions
 
+### Install (one command, Windows)
+
+Open **PowerShell** and run:
+
+```powershell
+irm https://raw.githubusercontent.com/fraol163/alphabet/main/install.ps1 | iex
+```
+
+This installs to `%USERPROFILE%\alphabet`, adds it to your PATH, and:
+- Downloads the pre-built `.exe` from GitHub Releases
+- Creates a `.bat` wrapper for cmd.exe compatibility
+- Works on Windows 10 1803+ (ships with `curl.exe`)
+
 ### Update
 
-Same command as install. It downloads and replaces with the latest version:
+Once installed, update from anywhere with:
 
 ```bash
+alphabet update
+```
+
+Or re-run the installer (same command as install):
+
+```bash
+# Linux/macOS
 curl -fsSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh | sh
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/fraol163/alphabet/main/install.ps1 | iex
 ```
 
 ### Uninstall
 
 ```bash
+# Linux/macOS
 curl -fsSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh | sh -s -- --uninstall
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/fraol163/alphabet/main/install.ps1 | iex -Args "--uninstall"
 ```
 
 ### Manual Download
 
 Visit **[GitHub Releases](https://github.com/fraol163/alphabet/releases)** → Download your OS:
-- **Linux:** `alphabet-linux-amd64.tar.gz`
-- **macOS:** `alphabet-macos-arm64.tar.gz`
-- **Windows:** `alphabet-windows-amd64.zip`
+- **Linux:** `alphabet-linux-amd64`
+- **macOS:** `alphabet-macos-arm64`
+- **Windows:** `alphabet-windows-amd64.exe`
 
 ### Build from Source
 
@@ -286,10 +313,10 @@ Use f-strings to embed expressions directly inside strings:
 12 name = "Alice"
 z.o(f"Hello, {name}! You are {age} years old.")  # Hello, Alice! You are 25 years old.
 z.o(f"2 + 3 = {2 + 3}")                          # 2 + 3 = 5
-z.o(f"sqrt(144) = {z.sqrt(144)}")                 # sqrt(144) = 12
+z.o(f"sqrt(16) = {z.sqrt(16)}")                   # sqrt(16) = 4
 ```
 
-Any expression — variables, arithmetic, function calls — can appear inside `{ }`.
+Expressions — variables, arithmetic, function calls — can appear inside `{ }`.
 
 ### FFI - Call Native C Functions
 
@@ -348,6 +375,7 @@ z.o(z.contains(nums, 2))    # 1
 13 rev = z.reverse(nums)    # [3,2,1]
 z.insert(nums, 0, 99)       # [99,1,2,3]
 z.remove(nums, 0)           # [1,2,3]
+z.o(z.sort(nums))           # sorted copy
 
 // Range
 13 r = z.range(5)           # [0,1,2,3,4]

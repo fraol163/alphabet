@@ -1,0 +1,10 @@
+#alphabet<de>
+klasse Rechner {
+    offentlich methode 5 addieren(5 a, 5 b) {
+        zuruck a + b
+    }
+}
+
+15 rech = neu Rechner()
+5 erg = rech.addieren(15, 25)
+z.o(erg)

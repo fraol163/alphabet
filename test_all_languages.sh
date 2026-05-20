@@ -1,5 +1,4 @@
 #!/bin/bash
-# Comprehensive UTF-8 Language Tests for Alphabet Programming Language
 
 echo "=========================================="
 echo "  ALPHABET LANGUAGE - PRODUCTION TESTS"
@@ -14,7 +13,6 @@ test_lang() {
     local code="$2"
     local expected="$3"
     
-    # Try to find alphabet binary (handle .exe on Windows)
     local bin="./build/alphabet"
     if [ ! -f "$bin" ]; then
         if [ -f "./build/alphabet.exe" ]; then
@@ -24,8 +22,6 @@ test_lang() {
         fi
     fi
     
-    # Use '-' for stdin instead of /dev/stdin
-    # Strip \r from output to handle Windows line endings
     result=$(echo "$code" | "$bin" - 2>&1 | tr -d '\r')
     
     if [ "$result" = "$expected" ]; then

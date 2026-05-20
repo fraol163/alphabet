@@ -41,12 +41,27 @@ struct Unary : Expr
 
 struct Literal : Expr
 {
-    std::variant<std::monostate, double, std::string> value;
+    std::variant<std::monostate, int64_t, double, std::string> value;
 
     Literal() : value(std::monostate{}) {}
+    explicit Literal(int64_t v) : value(v) {}
     explicit Literal(double v) : value(v) {}
     explicit Literal(std::string v) : value(std::move(v)) {}
     explicit Literal(std::nullptr_t) : value(std::monostate{}) {}
+};
+
+struct FString : Expr
+{
+    struct Part
+    {
+        bool is_literal;
+        std::string literal;
+        ExprPtr expr;
+    };
+
+    std::vector<Part> parts;
+
+    explicit FString(std::vector<Part> p) : parts(std::move(p)) {}
 };
 
 struct Grouping : Expr
@@ -221,7 +236,7 @@ struct LoopStmt : Stmt
 
 struct ForStmt : Stmt
 {
-    StmtPtr initializer; // Variable declaration or expression
+    StmtPtr initializer; 
     ExprPtr condition;
     ExprPtr increment;
     StmtPtr body;
@@ -301,11 +316,10 @@ struct ClassStmt : Stmt
     }
 };
 
-// Module system statements
 struct ImportStmt : Stmt
 {
-    std::string module_path;          // e.g., "std/io"
-    std::optional<std::string> alias; // optional alias: "x io"
+    std::string module_path;          
+    std::optional<std::string> alias; 
 
     ImportStmt(std::string path, std::optional<std::string> a = std::nullopt)
         : module_path(std::move(path)), alias(std::move(a))
@@ -315,12 +329,11 @@ struct ImportStmt : Stmt
 
 struct ExportStmt : Stmt
 {
-    std::vector<Token> names; // Names to export
+    std::vector<Token> names; 
 
     explicit ExportStmt(std::vector<Token> n) : names(std::move(n)) {}
 };
 
-// Pattern matching
 struct Case
 {
     ExprPtr pattern;
@@ -341,6 +354,6 @@ struct MatchStmt : Stmt
     }
 };
 
-} // namespace alphabet
+} 
 
 #endif

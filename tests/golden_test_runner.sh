@@ -1,12 +1,16 @@
 #!/bin/bash
-# Golden test runner - called by ctest
-# Usage: golden_test_runner.sh <alphabet_binary> <source_file> <expected_file>
 ALPHABET="$1"
-SOURCE="$2"
-EXPECTED="$3"
 
-# Use tr to remove \r for cross-platform comparison
-OUTPUT=$("$ALPHABET" "$SOURCE" 2>/dev/null | tr -d '\r')
+if [ "$2" = "--dump-bytecode" ]; then
+    SOURCE="$3"
+    EXPECTED="$4"
+    OUTPUT=$("$ALPHABET" --dump-bytecode "$SOURCE" 2>/dev/null | tr -d '\r')
+else
+    SOURCE="$2"
+    EXPECTED="$3"
+    OUTPUT=$("$ALPHABET" "$SOURCE" 2>/dev/null | tr -d '\r')
+fi
+
 EXPECTED_CONTENT=$(cat "$EXPECTED" | tr -d '\r')
 
 if [ "$OUTPUT" = "$EXPECTED_CONTENT" ]; then

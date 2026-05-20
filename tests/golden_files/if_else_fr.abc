@@ -1,0 +1,7 @@
+#alphabet<fr>
+5 x = 10
+si (x > 5) {
+    z.o("x est plus grand")
+} sinon {
+    z.o("x est plus petit")
+}

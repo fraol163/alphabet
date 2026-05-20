@@ -1,5 +1,5 @@
 #alphabet<golden_test>
-// Golden test: Class with method
+
 c Calculator {
   v m 5 add(5 x, 5 y) {
     r x + y

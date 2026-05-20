@@ -1,5 +1,5 @@
 #alphabet<golden_test>
-// Golden test: Loop
+
 5 i = 0
 5 sum = 0
 l (i < 5) {

@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <csignal>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -14,6 +16,7 @@
 #define chmod _chmod
 #else
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #endif
 
@@ -65,7 +68,7 @@ void print_help()
     std::cout << "  --sandbox         Sandbox mode: block FFI and file access\n";
     std::cout << "  --dump-bytecode   Print compiled bytecode and exit\n\n";
     std::cout << "Subcommands:\n";
-    std::cout << "  alphabet update   Self-update to latest version\n\n";
+    std::cout << "  alphabet update   Self-update to latest version (alias: upgrade)\n\n";
     std::cout << "Examples:\n";
     std::cout << "  alphabet program.abc          Run a program\n";
     std::cout << "  alphabet -c program.abc       Compile only\n";
@@ -86,8 +89,16 @@ void run_source(const std::string &source, bool debug_mode = false,
         std::vector<alphabet::StmtPtr> statements = parser.parse();
 
         if (parser.had_errors()) {
-            std::string msg = parser.first_error().empty() ? "Syntax errors in source code"
-                                                           : parser.first_error();
+            const auto &errors = parser.errors();
+            if (errors.empty()) {
+                throw alphabet::ParseError("Syntax errors in source code");
+            }
+            std::string msg;
+            for (size_t i = 0; i < errors.size(); ++i) {
+                if (i > 0)
+                    msg += "\n";
+                msg += errors[i];
+            }
             throw alphabet::ParseError(msg);
         }
 
@@ -123,18 +134,78 @@ void run_source(const std::string &source, bool debug_mode = false,
     }
 }
 
+
+namespace repl {
+volatile std::sig_atomic_t g_interrupted = 0;
+
+void sigint_handler(int)
+{
+    g_interrupted = 1;
+}
+
+
+int count_braces_safe(const std::string &line)
+{
+    int depth = 0;
+    bool in_string = false;
+    char quote_char = 0;
+
+    for (size_t i = 0; i < line.size(); ++i) {
+        char c = line[i];
+
+        if (in_string) {
+            if (c == '\\' && i + 1 < line.size()) {
+                ++i; 
+                continue;
+            }
+            if (c == quote_char)
+                in_string = false;
+            continue;
+        }
+
+        if (c == '"' || c == '\'') {
+            in_string = true;
+            quote_char = c;
+        }
+        else if (c == '{') {
+            ++depth;
+        }
+        else if (c == '}') {
+            --depth;
+        }
+    }
+    return depth;
+}
+
+
+bool is_command(const std::string &line)
+{
+    if (line == "q" || line == "quit" || line == "exit" || line == "help" ||
+        line == "clear" || line == "reset" || line == "vars" || line == "history" ||
+        line == "keywords" ||
+        line == "!!" || (line.size() > 1 && line[0] == '!' && line[1] != '!'))
+        return true;
+    
+    if (line.rfind("#alphabet<", 0) == 0 && line.size() > 10 && line.back() == '>')
+        return true;
+    return false;
+}
+
+} 
+
 void start_repl()
 {
     std::cout << LOGO;
     std::cout << "Alphabet Language [v" << VERSION << " - Native C++]\n";
     std::cout << "Developed by " << DEVELOPER << "\n";
-    std::cout << "Type 'q' to exit.\n\n";
-    std::cout << "Multi-line mode: Type '{' to start a block, then continue on next lines.\n";
-    std::cout << "Commands: 'history' (show past), '!!' (repeat last)\n";
+    std::cout << "\nType 'help' for commands, 'q' to exit.\n\n";
+
+    
+    std::signal(SIGINT, repl::sigint_handler);
 
     ffi_init();
 
-    // Load history from file
+    
     std::vector<std::string> history;
 #ifdef _WIN32
     const char *home = std::getenv("USERPROFILE");
@@ -153,7 +224,6 @@ void start_repl()
     }
     auto save_history = [&]() {
         std::ofstream hist_file(history_path);
-        // Keep last 500 entries
         size_t start = history.size() > 500 ? history.size() - 500 : 0;
         for (size_t i = start; i < history.size(); ++i) {
             hist_file << history[i] << "\n";
@@ -164,16 +234,31 @@ void start_repl()
     std::string buffer;
     int brace_depth = 0;
 
-    // REPL state: accumulate source and persist globals
-    std::string all_source; // All previously entered code
+
+    std::string all_source;
+    std::string repl_lang = "en";
     std::unordered_map<std::string, alphabet::Value> saved_globals;
+    alphabet::VM vm;
 
     while (true) {
+        
+        if (repl::g_interrupted) {
+            repl::g_interrupted = 0;
+            if (!buffer.empty()) {
+                std::cout << "\n... cancelled\n";
+                buffer.clear();
+                brace_depth = 0;
+            }
+            else {
+                std::cout << "\n";
+            }
+        }
+
         if (buffer.empty()) {
-            std::cout << ">>> ";
+            std::cout << "\u256d\u2500[>>>] ";
         }
         else {
-            std::cout << "... ";
+            std::cout << "\u2570\u2500[...] ";
         }
         std::cout.flush();
 
@@ -182,12 +267,216 @@ void start_repl()
             break;
         }
 
+        
+        if (repl::g_interrupted) {
+            repl::g_interrupted = 0;
+            if (!buffer.empty()) {
+                std::cout << "... cancelled\n";
+                buffer.clear();
+                brace_depth = 0;
+            }
+            continue;
+        }
+
+        
         if (buffer.empty() && (line == "q" || line == "quit" || line == "exit")) {
             save_history();
             break;
         }
 
-        // History commands
+        if (buffer.empty() && line == "help") {
+            std::cout << "Commands:\n";
+            std::cout << "  help          Show this message\n";
+            std::cout << "  history       Show last 20 entries\n";
+            std::cout << "  !N            Repeat history entry #N\n";
+            std::cout << "  !!            Repeat last entry\n";
+            std::cout << "  vars          Show defined variables\n";
+            std::cout << "  keywords      Show keywords for current language\n";
+            std::cout << "  clear         Clear screen (banner redraws)\n";
+            std::cout << "  clear history Clear command history\n";
+            std::cout << "  clear all     Clear screen + history\n";
+            std::cout << "  reset         Clear REPL state (variables + code)\n";
+            std::cout << "  q / quit      Exit\n";
+            std::cout << "\nLanguage: Type " << "\"#alphabet<lang>\" as first line to switch.\n";
+            std::cout << "  en=English  am=Amharic  es=Spanish  fr=French  de=German\n";
+            std::cout << "  Current: " << repl_lang << "\n";
+            std::cout << "\nMulti-line: Type '{' to start a block.\n";
+            std::cout << "Ctrl+C: Cancel current input line.\n";
+            continue;
+        }
+
+        if (buffer.empty() && (line == "clear" || line == "clear history" || line == "clear all")) {
+            if (line == "clear history" || line == "clear all") {
+                history.clear();
+                std::ofstream hist_file(history_path, std::ios::trunc);
+                std::cout << "History cleared.\n";
+            }
+            if (line == "clear" || line == "clear all") {
+#ifdef _WIN32
+                int rc = system("cls");
+#else
+                int rc = system("clear");
+#endif
+                (void)rc;
+                std::cout << LOGO;
+                std::cout << "Alphabet Language [v" << VERSION << " - Native C++]\n";
+                std::cout << "Developed by " << DEVELOPER << "\n";
+                std::cout << "\nType 'help' for commands, 'q' to exit.\n\n";
+            }
+            continue;
+        }
+
+        if (buffer.empty() && line == "reset") {
+            all_source.clear();
+            saved_globals.clear();
+            repl_lang = "en";
+            buffer.clear();
+            brace_depth = 0;
+            std::cout << "State cleared. Language reset to en.\n";
+            continue;
+        }
+
+        if (buffer.empty() && line == "vars") {
+            std::cout << "  language: " << repl_lang << "\n";
+            if (saved_globals.empty()) {
+                std::cout << "  (no variables defined)\n";
+            }
+            else {
+                for (const auto &[name, val] : saved_globals) {
+                    std::cout << "  " << name << " = " << alphabet::value_to_string(val)
+                              << "\n";
+                }
+            }
+            continue;
+        }
+
+        
+        if (buffer.empty() && line == "keywords") {
+            auto lang_it = alphabet::KEYWORD_MAPPINGS.find(repl_lang);
+            if (lang_it == alphabet::KEYWORD_MAPPINGS.end()) {
+                std::cerr << "No keyword mapping for language: " << repl_lang << "\n";
+                continue;
+            }
+            const auto &kw = lang_it->second;
+
+            
+            static const std::unordered_map<std::string, std::string> lang_names = {
+                {"en", "English"}, {"am", "Amharic (አማርኛ)"}, {"es", "Spanish (Español)"},
+                {"fr", "French (Français)"}, {"de", "German (Deutsch)"}};
+            auto name_it = lang_names.find(repl_lang);
+            std::string display_name =
+                name_it != lang_names.end() ? name_it->second : repl_lang;
+
+            
+            std::unordered_map<std::string, std::vector<std::string>> reverse;
+            for (const auto &[native, letter] : kw) {
+                reverse[letter].push_back(native);
+            }
+
+            
+            struct Cat {
+                std::string label;
+                std::vector<std::pair<std::string, std::string>> items;
+            };
+            std::vector<Cat> categories;
+
+            
+            Cat ctrl{"Control Flow", {}};
+            for (auto &l : {"i", "e", "l", "b", "k", "r"}) {
+                if (reverse.count(l)) {
+                    for (auto &n : reverse[l])
+                        ctrl.items.emplace_back(n, l);
+                }
+            }
+            categories.push_back(ctrl);
+
+            
+            Cat oop{"OOP", {}};
+            for (auto &l : {"c", "a", "j", "m", "n", "v", "p", "s", "^"}) {
+                if (reverse.count(l)) {
+                    for (auto &n : reverse[l])
+                        oop.items.emplace_back(n, l);
+                }
+            }
+            categories.push_back(oop);
+
+            
+            Cat err{"Error Handling", {}};
+            for (auto &l : {"t", "h"}) {
+                if (reverse.count(l)) {
+                    for (auto &n : reverse[l])
+                        err.items.emplace_back(n, l);
+                }
+            }
+            categories.push_back(err);
+
+            
+            Cat io{"I/O & Modules", {}};
+            for (auto &l : {"z", "z.i", "x", "q", "@"}) {
+                if (reverse.count(l)) {
+                    for (auto &n : reverse[l])
+                        io.items.emplace_back(n, l);
+                }
+            }
+            categories.push_back(io);
+
+            
+            Cat misc{"Other", {}};
+            for (const auto &l : {"\x80"}) {
+                if (reverse.count(l)) {
+                    for (auto &n : reverse[l])
+                        misc.items.emplace_back(n, "const");
+                }
+            }
+            if (!misc.items.empty())
+                categories.push_back(misc);
+
+            
+            std::cout << "Keywords: " << display_name << " (current: " << repl_lang
+                      << ")\n";
+            std::cout << "─────────────────────────────────────\n";
+
+            for (const auto &cat : categories) {
+                std::cout << "\n  " << cat.label << ":\n";
+                for (const auto &[native, letter] : cat.items) {
+                    
+                    std::string padded = native;
+                    
+                    size_t char_count = std::count_if(native.begin(), native.end(),
+                        [](unsigned char c) { return (c & 0xC0) != 0x80; });
+                    
+                    if (char_count < 16) {
+                        padded += std::string(16 - char_count, ' ');
+                    }
+                    std::cout << "    " << padded << "→ " << letter << "\n";
+                }
+            }
+
+            std::cout << "\n─────────────────────────────────────\n";
+            std::cout << "  Special: @ = export, ^ = extends\n";
+            std::cout << "  Type \"#alphabet<lang>\" to switch language.\n";
+            continue;
+        }
+
+        
+        if (buffer.empty() && line.rfind("#alphabet<", 0) == 0 && line.size() > 10 &&
+            line.back() == '>') {
+            std::string new_lang = line.substr(10, line.size() - 11);
+            static const std::unordered_set<std::string> valid_langs = {"en", "am", "es",
+                                                                        "fr", "de"};
+            if (valid_langs.count(new_lang)) {
+                repl_lang = new_lang;
+                all_source.clear();
+                saved_globals.clear();
+                std::cout << "Language set to " << repl_lang << ".\n";
+            }
+            else {
+                std::cerr << "Unknown language: " << new_lang
+                          << ". Valid: en, am, es, fr, de\n";
+            }
+            continue;
+        }
+
         if (buffer.empty() && line == "history") {
             size_t start = history.size() > 20 ? history.size() - 20 : 0;
             for (size_t i = start; i < history.size(); ++i) {
@@ -195,40 +484,66 @@ void start_repl()
             }
             continue;
         }
-        if (buffer.empty() && line == "!!" && !history.empty()) {
-            line = history.back();
-            std::cout << line << "\n";
+
+        
+        if (buffer.empty() && line.size() > 1 && line[0] == '!' && line[1] != '!') {
+            std::string num_str = line.substr(1);
+            bool is_num = !num_str.empty() && std::all_of(num_str.begin(), num_str.end(),
+                [](char c) { return std::isdigit(static_cast<unsigned char>(c)); });
+            if (is_num) {
+                size_t idx = std::stoul(num_str);
+                if (idx >= 1 && idx <= history.size()) {
+                    line = history[idx - 1];
+                    std::cout << line << "\n";
+                }
+                else {
+                    std::cerr << "History index out of range (1-" << history.size() << ")\n";
+                    continue;
+                }
+            }
+            else {
+                std::cerr << "Usage: !N (where N is a number)\n";
+                continue;
+            }
+        }
+
+        if (buffer.empty() && line == "!!") {
+            if (!history.empty()) {
+                line = history.back();
+                std::cout << line << "\n";
+            }
+            else {
+                std::cout << "(no history)\n";
+                continue;
+            }
         }
 
         if (buffer.empty() && line.empty()) {
             continue;
         }
 
-        // Save to history (only non-empty, non-command lines)
-        if (buffer.empty() && line != "!!") {
-            history.push_back(line);
+        
+        if (buffer.empty() && !repl::is_command(line)) {
+            if (history.empty() || history.back() != line)
+                history.push_back(line);
         }
 
-        for (char c : line) {
-            if (c == '{')
-                ++brace_depth;
-            else if (c == '}')
-                --brace_depth;
-        }
+        
+        brace_depth += repl::count_braces_safe(line);
 
         if (!buffer.empty())
             buffer += '\n';
         buffer += line;
 
         if (brace_depth == 0) {
-            // Append new code to accumulated source
+            
             all_source += buffer + "\n";
 
-            // Helper: roll back the last line from accumulated source
+            
             auto rollback_last_line = [&all_source]() {
                 size_t last_newline = all_source.rfind('\n', all_source.size() - 2);
                 if (last_newline != std::string::npos) {
-                    all_source = all_source.substr(0, last_newline + 1);
+                    all_source.resize(last_newline + 1);
                 }
                 else {
                     all_source.clear();
@@ -236,15 +551,18 @@ void start_repl()
             };
 
             try {
-                std::string full_source = "#alphabet<repl>\n" + all_source;
+                std::string full_source = "#alphabet<" + repl_lang + ">\n" + all_source;
                 alphabet::Lexer lexer(full_source);
                 auto tokens = lexer.scan_tokens();
                 alphabet::Parser parser(tokens, full_source);
                 auto statements = parser.parse();
 
                 if (parser.had_errors()) {
-                    if (!parser.first_error().empty()) {
-                        std::cerr << parser.first_error() << "\n";
+                    for (const auto &err : parser.errors()) {
+                        std::cerr << err << "\n";
+                    }
+                    if (parser.errors().empty()) {
+                        std::cerr << "Syntax errors in source code\n";
                     }
                     rollback_last_line();
                 }
@@ -252,7 +570,7 @@ void start_repl()
                     alphabet::Compiler compiler;
                     alphabet::Program program = compiler.compile(statements);
 
-                    alphabet::VM vm(program);
+                    vm.init(program);
                     vm.set_globals(saved_globals);
                     vm.run();
                     saved_globals = vm.get_globals();
@@ -272,7 +590,7 @@ void start_repl()
             }
             catch (const alphabet::RuntimeError &e) {
                 std::cerr << "Runtime Error: " << e.what() << "\n";
-                // Don't roll back source so user can fix in-place
+                
             }
             catch (const std::exception &e) {
                 std::cerr << "Error: " << e.what() << "\n";
@@ -287,11 +605,82 @@ void start_repl()
     ffi_cleanup();
 }
 
+bool is_safe_path(const std::string &path)
+{
+    return std::none_of(path.begin(), path.end(), [](char c) {
+        return c == ';' || c == '|' || c == '&' || c == '$' || c == '`' || c == '(' ||
+               c == ')' || c == '{' || c == '}' || c == '<' || c == '>' || c == '\n' ||
+               c == '\r' || c == '\\' || c == '\'' || c == '"' || c == '*' || c == '?' ||
+               c == '[' || c == ']' || c == '#' || c == '~' || c == '%' || c == '\0';
+    });
+}
+
+#ifndef _WIN32
+int exec_curl(const std::string &url, const std::string &output_path)
+{
+    pid_t pid = fork();
+    if (pid < 0) return -1;
+    if (pid == 0) {
+        execlp("curl", "curl", "-fsSL", "-o", output_path.c_str(), url.c_str(), nullptr);
+        _exit(127);
+    }
+    int status = 0;
+    waitpid(pid, &status, 0);
+    if (WIFEXITED(status)) return WEXITSTATUS(status);
+    return -1;
+}
+
+int exec_mv(const std::string &src, const std::string &dst)
+{
+    pid_t pid = fork();
+    if (pid < 0) return -1;
+    if (pid == 0) {
+        execlp("mv", "mv", "-f", src.c_str(), dst.c_str(), nullptr);
+        _exit(127);
+    }
+    int status = 0;
+    waitpid(pid, &status, 0);
+    if (WIFEXITED(status)) return WEXITSTATUS(status);
+    return -1;
+}
+
+std::string compute_sha256(const std::string &path)
+{
+    int pipefd[2];
+    if (pipe(pipefd) != 0) return "";
+    pid_t pid = fork();
+    if (pid < 0) {
+        close(pipefd[0]);
+        close(pipefd[1]);
+        return "";
+    }
+    if (pid == 0) {
+        close(pipefd[0]);
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[1]);
+        execlp("sha256sum", "sha256sum", path.c_str(), nullptr);
+        _exit(127);
+    }
+    close(pipefd[1]);
+    char buf[256];
+    std::string result;
+    ssize_t n;
+    while ((n = read(pipefd[0], buf, sizeof(buf))) > 0) {
+        result.append(buf, n);
+    }
+    close(pipefd[0]);
+    waitpid(pid, nullptr, 0);
+    size_t sp = result.find(' ');
+    if (sp != std::string::npos) return result.substr(0, sp);
+    return "";
+}
+#endif
+
 void do_update()
 {
     std::cout << "Checking for updates...\n";
 
-    // Get latest release info from GitHub
+    
     std::string api_cmd =
         "curl -fsSL https://api.github.com/repos/fraol163/alphabet/releases/latest";
     FILE *pipe = popen(api_cmd.c_str(), "r");
@@ -312,7 +701,7 @@ void do_update()
         return;
     }
 
-    // Parse tag_name from JSON (simple extraction)
+    
     std::string latest_version;
     size_t tag_pos = response.find("\"tag_name\"");
     if (tag_pos != std::string::npos) {
@@ -348,7 +737,7 @@ void do_update()
         return;
     }
 
-    // Determine OS and arch
+    
     std::string os = "linux";
     std::string arch = "amd64";
     std::string ext;
@@ -369,10 +758,15 @@ void do_update()
     std::string asset_name = "alphabet-" + os + "-" + arch + ext;
     std::string download_url = "https://github.com/fraol163/alphabet/releases/download/v" +
                                latest_version + "/" + asset_name;
+    if (download_url.find("https://github.com/") != 0 || !is_safe_path(download_url)) {
+        std::cerr << "Error: Invalid download URL\n";
+        return;
+    }
 
+    std::string checksum_url = download_url + ".sha256";
     std::cout << "Downloading " << download_url << "...\n";
 
-    // Get current binary path
+    
     std::string self_path;
     char self_buf[4096];
 #ifdef _WIN32
@@ -397,9 +791,17 @@ void do_update()
 
     std::string tmp_path = self_path + ".tmp";
 
-    // Download to temp file
+    if (!is_safe_path(self_path) || !is_safe_path(tmp_path)) {
+        std::cerr << "Error: Invalid installation path\n";
+        return;
+    }
+
+#ifdef _WIN32
     std::string dl_cmd = "curl -fsSL -o \"" + tmp_path + "\" \"" + download_url + "\"";
     int dl_status = system(dl_cmd.c_str());
+#else
+    int dl_status = exec_curl(download_url, tmp_path);
+#endif
     if (dl_status != 0) {
         std::cerr << "Error: Download failed\n";
 #ifdef _WIN32
@@ -411,11 +813,26 @@ void do_update()
     }
 
 #ifndef _WIN32
+    std::string expected_hash;
+    int hash_dl = exec_curl(checksum_url, tmp_path + ".sha256");
+    if (hash_dl == 0) {
+        std::ifstream hf(tmp_path + ".sha256");
+        if (hf.good()) hf >> expected_hash;
+        unlink((tmp_path + ".sha256").c_str());
+    }
+    if (!expected_hash.empty()) {
+        std::string actual_hash = compute_sha256(tmp_path);
+        if (actual_hash != expected_hash) {
+            std::cerr << "Error: Checksum mismatch\n";
+            unlink(tmp_path.c_str());
+            return;
+        }
+    }
+
     chmod(tmp_path.c_str(), 0755);
 
     std::cout << "Installing update...\n";
-    std::string mv_cmd = "mv \"" + tmp_path + "\" \"" + self_path + "\"";
-    int mv_status = system(mv_cmd.c_str());
+    int mv_status = exec_mv(tmp_path, self_path);
     if (mv_status != 0) {
         std::cerr << "Error: Could not install update\n";
         unlink(tmp_path.c_str());
@@ -459,7 +876,7 @@ std::string read_input(const std::string &path)
     return oss.str();
 }
 
-} // namespace
+} 
 
 int main(int argc, char *argv[])
 {
@@ -532,8 +949,8 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        // Subcommands
-        if (arg == "update") {
+        
+        if (arg == "update" || arg == "upgrade") {
             do_update();
             return 0;
         }
@@ -568,7 +985,7 @@ int main(int argc, char *argv[])
             alphabet::Parser parser(tokens, source);
             std::vector<alphabet::StmtPtr> statements = parser.parse();
 
-            // Check for parse errors
+            
             if (parser.had_errors()) {
                 std::string msg = parser.first_error().empty() ? "Syntax errors in source code"
                                                                : parser.first_error();
@@ -576,7 +993,7 @@ int main(int argc, char *argv[])
             }
 
             alphabet::Compiler compiler;
-            // Extract source file directory for resolving relative imports
+            
             size_t last_sl = input_file.find_last_of("/\\");
             if (last_sl != std::string::npos) {
                 compiler.set_source_dir(input_file.substr(0, last_sl));
@@ -590,7 +1007,7 @@ int main(int argc, char *argv[])
                     return 1;
                 }
 
-                // Header: magic + version + instruction count
+                
                 const char magic[] = "ALPH";
                 out.write(magic, 4);
                 uint32_t version = 2;
@@ -598,12 +1015,12 @@ int main(int argc, char *argv[])
                 uint32_t count = static_cast<uint32_t>(program.main.size());
                 out.write(reinterpret_cast<const char *>(&count), sizeof(count));
 
-                // Write each instruction with its operand
+                
                 for (const auto &instr : program.main) {
                     uint8_t op = static_cast<uint8_t>(instr.op);
                     out.write(reinterpret_cast<const char *>(&op), sizeof(op));
 
-                    // Operand type tag
+                    
                     uint8_t tag;
                     if (std::holds_alternative<std::monostate>(instr.operand)) {
                         tag = 0;
@@ -674,7 +1091,7 @@ int main(int argc, char *argv[])
             std::cout << alphabet::Compiler::dump_program(program);
         }
         else {
-            // Extract source file directory for resolving relative imports
+            
             std::string source_dir;
             size_t last_slash = input_file.find_last_of("/\\");
             if (last_slash != std::string::npos) {

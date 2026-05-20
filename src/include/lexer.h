@@ -6,13 +6,14 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <deque>
 #include <vector>
 #include "keywords.h"
 
 namespace alphabet {
 
 enum class TokenType : int {
-    // Keywords (single letter)
+
     IF = 100,
     ELSE = 101,
     LOOP = 102,
@@ -34,7 +35,6 @@ enum class TokenType : int {
     MATCH = 118,
     TOK_CONST = 119,
 
-    // Operators and special chars
     EXTENDS = '^',
     EXPORT = '@',
 
@@ -99,20 +99,26 @@ class MissingLanguageHeader : public std::runtime_error
 class Lexer
 {
   public:
-    explicit Lexer(std::string_view source);
+    explicit Lexer(std::string_view source, bool skip_header = false);
 
     std::vector<Token> scan_tokens();
+
+    std::deque<std::string> &get_string_pool()
+    {
+        return string_pool_;
+    }
 
   private:
     std::string_view source_;
     std::vector<Token> tokens_;
-    std::vector<std::string> string_pool_; // Owns processed strings with escapes
+    std::deque<std::string> string_pool_;
     size_t start_ = 0;
     size_t current_ = 0;
     size_t line_ = 1;
-    size_t column_ = 0;           // Current column (0-based)
-    size_t start_column_ = 0;     // Column at start of current token
-    std::string language_ = "en"; // Default language
+    size_t column_ = 0;
+    size_t start_column_ = 0;
+    std::string language_ = "en";
+    bool skip_header_ = false;
 
     [[nodiscard]] bool is_at_end() const;
     void scan_token();
@@ -135,6 +141,6 @@ class Lexer
 
 const char *token_type_to_string(TokenType type);
 
-} // namespace alphabet
+} 
 
 #endif

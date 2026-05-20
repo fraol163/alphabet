@@ -55,7 +55,7 @@ l (i < 5) {
 
 ---
 
-## Lesson 5: Functions
+## Lesson 5: Classes & Methods
 
 ```alphabet
 #alphabet<en>
@@ -72,9 +72,63 @@ z.o(result)
 
 ---
 
-## Lesson 6-10
+## Lesson 6: Error Handling
 
-See [examples/](../examples/) for more tutorials!
+```alphabet
+#alphabet<en>
+t {
+  5 x = 10 / 0
+} h (err) {
+  z.o("Caught error")
+}
+```
+
+---
+
+## Lesson 7: Lists
+
+```alphabet
+#alphabet<en>
+13 nums = [1, 2, 3, 4, 5]
+z.o(z.len(nums))
+z.o(nums[0])
+z.o(nums[-1])
+```
+
+---
+
+## Lesson 8: Maps
+
+```alphabet
+#alphabet<en>
+14 person = {"name": "Fraol", "age": 25}
+z.o(person["name"])
+z.o(z.keys(person))
+```
+
+---
+
+## Lesson 9: String Operations
+
+```alphabet
+#alphabet<en>
+12 msg = "Hello, World!"
+z.o(z.upper(msg))
+z.o(z.split(msg, ", "))
+z.o(z.replace(msg, "World", "Alphabet"))
+```
+
+---
+
+## Lesson 10: F-Strings
+
+```alphabet
+#alphabet<en>
+12 name = "Alphabet"
+5 version = 2
+z.o(f"Welcome to {name} v{version}.0")
+z.o(f"2 + 3 = {2 + 3}")
+```
 
 ---
 

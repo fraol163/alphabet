@@ -2,19 +2,21 @@
 
 **Real performance measurements with verified data.**
 
-**Last Updated:** April 19, 2026
+**Last Updated:** May 20, 2026
 
 ---
 
 ## Summary
 
-Alphabet V2 uses a stack-based bytecode interpreter (no JIT). Performance characteristics:
+**Note:** Results depend on hardware. Run benchmarks on your machine for accurate numbers.
 
-- **Recursive workloads:** ~11x slower than Python (fibonacci)
-- **Tight loops:** ~32x slower than Python (100K iteration loop)
+Alphabet v2.3.4 uses a stack-based bytecode interpreter (no JIT). Performance characteristics:
+
+- **Recursive workloads:** ~1.7x slower than Python (fibonacci)
+- **Tight loops:** ~1.1x comparable to Python (100K iteration loop)
 - **Startup:** Fast (native binary, no runtime boot)
 
-These numbers are for the current interpreter implementation. Future JIT compilation could significantly improve performance.
+Integer-typed operations (v2.3.4 real int64_t support) significantly improved performance over the previous double-only implementation.
 
 ---
 
@@ -22,8 +24,8 @@ These numbers are for the current interpreter implementation. Future JIT compila
 
 | Language | Time | Relative |
 |----------|------|----------|
-| **Alphabet** | 2.81s | 11.2x |
-| **Python 3** | 0.25s | 1.0x |
+| **Python 3** | 0.108s | 1.0x |
+| **Alphabet** | 0.184s | 1.7x |
 
 ```alphabet
 #alphabet<en>
@@ -38,8 +40,8 @@ z.o(fib(20))
 
 | Language | Time | Relative |
 |----------|------|----------|
-| **Alphabet** | 6.37s | 31.9x |
-| **Python 3** | 0.20s | 1.0x |
+| **Python 3** | 0.219s | 1.0x |
+| **Alphabet** | 0.244s | 1.1x |
 
 ```alphabet
 #alphabet<en>
@@ -54,13 +56,13 @@ z.o(sum)
 
 ---
 
-## Why Slower Than Python?
+## Performance Notes
 
 The Alphabet VM is a straightforward stack interpreter:
 - Each instruction dispatched via switch/case
 - No bytecode optimization or JIT
 - Dynamic type checks on every operation
-- Function calls allocate new CallFrame objects
+- Real integer (int64_t) support since v2.3.4 avoids float overhead
 
 Python's CPython interpreter is also a stack VM, but with decades of optimization (specialized opcodes, inline caches, etc.).
 

@@ -1,11 +1,41 @@
 # Build output
 build/
+build_asan/
+build_debug/
 out/
 
 # CMake generated
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+
+# Compiled binaries
+alphabet-linux-amd64
+alphabet-*.tar.gz
+alphabet-*.zip
+*.a
+a.out
+
+# Object files
+*.o
+*.o.d
+
+# Node.js (pptxgenjs for deck generation)
+node_modules/
+package.json
+package-lock.json
+
+# Generated presentation artifacts
+*.pptx
+*.pdf
+presentation_assets/
+gen_deck.js
+slide-*.jpg
+slide_end-*.jpg
 
 # OS files
 .DS_Store
@@ -14,20 +44,14 @@ Thumbs.db
 # IDE
 .idea/
 .vscode/
-*.swp
-
-
-# Build output
-build/
-
-# Compiled binaries
-alphabet-linux-amd64
-alphabet-*.tar.gz
-alphabet-*.zip
-
-# IDE
 .cache/
+*.swp
 .ide-state.json
+.openclaude/
+
+# Logs
+*.log
+Testing/
 
 # One-off fix scripts
 fix.cpp

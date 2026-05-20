@@ -1,4 +1,5 @@
 #include "type_system.h"
+#include <algorithm>
 
 namespace alphabet {
 
@@ -29,10 +30,9 @@ void TypeManager::register_primitive(uint16_t id, const std::string &name)
 
 const TypeInfo *TypeManager::get_type(uint16_t id) const
 {
-    if (id >= types_.size()) {
-        return nullptr;
-    }
-    return &types_[id];
+    auto it = std::find_if(types_.begin(), types_.end(),
+                           [id](const TypeInfo &t) { return t.id == id; });
+    return it != types_.end() ? &*it : nullptr;
 }
 
 uint16_t TypeManager::register_type(const std::string &name,
@@ -87,12 +87,8 @@ bool TypeManager::implements_interface(uint16_t type_id, uint16_t interface_id) 
     if (!type)
         return false;
 
-    for (uint16_t iface : type->interfaces) {
-        if (iface == interface_id)
-            return true;
-    }
-
-    return false;
+    return std::any_of(type->interfaces.begin(), type->interfaces.end(),
+                       [interface_id](uint16_t iface) { return iface == interface_id; });
 }
 
-} // namespace alphabet
+} 

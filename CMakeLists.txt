@@ -56,26 +56,26 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(ALPHABET_SOURCES
     src/main.cpp
-    src/include/lexer.cpp
-    src/include/parser.cpp
-    src/include/compiler.cpp
-    src/include/vm.cpp
-    src/include/vm_builtins.cpp
-    src/include/type_system.cpp
-    src/include/ffi.cpp
-    src/include/lsp.cpp
+    src/lexer.cpp
+    src/parser.cpp
+    src/compiler.cpp
+    src/vm.cpp
+    src/vm_builtins.cpp
+    src/type_system.cpp
+    src/ffi.cpp
+    src/lsp.cpp
 )
 
 # Library sources (excluding main.cpp for tests)
 set(ALPHABET_LIB_SOURCES
-    src/include/lexer.cpp
-    src/include/parser.cpp
-    src/include/compiler.cpp
-    src/include/vm.cpp
-    src/include/vm_builtins.cpp
-    src/include/type_system.cpp
-    src/include/ffi.cpp
-    src/include/lsp.cpp
+    src/lexer.cpp
+    src/parser.cpp
+    src/compiler.cpp
+    src/vm.cpp
+    src/vm_builtins.cpp
+    src/type_system.cpp
+    src/ffi.cpp
+    src/lsp.cpp
 )
 
 set(ALPHABET_HEADERS
@@ -87,15 +87,30 @@ set(ALPHABET_HEADERS
     src/include/vm.h
     src/include/type_system.h
     src/include/ffi.h
+    src/include/lsp.h
+    src/include/keywords.h
 )
 
 # ============================================================================
 # Main Executable
 # ============================================================================
 
-add_executable(alphabet ${ALPHABET_SOURCES} ${ALPHABET_HEADERS})
+add_executable(alphabet src/main.cpp)
+target_link_libraries(alphabet PRIVATE alphabet_lib)
 
 target_include_directories(alphabet PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/include
+    ${CMAKE_SOURCE_DIR}/third_party
+    ${CMAKE_BINARY_DIR}/generated
+)
+
+# ============================================================================
+# Static Library (shared by executable and tests)
+# ============================================================================
+
+add_library(alphabet_lib STATIC ${ALPHABET_LIB_SOURCES} ${ALPHABET_HEADERS})
+
+target_include_directories(alphabet_lib PUBLIC
     ${CMAKE_SOURCE_DIR}/src/include
     ${CMAKE_SOURCE_DIR}/third_party
     ${CMAKE_BINARY_DIR}/generated
@@ -131,33 +146,24 @@ if(BUILD_TESTS)
     enable_testing()
 
     # Test executable for lexer
-    add_executable(test_lexer tests/test_lexer.cpp ${ALPHABET_LIB_SOURCES})
-    target_include_directories(test_lexer PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/include
-        ${CMAKE_SOURCE_DIR}/third_party
-    )
+    add_executable(test_lexer tests/test_lexer.cpp)
+    target_link_libraries(test_lexer PRIVATE alphabet_lib)
     target_compile_definitions(test_lexer PRIVATE UNIT_TEST)
     if(WIN32)
         set_target_properties(test_lexer PROPERTIES WIN32_EXECUTABLE FALSE)
     endif()
 
     # Test executable for parser
-    add_executable(test_parser tests/test_parser.cpp ${ALPHABET_LIB_SOURCES})
-    target_include_directories(test_parser PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/include
-        ${CMAKE_SOURCE_DIR}/third_party
-    )
+    add_executable(test_parser tests/test_parser.cpp)
+    target_link_libraries(test_parser PRIVATE alphabet_lib)
     target_compile_definitions(test_parser PRIVATE UNIT_TEST)
     if(WIN32)
         set_target_properties(test_parser PROPERTIES WIN32_EXECUTABLE FALSE)
     endif()
 
     # Test executable for VM
-    add_executable(test_vm tests/test_vm.cpp ${ALPHABET_LIB_SOURCES})
-    target_include_directories(test_vm PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/include
-        ${CMAKE_SOURCE_DIR}/third_party
-    )
+    add_executable(test_vm tests/test_vm.cpp)
+    target_link_libraries(test_vm PRIVATE alphabet_lib)
     target_compile_definitions(test_vm PRIVATE UNIT_TEST)
     if(WIN32)
         set_target_properties(test_vm PROPERTIES WIN32_EXECUTABLE FALSE)
@@ -174,10 +180,18 @@ if(BUILD_TESTS)
         get_filename_component(test_name ${golden_file} NAME_WE)
         set(expected_file "${CMAKE_SOURCE_DIR}/tests/golden_files/${test_name}.expected")
         if(EXISTS ${expected_file})
-            add_test(NAME Golden_${test_name}
-                COMMAND bash "${CMAKE_SOURCE_DIR}/tests/golden_test_runner.sh"
-                    "$<TARGET_FILE:alphabet>" "${golden_file}" "${expected_file}"
-            )
+            if(test_name STREQUAL "dump_bytecode")
+                # Dump-bytecode test uses --dump-bytecode flag
+                add_test(NAME Golden_${test_name}
+                    COMMAND bash "${CMAKE_SOURCE_DIR}/tests/golden_test_runner.sh"
+                        "$<TARGET_FILE:alphabet>" "--dump-bytecode" "${golden_file}" "${expected_file}"
+                )
+            else()
+                add_test(NAME Golden_${test_name}
+                    COMMAND bash "${CMAKE_SOURCE_DIR}/tests/golden_test_runner.sh"
+                        "$<TARGET_FILE:alphabet>" "${golden_file}" "${expected_file}"
+                )
+            endif()
         endif()
     endforeach()
 

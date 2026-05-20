@@ -1,0 +1,4 @@
+#alphabet<en>
+x "../../stdlib/io.abc"
+z.o("hello")
+z.o("world")

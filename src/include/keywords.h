@@ -7,12 +7,9 @@
 
 namespace alphabet {
 
-// Keyword mappings for different languages
-// Each language maps native keywords to ASCII equivalents
-
 static const std::unordered_map<std::string, std::unordered_map<std::string, std::string>>
     KEYWORD_MAPPINGS = {
-        // English aliases (multi-letter keywords)
+
         {"en", {{"class", "c"},   {"abstract", "a"}, {"interface", "j"}, {"method", "m"},
                 {"if", "i"},      {"else", "e"},     {"loop", "l"},      {"while", "l"},
                 {"return", "r"},  {"break", "b"},    {"continue", "k"},  {"new", "n"},
@@ -21,36 +18,34 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
                 {"input", "z.i"}, {"import", "x"},   {"match", "q"},     {"extends", "^"},
                 {"export", "@"},  {"const", "\x80"}}},
 
-        // Amharic keywords
         {"am",
          {
-             {"ክፍል", "c"},      // class
-             {"ሥር", "a"},       // abstract
-             {"በይነገጽ", "j"},    // interface
-             {"ዘዴ", "m"},       // method
-             {"ከሆነ", "i"},      // if
-             {"አለበለዚህ", "e"},   // else
-             {"ሉፕ", "l"},       // loop
-             {"እስከሆነ", "l"},    // while
-             {"ተመለስ", "r"},     // return
-             {"ስበር", "b"},      // break
-             {"ቀጥል", "k"},      // continue
-             {"አዲስ", "n"},      // new
-             {"ግልጽ", "v"},      // public
-             {"ግል", "p"},       // private
-             {"ቋሚ", "s"},       // static (also used for const sometimes)
-             {"ሞክር", "t"},      // try
-             {"ያዟ", "h"},       // catch/handle
-             {"ውጤት", "z"},      // print/output
-             {"ግብአት", "z.i"},   // input
-             {"አስገባ", "x"},     // import
-             {"ምረጥ", "q"},      // match
-             {"ወራሽ", "^"},      // extends
-             {"ላክ", "@"},       // export
-             {"ቋሚ-እሴት", "\x80"} // const
+             {"ክፍል", "c"},      
+             {"ሥር", "a"},       
+             {"በይነገጽ", "j"},    
+             {"ዘዴ", "m"},       
+             {"ከሆነ", "i"},      
+             {"አለበለዚህ", "e"},   
+             {"ሉፕ", "l"},       
+             {"እስከሆነ", "l"},    
+             {"ተመለስ", "r"},     
+             {"ስበር", "b"},      
+             {"ቀጥል", "k"},      
+             {"አዲስ", "n"},      
+             {"ግልጽ", "v"},      
+             {"ግል", "p"},       
+             {"ቋሚ", "s"},       
+             {"ሞክር", "t"},      
+             {"ያዟ", "h"},       
+             {"ውጤት", "z"},      
+             {"ግብአት", "z.i"},   
+             {"አስገባ", "x"},     
+             {"ምረጥ", "q"},      
+             {"ወራሽ", "^"},      
+             {"ላክ", "@"},       
+             {"ቋሚ-እሴት", "\x80"} 
          }},
 
-        // Spanish keywords
         {"es", {{"clase", "c"},       {"abstracto", "a"}, {"interfaz", "j"},  {"metodo", "m"},
                 {"si", "i"},          {"sino", "e"},      {"bucle", "l"},     {"mientras", "l"},
                 {"retornar", "r"},    {"romper", "b"},    {"continuar", "k"}, {"nuevo", "n"},
@@ -59,7 +54,6 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
                 {"importar", "x"},    {"coincidir", "q"}, {"extiende", "^"},  {"exportar", "@"},
                 {"constante", "\x80"}}},
 
-        // French keywords
         {"fr",
          {{"classe", "c"},       {"abstrait", "a"}, {"interface", "j"}, {"methode", "m"},
           {"si", "i"},           {"sinon", "e"},    {"boucle", "l"},    {"tantque", "l"},
@@ -68,7 +62,6 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
           {"attraper", "h"},     {"afficher", "z"}, {"entrer", "z.i"},  {"importer", "x"},
           {"correspondre", "q"}, {"etend", "^"},    {"exporter", "@"},  {"constante", "\x80"}}},
 
-        // German keywords
         {"de", {{"klasse", "c"},     {"abstrakt", "a"},    {"schnittstelle", "j"},
                 {"methode", "m"},    {"wenn", "i"},        {"sonst", "e"},
                 {"schleife", "l"},   {"solange", "l"},     {"zuruck", "r"},
@@ -78,23 +71,21 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
                 {"eingabe", "z.i"},  {"importieren", "x"}, {"ubereinstimmen", "q"},
                 {"erweitert", "^"},  {"exportieren", "@"}, {"konstante", "\x80"}}}};
 
-// Helper function to get keyword mapping for a language
 inline std::string translate_keyword(const std::string &keyword, const std::string &lang)
 {
     auto lang_it = KEYWORD_MAPPINGS.find(lang);
     if (lang_it == KEYWORD_MAPPINGS.end()) {
-        return keyword; // No mapping for this language
+        return keyword; 
     }
 
     auto keyword_it = lang_it->second.find(keyword);
     if (keyword_it == lang_it->second.end()) {
-        return keyword; // No mapping for this keyword
+        return keyword; 
     }
 
     return keyword_it->second;
 }
 
-// Check if a string contains UTF-8 characters
 inline bool is_utf8_keyword(const std::string &str)
 {
     for (unsigned char c : str) {
@@ -104,6 +95,6 @@ inline bool is_utf8_keyword(const std::string &str)
     return false;
 }
 
-} // namespace alphabet
+} 
 
 #endif

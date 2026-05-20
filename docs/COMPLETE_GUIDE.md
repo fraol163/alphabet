@@ -1,6 +1,6 @@
 # Alphabet Language - Complete Guide
 
-**Comprehensive tutorial for Alphabet Programming Language v2.3.3**
+**Comprehensive tutorial for Alphabet Programming Language v2.3.4**
 
 ---
 
@@ -84,7 +84,7 @@ alphabet --version
 
 **Expected output:**
 ```
-Alphabet 2.3.3 (Native C++)
+Alphabet 2.3.4 (Native C++)
 Developer: Fraol Teshome (fraolteshome444@gmail.com)
 ```
 
@@ -163,7 +163,7 @@ z.o(f"2 + 3 = {2 + 3}")                          # 2 + 3 = 5
 z.o(f"sqrt(144) = {z.sqrt(144)}")                 # sqrt(144) = 12
 ```
 
-Any expression — variables, arithmetic, function calls — can appear inside `{ }`.
+Expressions — variables, arithmetic, function calls — can appear inside `{ }`.
 
 ---
 
@@ -340,8 +340,9 @@ t {
 | `z.type(x)` | Type name | `z.type(42)` = "number", returns "list", "map", "object" |
 | `z.tostr(x)` | To string | `z.tostr(42)` = "42" |
 | `z.tonum(x)` | To number | `z.tonum("42")` = 42 |
-| `z.insert(list, i, val)` | Insert in list | `z.insert(lst, 0, 99)` |
-| `z.remove(list, i)` | Remove from list | `z.remove(lst, 0)` |
+|| `z.insert(list, i, val)` | Insert in list | `z.insert(lst, 0, 99)` |
+|| `z.remove(list, i)` | Remove from list | `z.remove(lst, 0)` |
+|| `z.sort(list)` | Sort list | `z.sort(lst)` returns sorted copy |
 
 ---
 

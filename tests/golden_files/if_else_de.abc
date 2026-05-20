@@ -1,0 +1,7 @@
+#alphabet<de>
+5 x = 10
+wenn (x > 5) {
+    z.o("x ist groesser")
+} sonst {
+    z.o("x ist kleiner")
+}

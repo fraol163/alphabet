@@ -3,6 +3,7 @@
 
 #include "alphabet_ast.h"
 #include "lexer.h"
+#include <deque>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -30,13 +31,20 @@ class Parser
     {
         return first_error_;
     }
+    [[nodiscard]] const std::vector<std::string> &errors() const
+    {
+        return errors_;
+    }
 
   private:
     std::vector<Token> tokens_;
-    std::string_view source_; // Original source for error context
+    std::string_view source_;
+    std::vector<std::unique_ptr<Lexer>> sub_lexers_;
+    std::deque<std::string> sub_sources_;
     size_t current_ = 0;
     bool had_errors_ = false;
-    std::string first_error_; // Store first error for reporting
+    std::string first_error_;
+    std::vector<std::string> errors_; 
 
     [[nodiscard]] bool is_at_end() const;
     [[nodiscard]] const Token &peek() const;
@@ -70,6 +78,7 @@ class Parser
     std::vector<StmtPtr> block();
     StmtPtr expression_statement();
 
+    ExprPtr fstring_expression();
     ExprPtr expression();
     ExprPtr assignment();
     ExprPtr or_expr();
@@ -86,6 +95,6 @@ class Parser
     ExprPtr lambda_expression();
 };
 
-} // namespace alphabet
+} 
 
 #endif

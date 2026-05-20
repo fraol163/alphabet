@@ -1,5 +1,4 @@
 #alphabet<en>
-// Standard Math Library for Alphabet
 
 m 5 max(5 a, 5 bb) {
   i (a > bb) { r a }
@@ -32,8 +31,15 @@ m 5 is_odd(5 num) {
 }
 
 m 5 factorial(5 num) {
+  i (num < 0) { r 0 }
   i (num <= 1) { r 1 }
-  r num * factorial(num - 1)
+  5 result = 1
+  5 idx = 2
+  l (idx <= num) {
+    result = result * idx
+    idx = idx + 1
+  }
+  r result
 }
 
 m 5 gcd(5 aa, 5 bb) {

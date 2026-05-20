@@ -1,14 +1,14 @@
-# Alphabet Project Roadmap - v2.3.3
+# Alphabet Project Roadmap - v2.3.4
 
 **Project Owner: Fraol Teshome**
 
-## Completed (v2.0.0 - v2.3.3)
+## Completed (v2.0.0 - v2.3.4)
 
 ### Core Language
 - [x] Lexer with 19 single-letter keywords
 - [x] Recursive descent parser
 - [x] Stack-based bytecode compiler
-- [x] Virtual machine with 40+ opcodes
+- [x] Virtual machine with 42 opcodes
 - [x] Numeric type system (type IDs 0-14, all numbers stored as double internally)
 - [x] OOP: classes, methods, inheritance, interfaces, visibility
 - [x] Exception handling (try/handle)
@@ -19,10 +19,10 @@
 - [x] FFI: call native C functions
 - [x] String escape sequences
 - [x] String concatenation with type coercion
-- [x] String interpolation (f"Hello {name}")
+- [x] String interpolation via concatenation-based f-string desugaring (f"Hello {name}")
 - [x] Underscore identifiers
 - [x] Python-style negative list indexing (list[-1])
-- [x] Dynamic stack (vector-based, grows on demand)
+- [ ] Dynamic stack (currently fixed-size at 65536 via unique_ptr<Value[]>)
 - [x] Const variable declarations
 - [x] --dump-bytecode flag for debugging
 
@@ -35,7 +35,7 @@
 ### Built-In Functions
 - [x] Math: sqrt, abs, pow, floor, ceil, sin, cos, tan, round, min, max, log, log10
 - [x] String: len, tostr, tonum, type, split, join, replace, trim, upper, lower, substr, chr, ord, starts_with, ends_with
-- [x] List: append, pop_back, contains, reverse, range, keys, values, insert, remove
+- [x] List: append, pop_back, contains, reverse, range, keys, values, insert, remove, sort
 - [x] File I/O: f (read), fw (write)
 
 ### Tooling
@@ -55,7 +55,7 @@
 - [x] One-line install/update/uninstall script
 - [x] Multilingual keywords (English, Amharic, Spanish, French, German)
 - [x] Version managed from single VERSION file
-- [x] Dynamic VM stack (no more fixed 64KB allocation)
+- [ ] Dynamic VM stack (currently fixed-size at STACK_MAX=65536)
 - [x] FFI library handle caching (no more dlopen/dlclose per call)
 - [x] Code quality: vm.cpp split into vm.cpp + vm_builtins.cpp, REPL error handling deduplicated
 
@@ -90,7 +90,7 @@
 ## Future (v2.5+)
 
 ### Language Features
-- [ ] Lambda functions
+- [/] Lambda functions (parser and compiler have code, not wired into primary())
 - [ ] Generics
 - [ ] Range expressions in for loops
 - [ ] Destructuring assignment
@@ -116,4 +116,4 @@
 
 ---
 
-*Status: v2.3.3 Released. Core language and standard library complete. Focus on ecosystem and internationalization.*
+*Status: v2.3.4 Released. Core language and standard library complete. Focus on ecosystem and internationalization.*

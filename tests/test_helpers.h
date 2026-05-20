@@ -13,14 +13,12 @@
 namespace alphabet {
 namespace test {
 
-// Helper: lex source, return tokens
 inline std::vector<Token> lex(const std::string &source)
 {
     Lexer lexer(source);
     return lexer.scan_tokens();
 }
 
-// Helper: parse source, return statements
 inline std::vector<StmtPtr> parse(const std::string &source)
 {
     Lexer lexer(source);
@@ -29,7 +27,6 @@ inline std::vector<StmtPtr> parse(const std::string &source)
     return parser.parse();
 }
 
-// Helper: compile and run source
 inline void run(const std::string &source)
 {
     Lexer lexer(source);
@@ -42,7 +39,6 @@ inline void run(const std::string &source)
     vm.run();
 }
 
-// Helper: compile and run source, capture stdout
 inline std::string run_capture(const std::string &source)
 {
     std::ostringstream oss;
@@ -65,7 +61,6 @@ inline std::string run_capture(const std::string &source)
     return oss.str();
 }
 
-// Helper: compile and run, return globals
 inline std::unordered_map<std::string, Value> run_get_globals(const std::string &source)
 {
     Lexer lexer(source);
@@ -79,7 +74,7 @@ inline std::unordered_map<std::string, Value> run_get_globals(const std::string 
     return vm.get_globals();
 }
 
-} // namespace test
-} // namespace alphabet
+}
+}
 
 #endif

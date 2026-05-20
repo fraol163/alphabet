@@ -110,7 +110,8 @@ const char *token_type_to_string(TokenType type)
     }
 }
 
-Lexer::Lexer(std::string_view source) : source_(source) {}
+Lexer::Lexer(std::string_view source, bool skip_header)
+    : source_(source), skip_header_(skip_header) {}
 
 std::vector<Token> Lexer::scan_tokens()
 {
@@ -123,22 +124,9 @@ std::vector<Token> Lexer::scan_tokens()
         }
     }
 
-    validate_header();
-
-    // Pre-count escape sequences to reserve string_pool_ and prevent
-    // reallocation from invalidating string_view tokens
-    size_t escape_count = 0;
-    for (size_t i = current_; i < source_.size(); ++i) {
-        if (source_[i] == '\\')
-            escape_count++;
+    if (!skip_header_) {
+        validate_header();
     }
-    // Count fstring patterns and reserve extra capacity for their string parts
-    size_t fstring_reserve = 0;
-    for (size_t i = current_; i + 1 < source_.size(); ++i) {
-        if (source_[i] == 'f' && source_[i + 1] == '"')
-            fstring_reserve++;
-    }
-    string_pool_.reserve(escape_count + fstring_reserve * 20);
 
     while (!is_at_end()) {
         start_ = current_;
@@ -168,7 +156,7 @@ void Lexer::validate_header()
         throw MissingLanguageHeader();
     }
 
-    // Extract language code
+    
     size_t lang_start = prefix.size();
     size_t lang_length = close_pos - lang_start;
     language_ = std::string(header_source.substr(lang_start, lang_length));
@@ -261,11 +249,11 @@ void Lexer::scan_token()
             }
         }
         else if (match('*')) {
-            // Multi-line comment: consume until */
+            
             while (!is_at_end()) {
                 if (peek() == '*' && peek_next() == '/') {
-                    advance(); // consume *
-                    advance(); // consume /
+                    advance(); 
+                    advance(); 
                     break;
                 }
                 advance();
@@ -311,12 +299,12 @@ void Lexer::scan_token()
         }
         else if (std::isalpha(static_cast<unsigned char>(c)) ||
                  static_cast<unsigned char>(c) > 127) {
-            // Check for fstring: f"..."
+            
             if (c == 'f' && peek() == '"') {
                 fstring();
             }
             else {
-                // ASCII letters or UTF-8 characters
+                
                 identifier();
             }
         }
@@ -375,7 +363,7 @@ void Lexer::string()
     while (peek() != '"' && !is_at_end()) {
         if (peek() == '\\') {
             has_escapes = true;
-            advance(); // consume backslash
+            advance(); 
             if (is_at_end())
                 return;
 
@@ -397,7 +385,7 @@ void Lexer::string()
                 processed += '\0';
                 break;
             default:
-                // Unknown escape -- keep as-is
+                
                 processed += '\\';
                 processed += escaped;
                 break;
@@ -411,7 +399,7 @@ void Lexer::string()
     if (is_at_end())
         return;
 
-    advance(); // consume closing "
+    advance(); 
 
     if (has_escapes) {
         string_pool_.push_back(std::move(processed));
@@ -425,174 +413,72 @@ void Lexer::string()
 
 void Lexer::fstring()
 {
-    // 'f' was consumed by advance() in scan_token()
-    // Current position is at the opening '"'
-    advance(); // consume opening '"'
+    advance(); // skip opening quote
 
-    // Collect parts: alternating string literals and identifier expressions
-    struct Part
-    {
-        bool is_string; // true = string literal, false = identifier
-        std::string value;
-    };
-    std::vector<Part> parts;
-
-    std::string current_literal;
+    // Collect the entire f-string template as-is
+    std::string template_text;
+    int brace_depth = 0;
 
     while (peek() != '"' && !is_at_end()) {
         if (peek() == '{') {
-            advance(); // consume '{'
-
+            advance();
             if (peek() == '{') {
-                // Escaped brace: {{
+                // Escaped brace
                 advance();
-                current_literal += '{';
+                template_text += "{{";
                 continue;
             }
-
-            // Start of interpolation expression
-            // Save current literal part (even if empty, to preserve ordering)
-            parts.push_back({true, current_literal});
-            current_literal.clear();
-
-            // Read expression content until '}'
-            std::string expr;
-            while (peek() != '}' && !is_at_end()) {
-                expr += advance();
-            }
-            if (peek() == '}')
-                advance(); // consume '}'
-
-            // Trim whitespace from expression
-            size_t trim_start = expr.find_first_not_of(" \t\r\n");
-            size_t trim_end = expr.find_last_not_of(" \t\r\n");
-            if (trim_start != std::string::npos) {
-                expr = expr.substr(trim_start, trim_end - trim_start + 1);
-            }
-            else {
-                expr.clear();
-            }
-
-            parts.push_back({false, expr});
+            template_text += '{';
+            brace_depth++;
         }
         else if (peek() == '}') {
             advance();
             if (peek() == '}') {
-                // Escaped brace: }}
                 advance();
-                current_literal += '}';
+                template_text += "}}";
+                continue;
             }
-            else {
-                // Unmatched '}' - treat as literal
-                current_literal += '}';
-            }
+            template_text += '}';
+            brace_depth--;
         }
         else if (peek() == '\\') {
-            // Escape sequence
-            advance(); // consume backslash
+            advance();
             if (is_at_end())
                 break;
             char escaped = advance();
-            switch (escaped) {
-            case 'n':
-                current_literal += '\n';
-                break;
-            case 't':
-                current_literal += '\t';
-                break;
-            case '\\':
-                current_literal += '\\';
-                break;
-            case '"':
-                current_literal += '"';
-                break;
-            case '{':
-                current_literal += '{';
-                break;
-            case '}':
-                current_literal += '}';
-                break;
-            case '0':
-                current_literal += '\0';
-                break;
-            default:
-                current_literal += '\\';
-                current_literal += escaped;
-                break;
-            }
+            template_text += '\\';
+            template_text += escaped;
         }
         else {
-            current_literal += advance();
+            template_text += advance();
         }
     }
-
-    // Save trailing literal
-    parts.push_back({true, current_literal});
 
     if (is_at_end())
-        return; // Unterminated fstring
+        return;
 
-    advance(); // consume closing '"'
+    advance(); // skip closing quote
 
-    // Emit tokens: string parts as STRING, expression parts as IDENTIFIER,
-    // connected by PLUS tokens. Skip empty string parts when other parts exist.
-    bool emitted_any = false;
-
-    for (const auto &part : parts) {
-        if (part.is_string) {
-            // Skip empty string parts when there are other parts to emit
-            if (part.value.empty())
-                continue;
-
-            if (emitted_any) {
-                tokens_.emplace_back(TokenType::PLUS, std::string_view("+"), 0, line_,
-                                     start_column_);
-            }
-            string_pool_.push_back(part.value);
-            tokens_.emplace_back(TokenType::STRING, string_pool_.back(), 0, line_, start_column_);
-            emitted_any = true;
-        }
-        else {
-            // Skip empty identifiers (e.g., from {})
-            if (part.value.empty())
-                continue;
-
-            if (emitted_any) {
-                tokens_.emplace_back(TokenType::PLUS, std::string_view("+"), 0, line_,
-                                     start_column_);
-            }
-            string_pool_.push_back(part.value);
-            tokens_.emplace_back(TokenType::IDENTIFIER, string_pool_.back(), 0, line_,
-                                 start_column_);
-            emitted_any = true;
-        }
-    }
-
-    // If nothing was emitted (e.g., f"" or f"{}"), emit empty string
-    if (!emitted_any) {
-        string_pool_.push_back("");
-        tokens_.emplace_back(TokenType::STRING, string_pool_.back(), 0, line_, start_column_);
-    }
+    string_pool_.push_back(template_text);
+    tokens_.emplace_back(TokenType::FSTRING, string_pool_.back(), 0, line_, start_column_);
 }
 
 void Lexer::multi_line_string()
 {
-    advance(); // consume second "
-    advance(); // consume third "
+    advance(); 
+    advance(); 
 
     std::string processed;
-    bool has_escapes = false;
 
     while (!is_at_end()) {
         if (peek() == '"' && current_ + 2 < source_.size() && source_[current_ + 1] == '"' &&
             source_[current_ + 2] == '"') {
-            advance(); // consume first "
-            advance(); // consume second "
-            advance(); // consume third "
+            advance(); 
+            advance(); 
+            advance(); 
             break;
         }
         if (peek() == '\\') {
-            has_escapes = true;
             advance();
             if (is_at_end())
                 break;
@@ -638,14 +524,19 @@ void Lexer::number()
     }
 
     if (peek() == '.' && std::isdigit(static_cast<unsigned char>(peek_next()))) {
-        advance(); // consume the '.'
+        advance(); 
         while (std::isdigit(static_cast<unsigned char>(peek()))) {
             advance();
         }
     }
 
     std::string_view num_str = source_.substr(start_, current_ - start_);
-    double value = std::stod(std::string(num_str));
+    double value = 0.0;
+    try {
+        value = std::stod(std::string(num_str));
+    } catch (const std::exception &) {
+        value = 0.0;
+    }
     tokens_.emplace_back(TokenType::NUMBER, num_str, value, line_);
 }
 
@@ -659,39 +550,34 @@ void Lexer::identifier()
     std::string_view text = source_.substr(start_, current_ - start_);
     std::string text_str(text);
 
-    // Check for true/false literals
+    
     if (text == "true" || text == "false") {
         add_token(TokenType::NUMBER, (text == "true") ? 1.0 : 0.0);
         return;
     }
 
-    // Check for const keyword (single-word, not a keyword char)
+    
     if (text == "const") {
         add_token(TokenType::TOK_CONST);
         return;
     }
 
-    // Check if this is a UTF-8 keyword
+    
     if (is_utf8_keyword(text_str)) {
         std::string translated = translate_keyword(text_str, language_);
-        // If translation is different from original, it's a keyword
+        
         if (translated != text_str) {
-            // It's a translated keyword - process the translation
+            
             if (translated == "\x80") {
                 add_token(TokenType::TOK_CONST);
                 return;
             }
             if (translated == "z") {
-                if (translated == "\x80") {
-                    add_token(TokenType::TOK_CONST);
-                    return;
-                }
-                // Handle system functions - emit 'z' as SYSTEM token
                 tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
                 return;
             }
             if (translated == "z.i") {
-                // Handle system.input - emit 'z' as SYSTEM token
+                
                 tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
                 return;
             }
@@ -699,30 +585,26 @@ void Lexer::identifier()
                 add_token(TokenType::TOK_CONST);
                 return;
             }
-            // For other translated keywords, check first char
+            
             if (translated.size() == 1 && is_keyword_char(translated[0])) {
                 add_token(keyword_type(translated[0]));
                 return;
             }
         }
-        // UTF-8 identifier (not a keyword)
+        
         add_token(TokenType::IDENTIFIER);
         return;
     }
 
-    // ASCII keyword handling - check for aliases first
+    
     std::string translated = translate_keyword(text_str, language_);
     if (translated != text_str) {
-        // It's a translated ASCII keyword
+        
         if (translated == "\x80") {
             add_token(TokenType::TOK_CONST);
             return;
         }
         if (translated == "z") {
-            if (translated == "\x80") {
-                add_token(TokenType::TOK_CONST);
-                return;
-            }
             tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
             return;
         }
@@ -730,12 +612,8 @@ void Lexer::identifier()
             tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
             return;
         }
-        if (translated == "\x80") {
-            add_token(TokenType::TOK_CONST);
-            return;
-        }
-        // Handle multi-char translated keywords only (class->c, method->m, new->n, etc.)
-        // Single-char source keywords (like "n" as variable) are NOT translated to avoid ambiguity
+        
+        
         if (translated.size() == 1 && text_str.size() > 1) {
             char c = translated[0];
             if (is_keyword_char(c)) {
@@ -745,7 +623,7 @@ void Lexer::identifier()
         }
     }
 
-    // Standard single-char keywords
+    
     if (text.size() == 1 && is_keyword_char(text[0])) {
         add_token(keyword_type(text[0]));
     }
@@ -835,4 +713,4 @@ TokenType Lexer::previous_token_type() const
     return tokens_.back().type;
 }
 
-} // namespace alphabet
+} 

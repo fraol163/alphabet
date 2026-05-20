@@ -1,70 +1,55 @@
 #alphabet<en>
-// List Library for Alphabet v2.3.3
-// Wraps built-in z.* list functions for cleaner API
 
-// Get list length
 m 5 length(13 lst) {
   r z.len(lst)
 }
 
-// Append value to list (mutates)
 m 13 push(13 lst, 5 val) {
   r z.append(lst, val)
 }
 
-// Remove and return last element
 m 5 pop(13 lst) {
   r z.pop_back(lst)
 }
 
-// Check if list contains value
 m 11 contains(13 lst, 5 val) {
   r z.contains(lst, val)
 }
 
-// Reverse a list (returns new)
 m 13 reverse(13 lst) {
   r z.reverse(lst)
 }
 
-// Get first element
 m 5 first(13 lst) {
   r lst[0]
 }
 
-// Get last element
 m 5 last(13 lst) {
   r lst[-1]
 }
 
-// Create range [0, stop)
 m 13 range(5 stop) {
   r z.range(stop)
 }
 
-// Create range [start, stop)
 m 13 range_from(5 start, 5 stop) {
   r z.range(start, stop)
 }
 
-// Create range [start, stop) with step
 m 13 range_step(5 start, 5 stop, 5 step) {
   r z.range(start, stop, step)
 }
 
-// Get keys from map
 m 13 keys(14 m) {
   r z.keys(m)
 }
 
-// Get values from map
 m 13 values(14 m) {
   r z.values(m)
 }
 
-// Get minimum value from a list of numbers
 m 5 min(13 lst) {
-  i (z.len(lst) == 0) { r 0 }
+  i (z.len(lst) == 0) { r null }
   5 best = lst[0]
   5 idx = 1
   l (idx < z.len(lst)) {
@@ -76,9 +61,8 @@ m 5 min(13 lst) {
   r best
 }
 
-// Get maximum value from a list of numbers
 m 5 max(13 lst) {
-  i (z.len(lst) == 0) { r 0 }
+  i (z.len(lst) == 0) { r null }
   5 best = lst[0]
   5 idx = 1
   l (idx < z.len(lst)) {
@@ -90,7 +74,6 @@ m 5 max(13 lst) {
   r best
 }
 
-// Sum all values in a list
 m 5 sum(13 lst) {
   5 total = 0
   5 idx = 0
@@ -101,7 +84,6 @@ m 5 sum(13 lst) {
   r total
 }
 
-// Return list with duplicates removed (preserves order)
 m 13 unique(13 lst) {
   13 result = []
   5 idx = 0
@@ -115,7 +97,6 @@ m 13 unique(13 lst) {
   r result
 }
 
-// Get a sublist from start index with given length
 m 13 slice(13 lst, 5 start, 5 len) {
   13 result = []
   5 idx = start
@@ -130,29 +111,6 @@ m 13 slice(13 lst, 5 start, 5 len) {
   r result
 }
 
-// Sort a list of numbers using bubble sort (returns new list)
 m 13 sort(13 lst) {
-  13 result = []
-  // Copy input list into result
-  5 i = 0
-  l (i < z.len(lst)) {
-    result = z.append(result, lst[i])
-    i = i + 1
-  }
-  // Bubble sort
-  5 n = z.len(result)
-  5 a = 0
-  l (a < n - 1) {
-    5 b = a + 1
-    l (b < n) {
-      i (result[a] > result[b]) {
-        5 tmp = result[a]
-        result[a] = result[b]
-        result[b] = tmp
-      }
-      b = b + 1
-    }
-    a = a + 1
-  }
-  r result
+  r z.sort(lst)
 }

@@ -1,0 +1,10 @@
+#alphabet<es>
+clase Calculadora {
+    publico metodo 5 sumar(5 a, 5 b) {
+        retornar a + b
+    }
+}
+
+15 calc = nuevo Calculadora()
+5 res = calc.sumar(15, 25)
+z.o(res)

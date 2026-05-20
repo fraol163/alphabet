@@ -1,0 +1,10 @@
+#alphabet<fr>
+classe Calculatrice {
+    public methode 5 additionner(5 a, 5 b) {
+        retour a + b
+    }
+}
+
+15 calc = nouveau Calculatrice()
+5 res = calc.additionner(15, 25)
+z.o(res)

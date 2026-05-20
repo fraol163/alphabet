@@ -1,0 +1,8 @@
+#alphabet<fr>
+5 a = 10
+5 b = 3
+z.o(a + b)
+z.o(a - b)
+z.o(a * b)
+z.o(a / b)
+z.o(a % b)

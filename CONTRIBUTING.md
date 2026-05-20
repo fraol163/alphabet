@@ -110,7 +110,7 @@ git checkout -b feature/your-feature-name
 # ...
 
 # Stage changes
-git add src/include/lexer.cpp
+git add src/lexer.cpp
 
 # Commit
 git commit -m "fix: Resolve memory leak in lexer"
@@ -220,7 +220,7 @@ ctest -V
 - [ ] VS Code extension improvements
 - [ ] More real-world examples
 - [ ] Package manager support (Homebrew, apt)
-- [ ] Debugger implementation
+- [ ] More languages (Chinese, Japanese, Arabic, etc.)
 
 ### Medium Priority
 

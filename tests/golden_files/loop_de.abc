@@ -1,0 +1,6 @@
+#alphabet<de>
+5 total = 0
+schleife (5 j = 0 : j < 5 : j = j + 1) {
+    total = total + j
+}
+z.o(total)

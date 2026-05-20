@@ -7,7 +7,7 @@
 namespace alphabet {
 namespace lsp {
 
-// Simple JSON serializer
+
 static std::string escape_json(const std::string &s)
 {
     std::string out;
@@ -71,7 +71,7 @@ std::string JsonValue::dump() const
     return "null";
 }
 
-// Simple JSON parser (handles LSP message format)
+
 static size_t skip_ws(const std::string &s, size_t pos)
 {
     while (pos < s.size() && std::isspace(s[pos]))
@@ -116,7 +116,7 @@ static std::string parse_string(const std::string &s, size_t &pos)
         ++pos;
     }
     if (pos < s.size())
-        ++pos; // skip closing "
+        ++pos; 
     return out;
 }
 
@@ -170,7 +170,7 @@ static JsonValue parse_value(const std::string &s, size_t &pos)
         return JsonValue::boolean(val);
     }
     if (c == 'n') {
-        pos += 4; // null
+        pos += 4; 
         return JsonValue::null();
     }
     if (c == '-' || std::isdigit(c)) {
@@ -190,7 +190,7 @@ JsonValue JsonValue::parse(const std::string &json)
     return parse_value(json, pos);
 }
 
-// LSP server implementation
+
 LanguageServer::LanguageServer() {}
 
 void LanguageServer::send_message(const std::string &body)
@@ -241,10 +241,10 @@ void LanguageServer::run()
             continue;
         }
 
-        // Read empty line
+        
         std::getline(std::cin, line);
 
-        // Read JSON body
+        
         std::string body(content_length, '\0');
         std::cin.read(&body[0], content_length);
 
@@ -256,7 +256,7 @@ void LanguageServer::run()
             send_response(id, handle_initialize(id, msg.get("params")));
         }
         else if (method == "initialized" || method == "$/setTrace") {
-            // No response
+            
         }
         else if (method == "textDocument/didOpen") {
             handle_did_open(msg.get("params"));
@@ -288,7 +288,7 @@ void LanguageServer::run()
     }
 }
 
-JsonValue LanguageServer::handle_initialize(int /*id*/, const JsonValue & /*params*/)
+JsonValue LanguageServer::handle_initialize(int , const JsonValue & )
 {
     JsonValue caps = JsonValue::object();
 
@@ -315,7 +315,7 @@ JsonValue LanguageServer::handle_initialize(int /*id*/, const JsonValue & /*para
 
     JsonValue server_info = JsonValue::object();
     server_info.set("name", JsonValue::string("alphabet-lsp"));
-    server_info.set("version", JsonValue::string("2.3.3"));
+    server_info.set("version", JsonValue::string("2.3.4"));
     result.set("serverInfo", server_info);
 
     return result;
@@ -361,7 +361,7 @@ void LanguageServer::publish_diagnostics(const std::string &uri, const std::stri
         diags.push(d);
     }
     else {
-        // Try to parse for real errors
+        
         try {
             Lexer lexer(content);
             auto tokens = lexer.scan_tokens();
@@ -369,16 +369,16 @@ void LanguageServer::publish_diagnostics(const std::string &uri, const std::stri
             parser.parse();
 
             if (parser.had_errors() && !parser.first_error().empty()) {
-                // Extract line/column from error message "Error at line X, column Y: ..."
+                
                 std::string err = parser.first_error();
                 int err_line = 0, err_col = 0;
                 size_t lp = err.find("line ");
                 if (lp != std::string::npos) {
-                    err_line = std::stoi(err.substr(lp + 5)) - 1; // 0-based
+                    err_line = std::stoi(err.substr(lp + 5)) - 1; 
                 }
                 size_t cp = err.find("column ");
                 if (cp != std::string::npos) {
-                    err_col = std::stoi(err.substr(cp + 7)) - 1; // 0-based
+                    err_col = std::stoi(err.substr(cp + 7)) - 1; 
                 }
 
                 JsonValue d = JsonValue::object();
@@ -393,7 +393,7 @@ void LanguageServer::publish_diagnostics(const std::string &uri, const std::stri
                 range.set("end", end);
                 d.set("range", range);
                 d.set("severity", JsonValue::integer(1));
-                // Clean up error message (remove source context lines)
+                
                 size_t newline = err.find('\n');
                 std::string clean_msg =
                     (newline != std::string::npos) ? err.substr(0, newline) : err;
@@ -401,8 +401,7 @@ void LanguageServer::publish_diagnostics(const std::string &uri, const std::stri
                 diags.push(d);
             }
         }
-        catch (...) {
-            // Ignore parse errors that can't be processed
+        catch (const std::exception &) {
         }
     }
 
@@ -412,11 +411,11 @@ void LanguageServer::publish_diagnostics(const std::string &uri, const std::stri
     send_notification("textDocument/publishDiagnostics", params_out);
 }
 
-JsonValue LanguageServer::handle_completion(int /*id*/, const JsonValue & /*params*/)
+JsonValue LanguageServer::handle_completion(int , const JsonValue & )
 {
     JsonValue items = JsonValue::array();
 
-    // Keywords
+    
     struct
     {
         const char *label;
@@ -447,13 +446,13 @@ JsonValue LanguageServer::handle_completion(int /*id*/, const JsonValue & /*para
     for (auto &kw : keywords) {
         JsonValue item = JsonValue::object();
         item.set("label", JsonValue::string(kw.label));
-        item.set("kind", JsonValue::integer(14)); // Keyword
+        item.set("kind", JsonValue::integer(14)); 
         item.set("detail", JsonValue::string(kw.detail));
         item.set("documentation", JsonValue::string(kw.doc));
         items.push(item);
     }
 
-    // Types
+    
     struct
     {
         const char *label;
@@ -466,12 +465,12 @@ JsonValue LanguageServer::handle_completion(int /*id*/, const JsonValue & /*para
     for (auto &tp : types) {
         JsonValue item = JsonValue::object();
         item.set("label", JsonValue::string(tp.label));
-        item.set("kind", JsonValue::integer(25)); // TypeParameter
+        item.set("kind", JsonValue::integer(25)); 
         item.set("detail", JsonValue::string(tp.detail));
         items.push(item);
     }
 
-    // Built-in functions
+    
     struct
     {
         const char *label;
@@ -505,7 +504,7 @@ JsonValue LanguageServer::handle_completion(int /*id*/, const JsonValue & /*para
     for (auto &bi : builtins) {
         JsonValue item = JsonValue::object();
         item.set("label", JsonValue::string(bi.label));
-        item.set("kind", JsonValue::integer(3)); // Function
+        item.set("kind", JsonValue::integer(3)); 
         item.set("detail", JsonValue::string(bi.detail));
         item.set("documentation", JsonValue::string(bi.doc));
         items.push(item);
@@ -572,7 +571,7 @@ std::string LanguageServer::get_hover_doc(const std::string &word)
     return it != docs.end() ? it->second : "";
 }
 
-JsonValue LanguageServer::handle_hover(int /*id*/, const JsonValue &params)
+JsonValue LanguageServer::handle_hover(int , const JsonValue &params)
 {
     std::string uri = params.get("textDocument").get_str("uri");
     const JsonValue &pos = params.get("position");
@@ -583,7 +582,7 @@ JsonValue LanguageServer::handle_hover(int /*id*/, const JsonValue &params)
     if (it == documents_.end())
         return JsonValue::null();
 
-    // Get line content
+    
     std::string current_line;
     int ln = 0;
     std::istringstream stream(it->second);
@@ -596,7 +595,7 @@ JsonValue LanguageServer::handle_hover(int /*id*/, const JsonValue &params)
     if (character >= (int)current_line.size())
         return JsonValue::null();
 
-    // Extract word at cursor
+    
     int start = character, end = character;
     while (start > 0 && (std::isalnum(current_line[start - 1]) || current_line[start - 1] == '_' ||
                          current_line[start - 1] == '.'))
@@ -621,7 +620,7 @@ JsonValue LanguageServer::handle_hover(int /*id*/, const JsonValue &params)
     return result;
 }
 
-// Helper: extract the word at a given position in a line
+
 static std::string word_at(const std::string &line, int character)
 {
     if (character < 0 || character >= (int)line.size())
@@ -636,17 +635,17 @@ static std::string word_at(const std::string &line, int character)
     return line.substr(start, end - start);
 }
 
-// Helper: check if a character is a type-id digit start (Alphabet uses numeric type IDs)
+
 static bool is_type_prefix(const std::string &line, size_t pos)
 {
-    // A type prefix is a number followed by a space and an identifier
-    // e.g. "5 x =" or "12 name("  or "15 g ="
+    
+    
     size_t i = pos;
     if (i >= line.size() || !std::isdigit(line[i]))
         return false;
     while (i < line.size() && std::isdigit(line[i]))
         ++i;
-    // Must be followed by whitespace then an identifier character
+    
     if (i >= line.size() || line[i] != ' ')
         return false;
     while (i < line.size() && line[i] == ' ')
@@ -654,7 +653,7 @@ static bool is_type_prefix(const std::string &line, size_t pos)
     return i < line.size() && (std::isalpha(line[i]) || line[i] == '_');
 }
 
-// LSP SymbolKind constants
+
 static const int SK_FILE = 1;
 static const int SK_CLASS = 5;
 static const int SK_METHOD = 6;
@@ -663,7 +662,7 @@ static const int SK_VARIABLE = 13;
 static const int SK_CONSTANT = 14;
 static const int SK_FIELD = 8;
 
-JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &params)
+JsonValue LanguageServer::handle_document_symbol(int , const JsonValue &params)
 {
     std::string uri = params.get("textDocument").get_str("uri");
     auto it = documents_.find(uri);
@@ -677,14 +676,13 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
     std::string line;
     int line_num = 0;
 
-    // Track current class for nesting
+    
     std::string current_class;
-    int class_start_line = 0;
-    // Indices in the symbols array that are classes (for adding children later)
+    
     std::vector<size_t> class_indices;
 
     while (std::getline(stream, line)) {
-        // Skip blank lines and comments
+        
         size_t first_nonspace = line.find_first_not_of(" \t");
         if (first_nonspace == std::string::npos) {
             ++line_num;
@@ -696,7 +694,7 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
             continue;
         }
 
-        // Check for class: "c ClassName {"
+        
         if (fc == 'c' && first_nonspace + 1 < line.size() && line[first_nonspace + 1] == ' ') {
             size_t name_start = first_nonspace + 2;
             while (name_start < line.size() && line[name_start] == ' ')
@@ -708,7 +706,6 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
             if (name_end > name_start) {
                 std::string name = line.substr(name_start, name_end - name_start);
                 current_class = name;
-                class_start_line = line_num;
 
                 JsonValue sym = JsonValue::object();
                 sym.set("name", JsonValue::string(name));
@@ -718,11 +715,11 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
                 start.set("line", JsonValue::integer(line_num));
                 start.set("character", JsonValue::integer((int)first_nonspace));
                 range.set("start", start);
-                range.set("end", start); // simplified end
+                range.set("end", start); 
                 sym.set("range", range);
                 sym.set("selectionRange", range);
                 sym.set("detail", JsonValue::string("class"));
-                // children will be added later
+                
                 JsonValue children = JsonValue::array();
                 sym.set("children", children);
 
@@ -730,36 +727,36 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
                 symbols.push(sym);
             }
         }
-        // Check for method/function: "m type_id name(params)" or
-        // with modifiers like "v m type_id name(" or "s v m type_id name("
+        
+        
         else if (line.find("m ") != std::string::npos) {
-            // Find the 'm' keyword that starts a method definition
+            
             size_t m_pos = line.find("m ");
-            // Verify it's the method keyword (at word boundary, possibly after
-            // modifiers v/p/s)
+            
+            
             bool is_method = false;
             if (m_pos == first_nonspace ||
                 (m_pos > 0 && (line[m_pos - 1] == ' ' || line[m_pos - 1] == '\t'))) {
-                // Check that this looks like a method: m <type> <name>(
+                
                 size_t after_m = m_pos + 2;
                 while (after_m < line.size() && line[after_m] == ' ')
                     ++after_m;
-                // Should have a type number then a name
+                
                 if (after_m < line.size() && std::isdigit(line[after_m])) {
                     is_method = true;
                 }
             }
             if (is_method) {
-                // Skip past "m <type_id> "
+                
                 size_t pos = m_pos + 2;
                 while (pos < line.size() && line[pos] == ' ')
                     ++pos;
-                // Skip type id (digits)
+                
                 while (pos < line.size() && std::isdigit(line[pos]))
                     ++pos;
                 while (pos < line.size() && line[pos] == ' ')
                     ++pos;
-                // Extract name
+                
                 size_t name_start = pos;
                 while (pos < line.size() && (std::isalnum(line[pos]) || line[pos] == '_'))
                     ++pos;
@@ -789,7 +786,7 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
                 }
             }
         }
-        // Check for interface: "j InterfaceName {"
+        
         else if (fc == 'j' && first_nonspace + 1 < line.size() && line[first_nonspace + 1] == ' ') {
             size_t name_start = first_nonspace + 2;
             while (name_start < line.size() && line[name_start] == ' ')
@@ -803,7 +800,7 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
 
                 JsonValue sym = JsonValue::object();
                 sym.set("name", JsonValue::string(name));
-                sym.set("kind", JsonValue::integer(SK_CLASS)); // interface ~ class
+                sym.set("kind", JsonValue::integer(SK_CLASS)); 
                 JsonValue range = JsonValue::object();
                 JsonValue start_p = JsonValue::object();
                 start_p.set("line", JsonValue::integer(line_num));
@@ -816,7 +813,7 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
                 symbols.push(sym);
             }
         }
-        // Check for const: "const name = ..."
+        
         else if (line.substr(first_nonspace, 5) == "const" &&
                  (first_nonspace + 5 >= line.size() || line[first_nonspace + 5] == ' ')) {
             size_t pos = first_nonspace + 5;
@@ -843,11 +840,11 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
                 symbols.push(sym);
             }
         }
-        // Check for variable declaration: "<type_id> <name> = ..."
-        // e.g. "5 x = 10" or "12 msg = z.o(...)"
+        
+        
         else if (is_type_prefix(line, first_nonspace)) {
             size_t pos = first_nonspace;
-            // Skip type id
+            
             while (pos < line.size() && std::isdigit(line[pos]))
                 ++pos;
             while (pos < line.size() && line[pos] == ' ')
@@ -856,18 +853,18 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
             while (pos < line.size() && (std::isalnum(line[pos]) || line[pos] == '_'))
                 ++pos;
             if (pos > name_start) {
-                // Verify this is an assignment (has '=' after name)
+                
                 size_t after_name = pos;
                 while (after_name < line.size() && line[after_name] == ' ')
                     ++after_name;
                 if (after_name < line.size() && line[after_name] == '=') {
                     std::string name = line.substr(name_start, pos - name_start);
 
-                    // Extract type id
+                    
                     std::string type_str =
                         line.substr(first_nonspace, name_start - first_nonspace - 1);
 
-                    // Determine if it's a field (inside a class) or variable
+                    
                     int kind = current_class.empty() ? SK_VARIABLE : SK_FIELD;
                     std::string detail = "type " + type_str;
 
@@ -887,7 +884,7 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
                 }
             }
         }
-        // Detect closing brace to end class scope
+        
         else if (fc == '}' && !current_class.empty()) {
             current_class.clear();
         }
@@ -898,7 +895,7 @@ JsonValue LanguageServer::handle_document_symbol(int /*id*/, const JsonValue &pa
     return symbols;
 }
 
-JsonValue LanguageServer::handle_definition(int /*id*/, const JsonValue &params)
+JsonValue LanguageServer::handle_definition(int , const JsonValue &params)
 {
     std::string uri = params.get("textDocument").get_str("uri");
     const JsonValue &pos = params.get("position");
@@ -911,7 +908,7 @@ JsonValue LanguageServer::handle_definition(int /*id*/, const JsonValue &params)
 
     const std::string &content = doc_it->second;
 
-    // Get the line at cursor position
+    
     std::istringstream stream(content);
     std::string current_line;
     int ln = 0;
@@ -921,23 +918,22 @@ JsonValue LanguageServer::handle_definition(int /*id*/, const JsonValue &params)
         ++ln;
     }
 
-    // Extract the word at cursor
+    
     std::string word = word_at(current_line, character);
     if (word.empty())
         return JsonValue::null();
 
-    // For dotted names like "z.o", use the whole thing for builtins but
-    // for user definitions, search the base name
+    
     std::string search_name = word;
     size_t dot_pos = word.find('.');
     if (dot_pos != std::string::npos) {
-        // If it starts with 'z.', it's a builtin - no user definition
+        
         if (word.substr(0, 2) == "z.")
             return JsonValue::null();
         search_name = word.substr(dot_pos + 1);
     }
 
-    // Search through all lines for the definition of search_name
+    
     std::istringstream def_stream(content);
     std::string def_line;
     int def_line_num = 0;
@@ -954,7 +950,7 @@ JsonValue LanguageServer::handle_definition(int /*id*/, const JsonValue &params)
             continue;
         }
 
-        // Check class definition: "c ClassName {"
+        
         if (fc == 'c' && first_nonspace + 1 < def_line.size() &&
             def_line[first_nonspace + 1] == ' ') {
             size_t ns = first_nonspace + 2;
@@ -980,7 +976,7 @@ JsonValue LanguageServer::handle_definition(int /*id*/, const JsonValue &params)
             }
         }
 
-        // Check interface: "j Name {"
+        
         if (fc == 'j' && first_nonspace + 1 < def_line.size() &&
             def_line[first_nonspace + 1] == ' ') {
             size_t ns = first_nonspace + 2;
@@ -1006,7 +1002,7 @@ JsonValue LanguageServer::handle_definition(int /*id*/, const JsonValue &params)
             }
         }
 
-        // Check method/function: "m <type> name("
+        
         if (def_line.find("m ") != std::string::npos) {
             size_t m_pos = def_line.find("m ");
             bool is_method = false;
@@ -1049,7 +1045,7 @@ JsonValue LanguageServer::handle_definition(int /*id*/, const JsonValue &params)
             }
         }
 
-        // Check const: "const name = ..."
+        
         if (def_line.substr(first_nonspace, 5) == "const" &&
             (first_nonspace + 5 >= def_line.size() || def_line[first_nonspace + 5] == ' ')) {
             size_t pos2 = first_nonspace + 5;
@@ -1077,7 +1073,7 @@ JsonValue LanguageServer::handle_definition(int /*id*/, const JsonValue &params)
             }
         }
 
-        // Check variable declaration: "<type_id> name = ..."
+        
         if (is_type_prefix(def_line, first_nonspace)) {
             size_t pos2 = first_nonspace;
             while (pos2 < def_line.size() && std::isdigit(def_line[pos2]))
@@ -1114,9 +1110,9 @@ JsonValue LanguageServer::handle_definition(int /*id*/, const JsonValue &params)
         ++def_line_num;
     }
 
-    // No definition found
+    
     return JsonValue::null();
 }
 
-} // namespace lsp
-} // namespace alphabet
+} 
+} 

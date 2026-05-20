@@ -72,7 +72,7 @@ ParseError Parser::error(const Token &token, const std::string &message) const
     std::ostringstream oss;
     oss << "Error at line " << token.line << ", column " << token.column << ": " << message;
 
-    // Show source context if available
+    
     if (!source_.empty()) {
         size_t line_start = 0;
         size_t current_line = 1;
@@ -104,6 +104,13 @@ void Parser::synchronize()
         case TokenType::IF:
         case TokenType::LOOP:
         case TokenType::RETURN:
+        case TokenType::TOK_CONST:
+        case TokenType::HANDLE:
+        case TokenType::MATCH:
+        case TokenType::IMPORT:
+        case TokenType::INTERFACE:
+        case TokenType::ABSTRACT:
+        case TokenType::EXPORT:
             return;
         default:
             break;
@@ -119,12 +126,12 @@ bool Parser::is_identifier() const
     const Token &t = peek();
     if (t.type == TokenType::IDENTIFIER)
         return true;
-    // Check for single ASCII alpha or UTF-8 identifier
+    
     if (t.lexeme.size() == 1 && std::isalpha(static_cast<unsigned char>(t.lexeme[0])))
         return true;
-    // Check for UTF-8 (multi-byte characters)
+    
     if (t.lexeme.size() > 1) {
-        // If first byte indicates multi-byte UTF-8 sequence
+        
         unsigned char first = static_cast<unsigned char>(t.lexeme[0]);
         if (first >= 0xC0)
             return true;
@@ -174,8 +181,10 @@ std::optional<StmtPtr> Parser::declaration()
     }
     catch (const ParseError &e) {
         had_errors_ = true;
+        std::string msg = e.what();
+        errors_.push_back(msg);
         if (first_error_.empty())
-            first_error_ = e.what();
+            first_error_ = msg;
         synchronize();
         return std::nullopt;
     }
@@ -260,22 +269,22 @@ StmtPtr Parser::class_declaration()
         }
 
         if (match({TokenType::METHOD})) {
-            // m name(params) { body } - no return type
+            
             methods.push_back(method(visibility, is_static));
         }
         else if (check(TokenType::NUMBER)) {
-            // Could be: return_type m name() { body }  (method)
-            // Or: type_id field_name [= value]         (field)
+            
+            
             size_t saved = current_;
-            advance(); // consume NUMBER
+            advance(); 
             if (check(TokenType::METHOD)) {
-                // It's a method with return type
-                // Don't consume METHOD - method() will handle it
+                
+                
                 current_ = saved;
                 methods.push_back(method(visibility, is_static));
             }
             else {
-                // It's a field
+                
                 current_ = saved;
                 fields.push_back(var_declaration(visibility, is_static));
             }
@@ -293,26 +302,23 @@ StmtPtr Parser::class_declaration()
 
 FunctionStmt Parser::method(std::optional<Token> visibility, bool is_static)
 {
-    // METHOD keyword may or may not be consumed by caller
-    // If METHOD is current token, consume it
+    
+    
     if (check(TokenType::METHOD)) {
         advance();
     }
 
-    // Now we may have:
-    //   name(params)          - no return type
-    //   return_type name(params) - with return type
-
+    
     Token return_type;
     Token name;
 
     if (check(TokenType::NUMBER)) {
-        // Has return type: NUMBER name
-        return_type = advance(); // consume return type NUMBER
+        
+        return_type = advance(); 
         name = consume_identifier("Expect method name.");
     }
     else {
-        // No return type: name - default to INT (5)
+        
         name = consume_identifier("Expect method name.");
         return_type = Token(TokenType::NUMBER, std::string_view("5"), 5, name.line);
     }
@@ -340,11 +346,11 @@ FunctionStmt Parser::method(std::optional<Token> visibility, bool is_static)
 
 StmtPtr Parser::top_level_function()
 {
-    // m [return_type] name(params) { body }
-    // The METHOD token has already been consumed
+    
+    
     std::optional<Token> return_type;
 
-    // Check if next token is a number (return type) or identifier (name)
+    
     if (check(TokenType::NUMBER)) {
         return_type = advance();
     }
@@ -430,7 +436,10 @@ StmtPtr Parser::statement()
     if (check(TokenType::NUMBER) || (is_identifier() && check_next_is_identifier()))
         return var_statement();
     if (check(TokenType::METHOD)) {
-        advance(); // consume METHOD
+        if (current_ + 1 < tokens_.size() && tokens_[current_ + 1].type == TokenType::LPAREN) {
+            return expression_statement();
+        }
+        advance();
         return top_level_function();
     }
     return expression_statement();
@@ -457,9 +466,7 @@ StmtPtr Parser::loop_statement()
 {
     consume(TokenType::LPAREN, "Expect '(' after 'l'.");
 
-    // Check if this is a for-loop by looking for ';' before ')'
-    // For-loop: l (init; cond; incr) { body }
-    // While-loop: l (cond) { body }
+    
     bool is_for = false;
     size_t lookahead = current_;
     int paren_depth = 1;
@@ -476,15 +483,14 @@ StmtPtr Parser::loop_statement()
     }
 
     if (!is_for) {
-        // While-loop: l (cond) { body }
+        
         ExprPtr condition = expression();
         consume(TokenType::RPAREN, "Expect ')' after loop condition.");
         StmtPtr body = statement();
         return std::make_shared<LoopStmt>(std::move(condition), std::move(body));
     }
 
-    // For-loop: l (init; cond; incr) { body }
-    // Parse initializer (variable declaration or expression)
+    
     StmtPtr init;
     if (check(TokenType::NUMBER)) {
         init = std::make_shared<VarStmt>(var_declaration());
@@ -494,11 +500,11 @@ StmtPtr Parser::loop_statement()
     }
     consume(TokenType::COLON, "Expect ':' after for-loop initializer.");
 
-    // Parse condition
+    
     ExprPtr condition = expression();
     consume(TokenType::COLON, "Expect ':' after for-loop condition.");
 
-    // Parse increment
+    
     ExprPtr increment = expression();
     consume(TokenType::RPAREN, "Expect ')' after for-loop increment.");
 
@@ -534,7 +540,7 @@ StmtPtr Parser::return_statement()
         try {
             value = expression();
         }
-        catch (...) {
+        catch (const std::exception &) {
             value = nullptr;
         }
     }
@@ -544,29 +550,24 @@ StmtPtr Parser::return_statement()
 
 StmtPtr Parser::import_statement()
 {
-    // x "module/path" [as alias]
-    // x io "std/io"
-    (void)previous(); // Consume IMPORT token
+    
+    
+    (void)previous(); 
 
     std::optional<std::string> alias;
     std::string module_path;
 
-    // Check if there's an alias first: x io "std/io"
+    
     if (check(TokenType::IDENTIFIER) ||
         (peek().type == TokenType::NUMBER && peek().lexeme.size() == 1 &&
          std::isalpha(peek().lexeme[0]))) {
-        // Could be a single-letter identifier alias
-        Token alias_token = advance();
-        module_path = std::string(alias_token.lexeme);
-
-        // Now expect the string path
+        
+        advance();
         consume(TokenType::STRING, "Expect module path string after alias.");
-        // Remove quotes from string
-        std::string_view path_sv = previous().lexeme;
-        module_path = std::string(path_sv);
+        module_path = std::string(previous().lexeme);
     }
     else if (check(TokenType::STRING)) {
-        // Just the path: x "std/io"
+        
         advance();
         std::string_view path_sv = previous().lexeme;
         module_path = std::string(path_sv);
@@ -580,8 +581,8 @@ StmtPtr Parser::import_statement()
 
 StmtPtr Parser::match_statement()
 {
-    // q expression { case pattern: body ... default: body }
-    (void)previous(); // Consume MATCH token
+    
+    (void)previous(); 
 
     consume(TokenType::LPAREN, "Expect '(' after 'match'.");
     ExprPtr match_expr = expression();
@@ -593,13 +594,13 @@ StmtPtr Parser::match_statement()
 
     while (!check(TokenType::RBRACE) && !is_at_end()) {
         if (match({TokenType::ELSE})) {
-            // default case
+            
             consume(TokenType::COLON, "Expect ':' after 'default'.");
             default_case = statement();
         }
         else if (check(TokenType::NUMBER) || check(TokenType::STRING) ||
                  check(TokenType::IDENTIFIER)) {
-            // case pattern: body
+            
             ExprPtr pattern = expression();
             consume(TokenType::COLON, "Expect ':' after case pattern.");
             StmtPtr body = statement();
@@ -632,6 +633,116 @@ StmtPtr Parser::expression_statement()
 {
     ExprPtr expr = expression();
     return std::make_shared<ExpressionStmt>(std::move(expr));
+}
+
+ExprPtr Parser::fstring_expression()
+{
+    Token fstring_tok = previous();
+    std::string_view template_text = fstring_tok.lexeme;
+
+    std::vector<FString::Part> parts;
+    std::string current_literal;
+
+    size_t i = 0;
+    while (i < template_text.size()) {
+        if (template_text[i] == '{') {
+            i++;
+            if (i < template_text.size() && template_text[i] == '{') {
+                // Escaped brace
+                current_literal += '{';
+                i++;
+                continue;
+            }
+
+            // Start of expression
+            if (!current_literal.empty()) {
+                parts.push_back({true, current_literal, nullptr});
+                current_literal.clear();
+            }
+
+            // Find matching closing brace
+            int depth = 1;
+            size_t expr_start = i;
+            while (i < template_text.size() && depth > 0) {
+                if (template_text[i] == '{')
+                    depth++;
+                else if (template_text[i] == '}')
+                    depth--;
+                if (depth > 0)
+                    i++;
+            }
+
+            if (depth == 0) {
+                std::string expr_str(template_text.substr(expr_start, i - expr_start));
+                i++; // skip closing brace
+
+                // Parse the expression — keep source alive so token lexemes survive
+                sub_sources_.push_back(std::string(expr_str));
+                auto sub_lexer = std::make_unique<Lexer>(sub_sources_.back(), true);
+                auto tokens = sub_lexer->scan_tokens();
+                sub_lexers_.push_back(std::move(sub_lexer));
+                // Remove EOF token
+                if (!tokens.empty() && tokens.back().type == TokenType::EOF_TOKEN)
+                    tokens.pop_back();
+
+                Parser sub_parser(std::move(tokens));
+                ExprPtr expr = sub_parser.expression();
+                parts.push_back({false, "", std::move(expr)});
+            }
+        }
+        else if (template_text[i] == '}') {
+            i++;
+            if (i < template_text.size() && template_text[i] == '}') {
+                current_literal += '}';
+                i++;
+                continue;
+            }
+            // Single } - treat as literal
+            current_literal += '}';
+        }
+        else if (template_text[i] == '\\') {
+            i++;
+            if (i >= template_text.size())
+                break;
+            char escaped = template_text[i++];
+            switch (escaped) {
+            case 'n':
+                current_literal += '\n';
+                break;
+            case 't':
+                current_literal += '\t';
+                break;
+            case '\\':
+                current_literal += '\\';
+                break;
+            case '"':
+                current_literal += '"';
+                break;
+            case '{':
+                current_literal += '{';
+                break;
+            case '}':
+                current_literal += '}';
+                break;
+            case '0':
+                current_literal += '\0';
+                break;
+            default:
+                current_literal += '\\';
+                current_literal += escaped;
+                break;
+            }
+        }
+        else {
+            current_literal += template_text[i++];
+        }
+    }
+
+    if (!current_literal.empty()) {
+        parts.push_back({true, current_literal, nullptr});
+    }
+
+    return std::make_shared<FString>(std::move(parts));
 }
 
 ExprPtr Parser::expression()
@@ -795,9 +906,17 @@ ExprPtr Parser::finish_call(ExprPtr callee)
 
 ExprPtr Parser::primary()
 {
+    if (match({TokenType::FSTRING})) {
+        return fstring_expression();
+    }
+
     if (match({TokenType::NUMBER, TokenType::STRING})) {
         Token tok = previous();
         if (tok.type == TokenType::NUMBER) {
+            bool is_integer = tok.lexeme.find('.') == std::string_view::npos;
+            if (is_integer) {
+                return std::make_shared<Literal>(static_cast<int64_t>(tok.literal));
+            }
             return std::make_shared<Literal>(tok.literal);
         }
         else {
@@ -806,7 +925,9 @@ ExprPtr Parser::primary()
     }
 
     if (match({TokenType::METHOD})) {
-        // Named function reference (should not reach here normally)
+        if (check(TokenType::LPAREN)) {
+            return lambda_expression();
+        }
         return std::make_shared<Variable>(previous());
     }
 
@@ -877,7 +998,7 @@ ExprPtr Parser::primary()
 
 ExprPtr Parser::lambda_expression()
 {
-    // METHOD token already consumed by primary()
+    
     consume(TokenType::LPAREN, "Expect '(' after 'm' in lambda.");
 
     std::vector<VarStmt> parameters;
@@ -898,4 +1019,4 @@ ExprPtr Parser::lambda_expression()
     return std::make_shared<LambdaExpr>(std::move(parameters), std::move(body));
 }
 
-} // namespace alphabet
+} 

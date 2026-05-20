@@ -10,7 +10,6 @@
 namespace alphabet {
 namespace lsp {
 
-// Lightweight JSON value (subset sufficient for LSP)
 struct JsonValue
 {
     enum Type { NULL_T, BOOL_T, INT_T, STRING_T, ARRAY_T, OBJECT_T };
@@ -121,7 +120,7 @@ class LanguageServer
     std::string get_hover_doc(const std::string &word);
 };
 
-} // namespace lsp
-} // namespace alphabet
+} 
+} 
 
 #endif

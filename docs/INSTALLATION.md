@@ -10,11 +10,11 @@
 curl -fsSL https://raw.githubusercontent.com/fraol163/alphabet/main/install.sh | sh
 ```
 
-This automatically:
+This installs to `~/.local/bin` (no sudo needed) and:
 - Downloads the pre-built binary from GitHub Releases
 - Falls back to building from source if no release exists
-- Installs to `/usr/local/bin/alphabet`
-- Starts the REPL immediately
+- Adds `~/.local/bin` to your PATH
+- Shows version and usage instructions
 
 ---
 
@@ -102,7 +102,7 @@ alphabet --version
 
 **Expected:**
 ```
-Alphabet 2.1.0 (Native C++)
+Alphabet 2.3.4 (Native C++)
 Developer: Fraol Teshome (fraolteshome444@gmail.com)
 Compiled with C++17
 ```

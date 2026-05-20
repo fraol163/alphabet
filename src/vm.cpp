@@ -20,6 +20,12 @@ std::string value_to_string(const Value &value)
             if constexpr (std::is_same_v<T, std::monostate>) {
                 return "null";
             }
+            else if constexpr (std::is_same_v<T, bool>) {
+                return v ? "true" : "false";
+            }
+            else if constexpr (std::is_same_v<T, int64_t>) {
+                return std::to_string(v);
+            }
             else if constexpr (std::is_same_v<T, double>) {
                 std::ostringstream oss;
                 if (v == std::floor(v)) {
@@ -73,6 +79,10 @@ static std::string value_type_name(const Value &value)
 {
     if (value.is_null())
         return "null";
+    if (value.is_bool())
+        return "bool";
+    if (value.is_integer())
+        return "integer";
     if (value.is_number())
         return "number";
     if (value.is_string())
@@ -120,9 +130,9 @@ void VM::init(const Program &program)
     classes_ = program.classes;
     globals_by_index_ = program.globals;
     global_functions_ = program.functions;
-    stack_ptr_ = stack_.get(); // Reset stack
+    stack_ptr_ = stack_.get(); 
 
-    // Build reverse lookup for class name → ID
+    
     class_name_to_id_.clear();
     for (const auto &[id, cls] : classes_) {
         class_name_to_id_[cls.name] = id;
@@ -141,6 +151,26 @@ void VM::init(const Program &program)
 void VM::run()
 {
     run_loop();
+}
+
+void VM::run_from(const Program &program, size_t bytecode_offset)
+{
+    classes_ = program.classes;
+    globals_by_index_ = program.globals;
+    global_functions_ = program.functions;
+
+    class_name_to_id_.clear();
+    for (const auto &[id, cls] : classes_) {
+        class_name_to_id_[cls.name] = id;
+    }
+
+    frames_.clear();
+    if (!program.main.empty() && bytecode_offset < program.main.size()) {
+        CallFrame frame(&program.main);
+        frame.ip = bytecode_offset;
+        frames_.push_back(frame);
+        run_loop();
+    }
 }
 
 void VM::push(const Value &value)
@@ -175,8 +205,8 @@ void VM::run_loop()
         CallFrame &frame = frames_.back();
 
         if (frame.ip >= frame.bytecode->size()) {
-            // Frame ended without RET (e.g., break jumped past bytecode)
-            // Push default return value so caller's stack stays balanced
+            
+            
             push(Value(nullptr));
             frames_.pop_back();
             if (frames_.size() < start_frame_count) {
@@ -217,8 +247,7 @@ void VM::execute_instruction(CallFrame &frame)
         break;
     }
 
-        // ... (rest of cases)
-
+        
     case OpCode::LOAD_VAR: {
         std::visit(
             [this, &frame](const auto &op) {
@@ -250,7 +279,7 @@ void VM::execute_instruction(CallFrame &frame)
                         push(it->second);
                         return;
                     }
-                    // Check if we're in a method and 'this' has the field
+                    
                     auto this_it = frame.locals.find("this");
                     if (this_it != frame.locals.end() && this_it->second.is_object()) {
                         ObjectPtr obj = this_it->second.as_object();
@@ -276,6 +305,9 @@ void VM::execute_instruction(CallFrame &frame)
                 if constexpr (std::is_same_v<T, int64_t>) {
                     if (static_cast<size_t>(op) < globals_by_index_.size()) {
                         const std::string &name = globals_by_index_[op];
+                        if (const_vars_.count(name)) {
+                            throw RuntimeError("Cannot reassign const variable '" + name + "'");
+                        }
                         auto local_it = frame.locals.find(name);
                         if (local_it != frame.locals.end()) {
                             local_it->second = val;
@@ -286,12 +318,14 @@ void VM::execute_instruction(CallFrame &frame)
                     }
                 }
                 else if constexpr (std::is_same_v<T, std::string>) {
+                    if (const_vars_.count(op)) {
+                        throw RuntimeError("Cannot reassign const variable '" + std::string(op) + "'");
+                    }
                     auto local_it = frame.locals.find(op);
                     if (local_it != frame.locals.end()) {
                         local_it->second = val;
                     }
                     else {
-                        // Check if we're in a method and 'this' has the field
                         auto this_it = frame.locals.find("this");
                         if (this_it != frame.locals.end() && this_it->second.is_object()) {
                             ObjectPtr obj = this_it->second.as_object();
@@ -316,16 +350,13 @@ void VM::execute_instruction(CallFrame &frame)
         break;
 
     case OpCode::LOOP_START:
-        // Marker instruction -- no-op in VM, operand is loop start IP
+        
         break;
 
     case OpCode::BREAK_JUMP:
     case OpCode::CONTINUE_JUMP: {
-        // Jump unconditionally -- frame.ip is pre-incremented at top of
-        // execute_instruction, so setting frame.ip = target means the
-        // instruction at target is skipped. For BREAK_JUMP (patched to
-        // bytecode_.size()), this correctly exits the loop. For CONTINUE_JUMP
-        // (loop start), LOOP_START is a no-op so skipping it is fine.
+        
+        
         if (auto *target = std::get_if<int64_t>(&instr.operand)) {
             frame.ip = static_cast<size_t>(*target);
         }
@@ -335,16 +366,19 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::ADD: {
         Value b = pop();
         Value a = pop();
-        if (a.is_number() && b.is_number()) {
+        if (a.is_integer() && b.is_integer()) {
+            push(Value(a.as_integer() + b.as_integer()));
+        }
+        else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(a.as_number() + b.as_number()));
         }
         else if (a.is_string() && b.is_string()) {
             push(Value(a.as_string() + b.as_string()));
         }
-        else if (a.is_string() && b.is_number()) {
+        else if (a.is_string() && (b.is_number() || b.is_bool())) {
             push(Value(a.as_string() + value_to_string(b)));
         }
-        else if (a.is_number() && b.is_string()) {
+        else if ((a.is_number() || a.is_bool()) && b.is_string()) {
             push(Value(value_to_string(a) + b.as_string()));
         }
         else if (a.is_null() || b.is_null()) {
@@ -360,7 +394,10 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::SUB: {
         Value b = pop();
         Value a = pop();
-        if (a.is_number() && b.is_number()) {
+        if (a.is_integer() && b.is_integer()) {
+            push(Value(a.as_integer() - b.as_integer()));
+        }
+        else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(a.as_number() - b.as_number()));
         }
         else if (a.is_null() || b.is_null()) {
@@ -376,7 +413,10 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::MUL: {
         Value b = pop();
         Value a = pop();
-        if (a.is_number() && b.is_number()) {
+        if (a.is_integer() && b.is_integer()) {
+            push(Value(a.as_integer() * b.as_integer()));
+        }
+        else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(a.as_number() * b.as_number()));
         }
         else if (a.is_null() || b.is_null()) {
@@ -392,7 +432,7 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::DIV: {
         Value b = pop();
         Value a = pop();
-        if (a.is_number() && b.is_number()) {
+        if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             if (b.as_number() != 0) {
                 push(Value(a.as_number() / b.as_number()));
             }
@@ -413,7 +453,7 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::PERCENT: {
         Value b = pop();
         Value a = pop();
-        if (a.is_number() && b.is_number()) {
+        if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(std::fmod(a.as_number(), b.as_number())));
         }
         else if (a.is_null() || b.is_null()) {
@@ -429,15 +469,18 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::EQ: {
         Value b = pop();
         Value a = pop();
-        push(Value(a == b ? 1.0 : 0.0));
+        push(Value(a == b));
         break;
     }
 
     case OpCode::GT: {
         Value b = pop();
         Value a = pop();
-        if (a.is_number() && b.is_number()) {
-            push(Value(a.as_number() > b.as_number() ? 1.0 : 0.0));
+        if (a.is_integer() && b.is_integer()) {
+            push(Value(a.as_integer() > b.as_integer()));
+        }
+        else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
+            push(Value(a.as_number() > b.as_number()));
         }
         else if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
@@ -452,8 +495,11 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::LT: {
         Value b = pop();
         Value a = pop();
-        if (a.is_number() && b.is_number()) {
-            push(Value(a.as_number() < b.as_number() ? 1.0 : 0.0));
+        if (a.is_integer() && b.is_integer()) {
+            push(Value(a.as_integer() < b.as_integer()));
+        }
+        else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
+            push(Value(a.as_number() < b.as_number()));
         }
         else if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
@@ -468,15 +514,18 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::NE: {
         Value b = pop();
         Value a = pop();
-        push(Value(a != b ? 1.0 : 0.0));
+        push(Value(a != b));
         break;
     }
 
     case OpCode::GE: {
         Value b = pop();
         Value a = pop();
-        if (a.is_number() && b.is_number()) {
-            push(Value(a.as_number() >= b.as_number() ? 1.0 : 0.0));
+        if (a.is_integer() && b.is_integer()) {
+            push(Value(a.as_integer() >= b.as_integer()));
+        }
+        else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
+            push(Value(a.as_number() >= b.as_number()));
         }
         else if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
@@ -491,8 +540,11 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::LE: {
         Value b = pop();
         Value a = pop();
-        if (a.is_number() && b.is_number()) {
-            push(Value(a.as_number() <= b.as_number() ? 1.0 : 0.0));
+        if (a.is_integer() && b.is_integer()) {
+            push(Value(a.as_integer() <= b.as_integer()));
+        }
+        else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
+            push(Value(a.as_number() <= b.as_number()));
         }
         else if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
@@ -507,8 +559,10 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::NOT: {
         Value a = pop();
         bool is_false = a.is_null() || (a.is_number() && a.as_number() == 0) ||
+                        (a.is_integer() && a.as_integer() == 0) ||
+                        (a.is_bool() && !a.as_bool()) ||
                         (a.is_string() && a.as_string().empty());
-        push(Value(is_false ? 1.0 : 0.0));
+        push(Value(is_false));
         break;
     }
 
@@ -522,6 +576,8 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::JUMP_IF_FALSE: {
         Value cond = pop();
         bool is_false = cond.is_null() || (cond.is_number() && cond.as_number() == 0) ||
+                        (cond.is_integer() && cond.as_integer() == 0) ||
+                        (cond.is_bool() && !cond.as_bool()) ||
                         (cond.is_string() && cond.as_string().empty());
         if (is_false) {
             if (auto *target = std::get_if<int64_t>(&instr.operand)) {
@@ -534,6 +590,8 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::JUMP_IF_TRUE: {
         Value cond = pop();
         bool is_true = !cond.is_null() && !(cond.is_number() && cond.as_number() == 0) &&
+                       !(cond.is_integer() && cond.as_integer() == 0) &&
+                       !(cond.is_bool() && !cond.as_bool()) &&
                        !(cond.is_string() && cond.as_string().empty());
         if (is_true) {
             if (auto *target = std::get_if<int64_t>(&instr.operand)) {
@@ -548,7 +606,7 @@ void VM::execute_instruction(CallFrame &frame)
         CallFrame finished_frame = frames_.back();
         frames_.pop_back();
         if (!frames_.empty()) {
-            // If this frame had a post-action value (e.g., constructor init), push it
+            
             if (finished_frame.push_post_action_on_return) {
                 push(finished_frame.post_action_value);
             }
@@ -575,9 +633,9 @@ void VM::execute_instruction(CallFrame &frame)
                     Value callee = pop();
 
                     if (callee.is_string() && callee.as_string() == "SYSTEM_Z") {
-                        // Handle FFI dyn call directly (needs args in correct order)
+                        
                         if (method_name == "dyn" && args.size() >= 2) {
-                            // args: [lib_path, func_name, arg0, arg1, ...]
+                            
                             if (sandbox_mode_) {
                                 throw RuntimeError("FFI: z.dyn blocked in sandbox mode");
                             }
@@ -588,7 +646,7 @@ void VM::execute_instruction(CallFrame &frame)
                             std::string lib_path = args[0].as_string();
                             std::string func_name_str = args[1].as_string();
 
-                            // Use cached library handle (avoids dlopen/dlclose per call)
+                            
                             void *handle = nullptr;
                             auto cache_it = ffi_library_cache_.find(lib_path);
                             if (cache_it != ffi_library_cache_.end()) {
@@ -681,7 +739,7 @@ void VM::execute_instruction(CallFrame &frame)
                             push(Value(static_cast<double>(result)));
                             return;
                         }
-                        // Other system calls: push args back and dispatch
+                        
                         for (auto &arg : args) {
                             push(arg);
                         }
@@ -689,9 +747,7 @@ void VM::execute_instruction(CallFrame &frame)
                         return;
                     }
 
-                    // Function call: try callee value first, then method_name fallback
-                    // (callee is null for named functions since LOAD_VAR finds no variable,
-                    //  or a string like "__lambda_0" for lambda values stored in variables)
+                    
                     if (callee.is_string()) {
                         auto func_it = global_functions_.find(callee.as_string());
                         if (func_it != global_functions_.end()) {
@@ -707,8 +763,7 @@ void VM::execute_instruction(CallFrame &frame)
                         }
                     }
 
-                    // Fallback: if callee is null, try method_name from CALL operand
-                    // This handles regular named function calls where LOAD_VAR returned null
+                    
                     if (callee.is_null()) {
                         auto func_it = global_functions_.find(method_name);
                         if (func_it != global_functions_.end()) {
@@ -735,7 +790,7 @@ void VM::execute_instruction(CallFrame &frame)
 
                         const CompiledClass &cls = class_it->second;
 
-                        // Search for method in class hierarchy
+                        
                         const CompiledClass *current_cls = &cls;
                         auto method_it = current_cls->methods.end();
                         while (current_cls) {
@@ -755,8 +810,7 @@ void VM::execute_instruction(CallFrame &frame)
                             current_cls = nullptr;
                         }
 
-                        if (method_it == current_cls->methods.end()) {
-                            // If init is called and doesn't exist, just return the object
+                        if (!current_cls || method_it == current_cls->methods.end()) {
                             if (method_name == "init") {
                                 push(callee);
                                 return;
@@ -799,7 +853,7 @@ void VM::execute_instruction(CallFrame &frame)
                     }
                     ObjectPtr obj = std::make_shared<AlphabetObject>(class_id);
 
-                    // Collect constructor arguments
+                    
                     std::vector<Value> args;
                     for (int i = 0; i < arg_count; ++i) {
                         args.push_back(pop());
@@ -808,10 +862,10 @@ void VM::execute_instruction(CallFrame &frame)
 
                     auto class_it = classes_.find(class_id);
                     if (class_it != classes_.end()) {
-                        // Initialize field values (walks superclass chain)
+                        
                         run_field_init(obj, class_it->second);
 
-                        // Call init method if it exists (searches hierarchy)
+                        
                         const CompiledClass *init_cls = &class_it->second;
                         bool found_init = false;
                         while (init_cls) {
@@ -837,7 +891,7 @@ void VM::execute_instruction(CallFrame &frame)
                             CallFrame init_frame(&init_method.bytecode);
                             init_frame.locals["this"] = Value(obj);
 
-                            // Pass arguments if provided
+                            
                             if (arg_count > 0) {
                                 for (size_t i = 0;
                                      i < args.size() && i < init_method.param_names.size(); ++i) {
@@ -845,7 +899,7 @@ void VM::execute_instruction(CallFrame &frame)
                                 }
                             }
 
-                            // Set post-action to push the object after init completes
+                            
                             check_call_depth();
                             init_frame.post_action_value = Value(obj);
                             init_frame.push_post_action_on_return = true;
@@ -864,7 +918,7 @@ void VM::execute_instruction(CallFrame &frame)
                     }
                     ObjectPtr obj = std::make_shared<AlphabetObject>(class_id);
 
-                    // Initialize field values (walks superclass chain)
+                    
                     auto class_it = classes_.find(class_id);
                     if (class_it != classes_.end()) {
                         run_field_init(obj, class_it->second);
@@ -999,7 +1053,7 @@ void VM::execute_instruction(CallFrame &frame)
                     Value obj_val = pop();
                     if (obj_val.is_object()) {
                         ObjectPtr obj = obj_val.as_object();
-                        obj->fields[op] = std::make_shared<Value>(val); // Store
+                        obj->fields[op] = std::make_shared<Value>(val); 
                     }
                 }
             },
@@ -1052,7 +1106,7 @@ void VM::execute_instruction(CallFrame &frame)
             const auto &list = obj.as_list();
             double raw = idx.as_number();
             int64_t index = static_cast<int64_t>(raw);
-            // Python-style negative indexing
+            
             if (index < 0)
                 index += static_cast<int64_t>(list.size());
             if (index >= 0 && static_cast<size_t>(index) < list.size()) {
@@ -1101,6 +1155,14 @@ void VM::execute_instruction(CallFrame &frame)
         break;
     }
 
+    case OpCode::MARK_CONST: {
+        Value name_val = pop();
+        if (name_val.is_string()) {
+            const_vars_.insert(name_val.as_string());
+        }
+        break;
+    }
+
     default:
         break;
     }
@@ -1109,7 +1171,7 @@ void VM::execute_instruction(CallFrame &frame)
 void VM::check_breakpoints(const Instruction &instr)
 {
     if (step_over_ || (breakpoints_.find(instr.line) != breakpoints_.end())) {
-        // Output structured JSON event for debugger to parse
+        
         std::cout << "{\"event\":\"stopped\",\"line\":" << instr.line << ",\"reason\":\""
                   << (step_over_ ? "step" : "breakpoint") << "\"}" << std::endl;
         step_over_ = false;
@@ -1153,10 +1215,10 @@ void VM::wait_for_debugger_command()
             std::cout << oss.str() << std::endl;
         }
         else if (line == "print" || line == "p") {
-            // Print current stack
+            
             std::ostringstream oss;
             oss << "[";
-            for (size_t i = 0; i < (stack_ptr_ - stack_.get()); ++i) {
+            for (size_t i = 0; i < static_cast<size_t>(stack_ptr_ - stack_.get()); ++i) {
                 if (i > 0)
                     oss << ", ";
                 oss << "\"" << value_to_string(stack_[i]) << "\"";
@@ -1235,7 +1297,7 @@ std::string VM::get_locals_json(const CallFrame &frame)
 
 void VM::run_field_init(ObjectPtr obj, const CompiledClass &cls)
 {
-    // Collect superclass chain from root to leaf
+    
     std::vector<const CompiledClass *> chain;
     const CompiledClass *current = &cls;
     while (current) {
@@ -1252,7 +1314,7 @@ void VM::run_field_init(ObjectPtr obj, const CompiledClass &cls)
         }
         break;
     }
-    // Reverse so superclass runs first, subclass last
+    
     std::reverse(chain.begin(), chain.end());
 
     for (const auto *c : chain) {
@@ -1267,7 +1329,10 @@ void VM::run_field_init(ObjectPtr obj, const CompiledClass &cls)
                 push(Value(obj));
             }
             else if (instr.op == OpCode::PUSH_CONST) {
-                if (auto *d = std::get_if<double>(&instr.operand)) {
+                if (auto *i = std::get_if<int64_t>(&instr.operand)) {
+                    push(Value(*i));
+                }
+                else if (auto *d = std::get_if<double>(&instr.operand)) {
                     push(Value(*d));
                 }
                 else if (auto *s = std::get_if<std::string>(&instr.operand)) {
@@ -1300,6 +1365,11 @@ void VM::run_field_init(ObjectPtr obj, const CompiledClass &cls)
     }
 }
 
+void VM::mark_const(const std::string &name)
+{
+    const_vars_.insert(name);
+}
+
 void VM::throw_exception(const Value &value)
 {
     while (!frames_.empty()) {
@@ -1309,7 +1379,7 @@ void VM::throw_exception(const Value &value)
             auto [handler_ip, stack_depth] = frame.try_stack.back();
             frame.try_stack.pop_back();
 
-            while ((stack_ptr_ - stack_.get()) > stack_depth) {
+            while (static_cast<size_t>(stack_ptr_ - stack_.get()) > stack_depth) {
                 pop();
             }
 
@@ -1325,7 +1395,7 @@ void VM::throw_exception(const Value &value)
 }
 
 const std::vector<Instruction> *VM::lookup_method(const CompiledClass &cls, const std::string &name,
-                                                  const std::string & /*caller_class*/)
+                                                  const std::string & )
 {
     const CompiledClass *current = &cls;
     while (current) {
@@ -1333,7 +1403,7 @@ const std::vector<Instruction> *VM::lookup_method(const CompiledClass &cls, cons
         if (it != current->methods.end()) {
             return &it->second.bytecode;
         }
-        // Walk superclass chain
+        
         if (!current->superclass.empty()) {
             auto super_id_it = class_name_to_id_.find(current->superclass);
             if (super_id_it != class_name_to_id_.end()) {
@@ -1349,4 +1419,4 @@ const std::vector<Instruction> *VM::lookup_method(const CompiledClass &cls, cons
     return nullptr;
 }
 
-} // namespace alphabet
+} 

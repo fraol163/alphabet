@@ -1,0 +1,14 @@
+#alphabet<en>
+x "../../stdlib/string.abc"
+z.o(upper("hello"))
+z.o(lower("HELLO"))
+z.o(trim("  hi  "))
+z.o(replace("a+b", "+", "-"))
+13 parts = split("a,b,c", ",")
+z.o(join(parts, "-"))
+z.o(starts_with("hello", "hel"))
+z.o(ends_with("hello", "llo"))
+z.o(substr("hello", 1, 3))
+z.o(length("test"))
+z.o(chr(65))
+z.o(ord("A"))

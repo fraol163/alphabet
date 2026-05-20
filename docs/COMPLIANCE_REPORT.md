@@ -11,7 +11,7 @@
 ### 1.1 Magic Header Validation
 **Requirement:** Lexer must validate `#alphabet<lang>` on line 1, throw `MissingLanguageHeader` if absent.
 
-**Implementation:** `src/include/lexer.cpp:83-109`
+**Implementation:** `src/lexer.cpp:83-109`
 ```cpp
 void Lexer::validate_header() {
     // Magic header format: #alphabet<lang>
@@ -50,7 +50,7 @@ class Lexer {
 ### 1.3 Single-Character Keywords Optimization
 **Requirement:** Optimize for `i, l, c, v` keywords.
 
-**Implementation:** `src/include/lexer.cpp:117-160`
+**Implementation:** `src/lexer.cpp:117-160`
 ```cpp
 void Lexer::scan_token() {
     char c = advance();
@@ -71,7 +71,7 @@ void Lexer::scan_token() {
 ### 1.4 Unix Shebang Compatibility
 **Requirement:** Support `#!` script headers.
 
-**Implementation:** `src/include/lexer.cpp:66-70`
+**Implementation:** `src/lexer.cpp:66-70`
 ```cpp
 // Skip Unix shebang if present (for script compatibility)
 if (source_.size() >= 2 && source_[0] == '#' && source_[1] == '!') {
@@ -87,42 +87,43 @@ if (source_.size() >= 2 && source_[0] == '#' && source_[1] == '!') {
 
 ## ✅ 2. Native Engine & VM Architecture
 
-### 2.1 Bytecode Standardization (36 uint8_t Instructions)
-**Requirement:** All 36 internal instructions as `uint8_t` constants.
+### 2.1 Bytecode Standardization (42 uint8_t Instructions)
+**Requirement:** All 42 internal instructions as `uint8_t` constants.
 
-**Implementation:** `src/include/bytecode.h:13-48`
+**Implementation:** `src/include/bytecode.h:13-80`
 ```cpp
 enum class OpCode : uint8_t {
     PUSH_CONST = 1,      LOAD_VAR = 2,        STORE_VAR = 3,
     LOAD_FIELD = 4,      STORE_FIELD = 5,     ADD = 6,
     SUB = 7,             MUL = 8,             DIV = 9,
-    // ... all 36 opcodes as uint8_t
-    STORE_INDEX = 36
+    // ... all 42 opcodes as uint8_t
+    DUP = 37,            LOOP_START = 38,     BREAK_JUMP = 39,
+    CONTINUE_JUMP = 40,  JUMP_IF_TRUE = 41,   MARK_CONST = 42
 };
 ```
 
 **Status:** ✅ COMPLETE
 
-### 2.3 Dynamic VM Stack with std::vector
-**Requirement:** Stack-based VM using `std::array` for stack.
+### 2.3 Fixed-Size VM Stack with unique_ptr
+**Requirement:** Stack-based VM using fixed-size array for predictable memory.
 
-**Implementation:** `src/include/vm.h:145-147`
+**Implementation:** `src/include/vm.h`
 ```cpp
 class VM {
 private:
-    // Fixed-size stack to avoid heap fragmentation
-    std::array<Value, 65536> stack_;
+    static constexpr size_t STACK_MAX = 65536;
+    std::unique_ptr<Value[]> stack_ = std::make_unique<Value[]>(STACK_MAX);
     size_t stack_top_ = 0;
     // ...
 };
 ```
 
-**Status:** ✅ COMPLETE
+**Status:** ✅ COMPLETE (fixed-size, not dynamic vector)
 
 ### 2.3 Raw Pointer Arithmetic
 **Requirement:** Use raw pointer arithmetic for performance.
 
-**Implementation:** `src/include/vm.cpp:95-110`
+**Implementation:** `src/vm.cpp:95-110`
 ```cpp
 void VM::run_loop() {
     while (!frames_.empty()) {
@@ -142,7 +143,7 @@ void VM::run_loop() {
 ### 2.4 Strong Static Typing (Compile-Time Validation)
 **Requirement:** Type-validation pass BEFORE bytecode generation.
 
-**Implementation:** `src/include/compiler.cpp:18-54`
+**Implementation:** `src/compiler.cpp:18-54`
 ```cpp
 void Compiler::validate_types(const std::vector<StmtPtr>& statements) {
     // Called BEFORE bytecode generation in compile()
@@ -158,7 +159,7 @@ void Compiler::validate_types(const std::vector<StmtPtr>& statements) {
 }
 ```
 
-**Integration:** `src/include/compiler.cpp:185`
+**Integration:** `src/compiler.cpp:185`
 ```cpp
 Program Compiler::compile(...) {
     // ...register classes...
@@ -369,15 +370,15 @@ build-asan:
 | Requirement | Status | Files |
 |-------------|--------|-------|
 | **1. Language Identity** | ✅ | `lexer.h/cpp` |
-| 1.1 Magic Header | ✅ | `lexer.cpp:83-109` |
+| 1.1 Magic Header | ✅ | `src/lexer.cpp:83-109` |
 | 1.2 Zero-Copy Scanning | ✅ | `lexer.h:62` |
-| 1.3 Single-Char Keywords | ✅ | `lexer.cpp:117-160` |
-| 1.4 Shebang Support | ✅ | `lexer.cpp:66-70` |
+| 1.3 Single-Char Keywords | ✅ | `src/lexer.cpp:117-160` |
+| 1.4 Shebang Support | ✅ | `src/lexer.cpp:66-70` |
 | **2. Native Engine** | ✅ | `bytecode.h`, `vm.h/cpp` |
-| 2.1 36 uint8_t Opcodes | ✅ | `bytecode.h:13-48` |
-| 2.3 Dynamic std::vector Stack | ✅ | `vm.h:145-147` |
+| 2.1 42 uint8_t Opcodes | ✅ | `bytecode.h:13-80` |
+| 2.3 Fixed-Size unique_ptr Stack | ✅ | `vm.h:279` |
 | 2.3 Pointer Arithmetic | ✅ | `vm.cpp:95-110` |
-| 2.4 Compile-Time Type Check | ✅ | `compiler.cpp:18-54,185` |
+| 2.4 Compile-Time Type Check | ✅ | `src/compiler.cpp:18-54,185` |
 | **3. Type System & FFI** | ✅ | `type_system.h`, `ffi.h/cpp` |
 | 3.1 Dynamic Type Registry | ✅ | `type_system.h:29-70` |
 | 3.2 Native FFI Bridge | ✅ | `ffi.h:43-90` |
@@ -432,7 +433,7 @@ $ ./alphabet --lsp
 
 # Version
 $ ./alphabet --version
-Alphabet 2.0.0 (Native C++)
+Alphabet 2.3.4 (Native C++)
 Developer: Fraol Teshome
 Compiled with C++17
 ```

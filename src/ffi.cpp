@@ -1,4 +1,5 @@
 #include "ffi.h"
+#include <algorithm>
 #include <cstring>
 #include <stdexcept>
 
@@ -88,14 +89,8 @@ FFI_EXPORT void ffi_unload_library(void *handle)
     }
 }
 
-FFI_EXPORT int ffi_register_function(const char *name, void *func_ptr, FFIType *arg_types,
-                                     int arg_count, FFIType return_type)
+FFI_EXPORT int ffi_register_function(const char *, void *, FFIType *, int, FFIType)
 {
-    (void)name;
-    (void)func_ptr;
-    (void)arg_types;
-    (void)arg_count;
-    (void)return_type;
     return 1;
 }
 
@@ -200,13 +195,12 @@ void FFIBridge::unload_all()
 FFIArg FFIBridge::call(const std::string &lib_path, const std::string &func_name,
                        const std::vector<FFIArg> &args)
 {
-    // Find or load library handle
+    
     void *handle = nullptr;
-    for (auto &lib : libraries_) {
-        if (lib.path == lib_path) {
-            handle = lib.handle;
-            break;
-        }
+    auto it = std::find_if(libraries_.begin(), libraries_.end(),
+                           [&lib_path](const auto &lib) { return lib.path == lib_path; });
+    if (it != libraries_.end()) {
+        handle = it->handle;
     }
     if (!handle) {
         if (!load_library(lib_path)) {
@@ -289,7 +283,7 @@ FFIArg from_ffi_value(const FFIValue &val)
     }
 }
 
-} // namespace ffi
-} // namespace alphabet
+} 
+} 
 
 #endif

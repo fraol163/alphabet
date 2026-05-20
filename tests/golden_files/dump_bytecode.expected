@@ -1,0 +1,14 @@
+=== MAIN ===
+  0: PUSH_CONST 10
+  1: PUSH_CONST 20
+  2: ADD
+  3: STORE_VAR 0  (line 2)
+  4: POP
+  5: PUSH_CONST "SYSTEM_Z"
+  6: LOAD_VAR 0
+  7: PRINT
+  8: POP
+  9: HALT
+
+=== GLOBALS ===
+  0: x

@@ -1,4 +1,5 @@
 # Alphabet: High-Density Logic Evolution
+**Version:** 2.3.4
 **Lead Architect: Fraol Teshome** (`fraolteshome444@gmail.com`)
 
 ---
@@ -17,14 +18,15 @@ We have implemented an **Enterprise CI/CD Pipeline** using GitHub Actions. This 
 - **Cloud-Based Compilation:** Binaries are built on remote servers, not local machines.
 - **Universal Availability:** Simultaneous native builds for **Windows (PE)** and **Linux (ELF)** formats.
 - **Automated Artifact Generation:** Every version update is automatically packaged and ready for distribution.
+- **ASan CI:** AddressSanitizer enabled in CI for memory safety validation.
 
 ## 2. Security & IP Protection
-To protect the developer's intellectual property, Alphabet uses a **Machine-Code Distribution Model**. By compiling logic into native binaries, we ensure that the internal engine logic is non-readable, while providing users with a high-performance standalone tool.
+- **Open Source:** The source code is open under the MIT license on GitHub.
+- **Native Binary Distribution:** Pre-built binaries for Windows (PE), Linux (ELF), and macOS (DMG).
 
 ## 3. Competitive Advantage
 - **Zero-Boilerplate Logic:** Logic-to-syntax ratio is 1:1.
 - **Cloud-Native Deployment:** Automated build cycles for rapid release management.
-- **Encapsulated Engine:** Full source-code privacy.
 
 ---
 © 2026 Developed by Fraol Teshome.

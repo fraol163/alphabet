@@ -1,13 +1,10 @@
 #alphabet<en>
-// Standard I/O Library for Alphabet
-// Requires built-in: z.o (print), z.i (input), z.f (read file)
 
 m 5 print(5 val) {
   z.o(val)
   r 0
 }
 
-// Print value followed by a newline
 m 5 println(5 val) {
   z.o(val)
   z.o("\n")
@@ -18,10 +15,6 @@ m 12 read_file(12 path) {
   r z.f(path)
 }
 
-// Write content to a file
-// TODO: z.fw is not a built-in in the current VM.
-// Once z.fw(path, content) is added to the interpreter, update this.
 m 5 write_file(12 path, 12 content) {
-  z.o("Error: write_file not yet supported (z.fw built-in missing)")
-  r 0
+  r z.fw(path, content)
 }

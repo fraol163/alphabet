@@ -44,7 +44,7 @@ class Parser
     size_t current_ = 0;
     bool had_errors_ = false;
     std::string first_error_;
-    std::vector<std::string> errors_; 
+    std::vector<std::string> errors_;
 
     [[nodiscard]] bool is_at_end() const;
     [[nodiscard]] const Token &peek() const;
@@ -95,6 +95,6 @@ class Parser
     ExprPtr lambda_expression();
 };
 
-} 
+} // namespace alphabet
 
 #endif

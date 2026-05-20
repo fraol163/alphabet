@@ -11,8 +11,7 @@ namespace alphabet {
 
 void VM::system_call(const std::string &method, int arg_count)
 {
-    
-    
+
     if (method == "o" && arg_count >= 1) {
         Value val = pop();
         std::cout << value_to_string(val) << std::endl;
@@ -40,7 +39,7 @@ void VM::system_call(const std::string &method, int arg_count)
     }
     else if (method == "f" && arg_count >= 1) {
         if (sandbox_mode_) {
-            pop(); 
+            pop();
             push(Value(std::string("")));
         }
         else {
@@ -101,7 +100,6 @@ void VM::system_call(const std::string &method, int arg_count)
         }
     }
 
-    
     else if (method == "sqrt" && arg_count >= 1) {
         Value v = pop();
         push(Value(v.is_number() ? std::sqrt(v.as_number()) : 0.0));
@@ -172,7 +170,6 @@ void VM::system_call(const std::string &method, int arg_count)
         push(Value(v.is_number() ? std::log10(v.as_number()) : 0.0));
     }
 
-    
     else if (method == "len" && arg_count >= 1) {
         Value v = pop();
         if (v.is_string())
@@ -227,7 +224,6 @@ void VM::system_call(const std::string &method, int arg_count)
             push(Value(std::string("unknown")));
     }
 
-    
     else if (method == "split" && arg_count >= 2) {
         Value delim = pop();
         Value str = pop();
@@ -417,7 +413,6 @@ void VM::system_call(const std::string &method, int arg_count)
         }
     }
 
-    
     else if (method == "range") {
         double start = 0, stop = 0, step = 1;
         if (arg_count == 1) {
@@ -522,7 +517,7 @@ void VM::system_call(const std::string &method, int arg_count)
     else if (method == "reverse" && arg_count >= 1) {
         Value list_val = pop();
         if (list_val.is_list()) {
-            auto lst = list_val.as_list(); 
+            auto lst = list_val.as_list();
             std::reverse(lst.begin(), lst.end());
             push(Value(std::move(lst)));
         }
@@ -536,10 +531,10 @@ void VM::system_call(const std::string &method, int arg_count)
         }
     }
     else if (method == "sort" && arg_count >= 1) {
-        
+
         Value list_val = pop();
         if (list_val.is_list()) {
-            auto lst = list_val.as_list(); 
+            auto lst = list_val.as_list();
             std::sort(lst.begin(), lst.end(), [](const Value &a, const Value &b) {
                 if (a.is_number() && b.is_number())
                     return a.as_number() < b.as_number();
@@ -554,7 +549,7 @@ void VM::system_call(const std::string &method, int arg_count)
         }
     }
     else if (method == "insert" && arg_count >= 3) {
-        
+
         Value val = pop();
         Value idx_val = pop();
         Value list_val = pop();
@@ -571,7 +566,7 @@ void VM::system_call(const std::string &method, int arg_count)
         }
     }
     else if (method == "remove" && arg_count >= 2) {
-        
+
         Value idx_val = pop();
         Value list_val = pop();
         if (list_val.is_list() && idx_val.is_number()) {
@@ -592,4 +587,4 @@ void VM::system_call(const std::string &method, int arg_count)
     }
 }
 
-} 
+} // namespace alphabet

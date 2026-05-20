@@ -110,8 +110,9 @@ const char *token_type_to_string(TokenType type)
     }
 }
 
-Lexer::Lexer(std::string_view source, bool skip_header)
-    : source_(source), skip_header_(skip_header) {}
+Lexer::Lexer(std::string_view source, bool skip_header) : source_(source), skip_header_(skip_header)
+{
+}
 
 std::vector<Token> Lexer::scan_tokens()
 {
@@ -156,7 +157,6 @@ void Lexer::validate_header()
         throw MissingLanguageHeader();
     }
 
-    
     size_t lang_start = prefix.size();
     size_t lang_length = close_pos - lang_start;
     language_ = std::string(header_source.substr(lang_start, lang_length));
@@ -249,11 +249,11 @@ void Lexer::scan_token()
             }
         }
         else if (match('*')) {
-            
+
             while (!is_at_end()) {
                 if (peek() == '*' && peek_next() == '/') {
-                    advance(); 
-                    advance(); 
+                    advance();
+                    advance();
                     break;
                 }
                 advance();
@@ -299,12 +299,12 @@ void Lexer::scan_token()
         }
         else if (std::isalpha(static_cast<unsigned char>(c)) ||
                  static_cast<unsigned char>(c) > 127) {
-            
+
             if (c == 'f' && peek() == '"') {
                 fstring();
             }
             else {
-                
+
                 identifier();
             }
         }
@@ -363,7 +363,7 @@ void Lexer::string()
     while (peek() != '"' && !is_at_end()) {
         if (peek() == '\\') {
             has_escapes = true;
-            advance(); 
+            advance();
             if (is_at_end())
                 return;
 
@@ -385,7 +385,7 @@ void Lexer::string()
                 processed += '\0';
                 break;
             default:
-                
+
                 processed += '\\';
                 processed += escaped;
                 break;
@@ -399,7 +399,7 @@ void Lexer::string()
     if (is_at_end())
         return;
 
-    advance(); 
+    advance();
 
     if (has_escapes) {
         string_pool_.push_back(std::move(processed));
@@ -465,17 +465,17 @@ void Lexer::fstring()
 
 void Lexer::multi_line_string()
 {
-    advance(); 
-    advance(); 
+    advance();
+    advance();
 
     std::string processed;
 
     while (!is_at_end()) {
         if (peek() == '"' && current_ + 2 < source_.size() && source_[current_ + 1] == '"' &&
             source_[current_ + 2] == '"') {
-            advance(); 
-            advance(); 
-            advance(); 
+            advance();
+            advance();
+            advance();
             break;
         }
         if (peek() == '\\') {
@@ -524,7 +524,7 @@ void Lexer::number()
     }
 
     if (peek() == '.' && std::isdigit(static_cast<unsigned char>(peek_next()))) {
-        advance(); 
+        advance();
         while (std::isdigit(static_cast<unsigned char>(peek()))) {
             advance();
         }
@@ -534,7 +534,8 @@ void Lexer::number()
     double value = 0.0;
     try {
         value = std::stod(std::string(num_str));
-    } catch (const std::exception &) {
+    }
+    catch (const std::exception &) {
         value = 0.0;
     }
     tokens_.emplace_back(TokenType::NUMBER, num_str, value, line_);
@@ -550,24 +551,21 @@ void Lexer::identifier()
     std::string_view text = source_.substr(start_, current_ - start_);
     std::string text_str(text);
 
-    
     if (text == "true" || text == "false") {
         add_token(TokenType::NUMBER, (text == "true") ? 1.0 : 0.0);
         return;
     }
 
-    
     if (text == "const") {
         add_token(TokenType::TOK_CONST);
         return;
     }
 
-    
     if (is_utf8_keyword(text_str)) {
         std::string translated = translate_keyword(text_str, language_);
-        
+
         if (translated != text_str) {
-            
+
             if (translated == "\x80") {
                 add_token(TokenType::TOK_CONST);
                 return;
@@ -577,7 +575,7 @@ void Lexer::identifier()
                 return;
             }
             if (translated == "z.i") {
-                
+
                 tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
                 return;
             }
@@ -585,21 +583,20 @@ void Lexer::identifier()
                 add_token(TokenType::TOK_CONST);
                 return;
             }
-            
+
             if (translated.size() == 1 && is_keyword_char(translated[0])) {
                 add_token(keyword_type(translated[0]));
                 return;
             }
         }
-        
+
         add_token(TokenType::IDENTIFIER);
         return;
     }
 
-    
     std::string translated = translate_keyword(text_str, language_);
     if (translated != text_str) {
-        
+
         if (translated == "\x80") {
             add_token(TokenType::TOK_CONST);
             return;
@@ -612,8 +609,7 @@ void Lexer::identifier()
             tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
             return;
         }
-        
-        
+
         if (translated.size() == 1 && text_str.size() > 1) {
             char c = translated[0];
             if (is_keyword_char(c)) {
@@ -623,7 +619,6 @@ void Lexer::identifier()
         }
     }
 
-    
     if (text.size() == 1 && is_keyword_char(text[0])) {
         add_token(keyword_type(text[0]));
     }
@@ -713,4 +708,4 @@ TokenType Lexer::previous_token_type() const
     return tokens_.back().type;
 }
 
-} 
+} // namespace alphabet

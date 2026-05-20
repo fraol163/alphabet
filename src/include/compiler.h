@@ -37,23 +37,23 @@ class Compiler
     uint16_t next_class_id_ = 15;
     int lambda_counter_ = 0;
     std::vector<std::string> globals_;
-    std::unordered_set<std::string> const_vars_;          
-    std::unordered_map<std::string, uint16_t> var_types_; 
+    std::unordered_set<std::string> const_vars_;
+    std::unordered_map<std::string, uint16_t> var_types_;
     std::unordered_map<std::string, CompiledMethod> pending_functions_;
-    std::unordered_map<std::string, CompiledClass> pending_classes_; 
+    std::unordered_map<std::string, CompiledClass> pending_classes_;
     TypeManager type_manager_;
 
     struct LoopContext
     {
-        size_t loop_start_ip;            
-        std::vector<size_t> break_jumps; 
+        size_t loop_start_ip;
+        std::vector<size_t> break_jumps;
     };
     std::vector<LoopContext> loop_stack_;
 
     std::vector<std::string> imported_modules_;
     std::unordered_map<std::string, std::string> module_aliases_;
-    std::unordered_set<std::string> loaded_modules_; 
-    std::string source_dir_; 
+    std::unordered_set<std::string> loaded_modules_;
+    std::string source_dir_;
 
     void load_module(const std::string &path);
 
@@ -104,10 +104,9 @@ class Compiler
     std::vector<Instruction> compile_method(const FunctionStmt &method);
 
   public:
-
     static std::string dump_program(const Program &program);
 };
 
-} 
+} // namespace alphabet
 
 #endif

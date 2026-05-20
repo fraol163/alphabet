@@ -2,11 +2,11 @@
 #define ALPHABET_LEXER_H
 
 #include <cstdint>
+#include <deque>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <unordered_map>
-#include <deque>
 #include <vector>
 #include "keywords.h"
 
@@ -141,6 +141,6 @@ class Lexer
 
 const char *token_type_to_string(TokenType type);
 
-} 
+} // namespace alphabet
 
 #endif

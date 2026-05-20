@@ -18,33 +18,11 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
                 {"input", "z.i"}, {"import", "x"},   {"match", "q"},     {"extends", "^"},
                 {"export", "@"},  {"const", "\x80"}}},
 
-        {"am",
-         {
-             {"ክፍል", "c"},      
-             {"ሥር", "a"},       
-             {"በይነገጽ", "j"},    
-             {"ዘዴ", "m"},       
-             {"ከሆነ", "i"},      
-             {"አለበለዚህ", "e"},   
-             {"ሉፕ", "l"},       
-             {"እስከሆነ", "l"},    
-             {"ተመለስ", "r"},     
-             {"ስበር", "b"},      
-             {"ቀጥል", "k"},      
-             {"አዲስ", "n"},      
-             {"ግልጽ", "v"},      
-             {"ግል", "p"},       
-             {"ቋሚ", "s"},       
-             {"ሞክር", "t"},      
-             {"ያዟ", "h"},       
-             {"ውጤት", "z"},      
-             {"ግብአት", "z.i"},   
-             {"አስገባ", "x"},     
-             {"ምረጥ", "q"},      
-             {"ወራሽ", "^"},      
-             {"ላክ", "@"},       
-             {"ቋሚ-እሴት", "\x80"} 
-         }},
+        {"am", {{"ክፍል", "c"},    {"ሥር", "a"},  {"በይነገጽ", "j"}, {"ዘዴ", "m"},       {"ከሆነ", "i"},
+                {"አለበለዚህ", "e"}, {"ሉፕ", "l"},  {"እስከሆነ", "l"}, {"ተመለስ", "r"},     {"ስበር", "b"},
+                {"ቀጥል", "k"},    {"አዲስ", "n"}, {"ግልጽ", "v"},   {"ግል", "p"},       {"ቋሚ", "s"},
+                {"ሞክር", "t"},    {"ያዟ", "h"},  {"ውጤት", "z"},   {"ግብአት", "z.i"},   {"አስገባ", "x"},
+                {"ምረጥ", "q"},    {"ወራሽ", "^"}, {"ላክ", "@"},    {"ቋሚ-እሴት", "\x80"}}},
 
         {"es", {{"clase", "c"},       {"abstracto", "a"}, {"interfaz", "j"},  {"metodo", "m"},
                 {"si", "i"},          {"sino", "e"},      {"bucle", "l"},     {"mientras", "l"},
@@ -75,12 +53,12 @@ inline std::string translate_keyword(const std::string &keyword, const std::stri
 {
     auto lang_it = KEYWORD_MAPPINGS.find(lang);
     if (lang_it == KEYWORD_MAPPINGS.end()) {
-        return keyword; 
+        return keyword;
     }
 
     auto keyword_it = lang_it->second.find(keyword);
     if (keyword_it == lang_it->second.end()) {
-        return keyword; 
+        return keyword;
     }
 
     return keyword_it->second;
@@ -95,6 +73,6 @@ inline bool is_utf8_keyword(const std::string &str)
     return false;
 }
 
-} 
+} // namespace alphabet
 
 #endif

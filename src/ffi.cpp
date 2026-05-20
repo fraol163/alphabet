@@ -195,7 +195,7 @@ void FFIBridge::unload_all()
 FFIArg FFIBridge::call(const std::string &lib_path, const std::string &func_name,
                        const std::vector<FFIArg> &args)
 {
-    
+
     void *handle = nullptr;
     auto it = std::find_if(libraries_.begin(), libraries_.end(),
                            [&lib_path](const auto &lib) { return lib.path == lib_path; });
@@ -283,7 +283,7 @@ FFIArg from_ffi_value(const FFIValue &val)
     }
 }
 
-} 
-} 
+} // namespace ffi
+} // namespace alphabet
 
 #endif

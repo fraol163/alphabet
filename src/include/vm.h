@@ -219,7 +219,7 @@ struct CallFrame
     size_t ip = 0;
     std::unordered_map<std::string, Value> locals;
     std::vector<std::pair<size_t, size_t>> try_stack;
-    Value post_action_value; 
+    Value post_action_value;
     bool push_post_action_on_return = false;
 
     CallFrame() : bytecode(nullptr) {}
@@ -285,7 +285,7 @@ class VM
     std::vector<std::string> globals_by_index_;
     std::vector<CallFrame> frames_;
     std::unordered_map<uint16_t, CompiledClass> classes_;
-    std::unordered_map<std::string, uint16_t> class_name_to_id_; 
+    std::unordered_map<std::string, uint16_t> class_name_to_id_;
     std::unordered_map<std::string, CompiledMethod> global_functions_;
 
     bool debug_mode_ = false;
@@ -321,6 +321,6 @@ class VM
 
 std::string value_to_string(const Value &value);
 
-} 
+} // namespace alphabet
 
 #endif

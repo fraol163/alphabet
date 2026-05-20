@@ -7,7 +7,6 @@
 namespace alphabet {
 namespace lsp {
 
-
 static std::string escape_json(const std::string &s)
 {
     std::string out;
@@ -71,7 +70,6 @@ std::string JsonValue::dump() const
     return "null";
 }
 
-
 static size_t skip_ws(const std::string &s, size_t pos)
 {
     while (pos < s.size() && std::isspace(s[pos]))
@@ -116,7 +114,7 @@ static std::string parse_string(const std::string &s, size_t &pos)
         ++pos;
     }
     if (pos < s.size())
-        ++pos; 
+        ++pos;
     return out;
 }
 
@@ -170,7 +168,7 @@ static JsonValue parse_value(const std::string &s, size_t &pos)
         return JsonValue::boolean(val);
     }
     if (c == 'n') {
-        pos += 4; 
+        pos += 4;
         return JsonValue::null();
     }
     if (c == '-' || std::isdigit(c)) {
@@ -189,7 +187,6 @@ JsonValue JsonValue::parse(const std::string &json)
     size_t pos = 0;
     return parse_value(json, pos);
 }
-
 
 LanguageServer::LanguageServer() {}
 
@@ -241,10 +238,8 @@ void LanguageServer::run()
             continue;
         }
 
-        
         std::getline(std::cin, line);
 
-        
         std::string body(content_length, '\0');
         std::cin.read(&body[0], content_length);
 
@@ -256,7 +251,6 @@ void LanguageServer::run()
             send_response(id, handle_initialize(id, msg.get("params")));
         }
         else if (method == "initialized" || method == "$/setTrace") {
-            
         }
         else if (method == "textDocument/didOpen") {
             handle_did_open(msg.get("params"));
@@ -288,7 +282,7 @@ void LanguageServer::run()
     }
 }
 
-JsonValue LanguageServer::handle_initialize(int , const JsonValue & )
+JsonValue LanguageServer::handle_initialize(int, const JsonValue &)
 {
     JsonValue caps = JsonValue::object();
 
@@ -361,7 +355,7 @@ void LanguageServer::publish_diagnostics(const std::string &uri, const std::stri
         diags.push(d);
     }
     else {
-        
+
         try {
             Lexer lexer(content);
             auto tokens = lexer.scan_tokens();
@@ -369,16 +363,16 @@ void LanguageServer::publish_diagnostics(const std::string &uri, const std::stri
             parser.parse();
 
             if (parser.had_errors() && !parser.first_error().empty()) {
-                
+
                 std::string err = parser.first_error();
                 int err_line = 0, err_col = 0;
                 size_t lp = err.find("line ");
                 if (lp != std::string::npos) {
-                    err_line = std::stoi(err.substr(lp + 5)) - 1; 
+                    err_line = std::stoi(err.substr(lp + 5)) - 1;
                 }
                 size_t cp = err.find("column ");
                 if (cp != std::string::npos) {
-                    err_col = std::stoi(err.substr(cp + 7)) - 1; 
+                    err_col = std::stoi(err.substr(cp + 7)) - 1;
                 }
 
                 JsonValue d = JsonValue::object();
@@ -393,7 +387,7 @@ void LanguageServer::publish_diagnostics(const std::string &uri, const std::stri
                 range.set("end", end);
                 d.set("range", range);
                 d.set("severity", JsonValue::integer(1));
-                
+
                 size_t newline = err.find('\n');
                 std::string clean_msg =
                     (newline != std::string::npos) ? err.substr(0, newline) : err;
@@ -411,11 +405,10 @@ void LanguageServer::publish_diagnostics(const std::string &uri, const std::stri
     send_notification("textDocument/publishDiagnostics", params_out);
 }
 
-JsonValue LanguageServer::handle_completion(int , const JsonValue & )
+JsonValue LanguageServer::handle_completion(int, const JsonValue &)
 {
     JsonValue items = JsonValue::array();
 
-    
     struct
     {
         const char *label;
@@ -446,13 +439,12 @@ JsonValue LanguageServer::handle_completion(int , const JsonValue & )
     for (auto &kw : keywords) {
         JsonValue item = JsonValue::object();
         item.set("label", JsonValue::string(kw.label));
-        item.set("kind", JsonValue::integer(14)); 
+        item.set("kind", JsonValue::integer(14));
         item.set("detail", JsonValue::string(kw.detail));
         item.set("documentation", JsonValue::string(kw.doc));
         items.push(item);
     }
 
-    
     struct
     {
         const char *label;
@@ -465,12 +457,11 @@ JsonValue LanguageServer::handle_completion(int , const JsonValue & )
     for (auto &tp : types) {
         JsonValue item = JsonValue::object();
         item.set("label", JsonValue::string(tp.label));
-        item.set("kind", JsonValue::integer(25)); 
+        item.set("kind", JsonValue::integer(25));
         item.set("detail", JsonValue::string(tp.detail));
         items.push(item);
     }
 
-    
     struct
     {
         const char *label;
@@ -504,7 +495,7 @@ JsonValue LanguageServer::handle_completion(int , const JsonValue & )
     for (auto &bi : builtins) {
         JsonValue item = JsonValue::object();
         item.set("label", JsonValue::string(bi.label));
-        item.set("kind", JsonValue::integer(3)); 
+        item.set("kind", JsonValue::integer(3));
         item.set("detail", JsonValue::string(bi.detail));
         item.set("documentation", JsonValue::string(bi.doc));
         items.push(item);
@@ -571,7 +562,7 @@ std::string LanguageServer::get_hover_doc(const std::string &word)
     return it != docs.end() ? it->second : "";
 }
 
-JsonValue LanguageServer::handle_hover(int , const JsonValue &params)
+JsonValue LanguageServer::handle_hover(int, const JsonValue &params)
 {
     std::string uri = params.get("textDocument").get_str("uri");
     const JsonValue &pos = params.get("position");
@@ -582,7 +573,6 @@ JsonValue LanguageServer::handle_hover(int , const JsonValue &params)
     if (it == documents_.end())
         return JsonValue::null();
 
-    
     std::string current_line;
     int ln = 0;
     std::istringstream stream(it->second);
@@ -595,7 +585,6 @@ JsonValue LanguageServer::handle_hover(int , const JsonValue &params)
     if (character >= (int)current_line.size())
         return JsonValue::null();
 
-    
     int start = character, end = character;
     while (start > 0 && (std::isalnum(current_line[start - 1]) || current_line[start - 1] == '_' ||
                          current_line[start - 1] == '.'))
@@ -620,7 +609,6 @@ JsonValue LanguageServer::handle_hover(int , const JsonValue &params)
     return result;
 }
 
-
 static std::string word_at(const std::string &line, int character)
 {
     if (character < 0 || character >= (int)line.size())
@@ -635,24 +623,21 @@ static std::string word_at(const std::string &line, int character)
     return line.substr(start, end - start);
 }
 
-
 static bool is_type_prefix(const std::string &line, size_t pos)
 {
-    
-    
+
     size_t i = pos;
     if (i >= line.size() || !std::isdigit(line[i]))
         return false;
     while (i < line.size() && std::isdigit(line[i]))
         ++i;
-    
+
     if (i >= line.size() || line[i] != ' ')
         return false;
     while (i < line.size() && line[i] == ' ')
         ++i;
     return i < line.size() && (std::isalpha(line[i]) || line[i] == '_');
 }
-
 
 static const int SK_FILE = 1;
 static const int SK_CLASS = 5;
@@ -662,7 +647,7 @@ static const int SK_VARIABLE = 13;
 static const int SK_CONSTANT = 14;
 static const int SK_FIELD = 8;
 
-JsonValue LanguageServer::handle_document_symbol(int , const JsonValue &params)
+JsonValue LanguageServer::handle_document_symbol(int, const JsonValue &params)
 {
     std::string uri = params.get("textDocument").get_str("uri");
     auto it = documents_.find(uri);
@@ -676,13 +661,12 @@ JsonValue LanguageServer::handle_document_symbol(int , const JsonValue &params)
     std::string line;
     int line_num = 0;
 
-    
     std::string current_class;
-    
+
     std::vector<size_t> class_indices;
 
     while (std::getline(stream, line)) {
-        
+
         size_t first_nonspace = line.find_first_not_of(" \t");
         if (first_nonspace == std::string::npos) {
             ++line_num;
@@ -694,7 +678,6 @@ JsonValue LanguageServer::handle_document_symbol(int , const JsonValue &params)
             continue;
         }
 
-        
         if (fc == 'c' && first_nonspace + 1 < line.size() && line[first_nonspace + 1] == ' ') {
             size_t name_start = first_nonspace + 2;
             while (name_start < line.size() && line[name_start] == ' ')
@@ -715,11 +698,11 @@ JsonValue LanguageServer::handle_document_symbol(int , const JsonValue &params)
                 start.set("line", JsonValue::integer(line_num));
                 start.set("character", JsonValue::integer((int)first_nonspace));
                 range.set("start", start);
-                range.set("end", start); 
+                range.set("end", start);
                 sym.set("range", range);
                 sym.set("selectionRange", range);
                 sym.set("detail", JsonValue::string("class"));
-                
+
                 JsonValue children = JsonValue::array();
                 sym.set("children", children);
 
@@ -727,36 +710,34 @@ JsonValue LanguageServer::handle_document_symbol(int , const JsonValue &params)
                 symbols.push(sym);
             }
         }
-        
-        
+
         else if (line.find("m ") != std::string::npos) {
-            
+
             size_t m_pos = line.find("m ");
-            
-            
+
             bool is_method = false;
             if (m_pos == first_nonspace ||
                 (m_pos > 0 && (line[m_pos - 1] == ' ' || line[m_pos - 1] == '\t'))) {
-                
+
                 size_t after_m = m_pos + 2;
                 while (after_m < line.size() && line[after_m] == ' ')
                     ++after_m;
-                
+
                 if (after_m < line.size() && std::isdigit(line[after_m])) {
                     is_method = true;
                 }
             }
             if (is_method) {
-                
+
                 size_t pos = m_pos + 2;
                 while (pos < line.size() && line[pos] == ' ')
                     ++pos;
-                
+
                 while (pos < line.size() && std::isdigit(line[pos]))
                     ++pos;
                 while (pos < line.size() && line[pos] == ' ')
                     ++pos;
-                
+
                 size_t name_start = pos;
                 while (pos < line.size() && (std::isalnum(line[pos]) || line[pos] == '_'))
                     ++pos;
@@ -786,7 +767,7 @@ JsonValue LanguageServer::handle_document_symbol(int , const JsonValue &params)
                 }
             }
         }
-        
+
         else if (fc == 'j' && first_nonspace + 1 < line.size() && line[first_nonspace + 1] == ' ') {
             size_t name_start = first_nonspace + 2;
             while (name_start < line.size() && line[name_start] == ' ')
@@ -800,7 +781,7 @@ JsonValue LanguageServer::handle_document_symbol(int , const JsonValue &params)
 
                 JsonValue sym = JsonValue::object();
                 sym.set("name", JsonValue::string(name));
-                sym.set("kind", JsonValue::integer(SK_CLASS)); 
+                sym.set("kind", JsonValue::integer(SK_CLASS));
                 JsonValue range = JsonValue::object();
                 JsonValue start_p = JsonValue::object();
                 start_p.set("line", JsonValue::integer(line_num));
@@ -813,7 +794,7 @@ JsonValue LanguageServer::handle_document_symbol(int , const JsonValue &params)
                 symbols.push(sym);
             }
         }
-        
+
         else if (line.substr(first_nonspace, 5) == "const" &&
                  (first_nonspace + 5 >= line.size() || line[first_nonspace + 5] == ' ')) {
             size_t pos = first_nonspace + 5;
@@ -840,11 +821,10 @@ JsonValue LanguageServer::handle_document_symbol(int , const JsonValue &params)
                 symbols.push(sym);
             }
         }
-        
-        
+
         else if (is_type_prefix(line, first_nonspace)) {
             size_t pos = first_nonspace;
-            
+
             while (pos < line.size() && std::isdigit(line[pos]))
                 ++pos;
             while (pos < line.size() && line[pos] == ' ')
@@ -853,18 +833,16 @@ JsonValue LanguageServer::handle_document_symbol(int , const JsonValue &params)
             while (pos < line.size() && (std::isalnum(line[pos]) || line[pos] == '_'))
                 ++pos;
             if (pos > name_start) {
-                
+
                 size_t after_name = pos;
                 while (after_name < line.size() && line[after_name] == ' ')
                     ++after_name;
                 if (after_name < line.size() && line[after_name] == '=') {
                     std::string name = line.substr(name_start, pos - name_start);
 
-                    
                     std::string type_str =
                         line.substr(first_nonspace, name_start - first_nonspace - 1);
 
-                    
                     int kind = current_class.empty() ? SK_VARIABLE : SK_FIELD;
                     std::string detail = "type " + type_str;
 
@@ -884,7 +862,7 @@ JsonValue LanguageServer::handle_document_symbol(int , const JsonValue &params)
                 }
             }
         }
-        
+
         else if (fc == '}' && !current_class.empty()) {
             current_class.clear();
         }
@@ -895,7 +873,7 @@ JsonValue LanguageServer::handle_document_symbol(int , const JsonValue &params)
     return symbols;
 }
 
-JsonValue LanguageServer::handle_definition(int , const JsonValue &params)
+JsonValue LanguageServer::handle_definition(int, const JsonValue &params)
 {
     std::string uri = params.get("textDocument").get_str("uri");
     const JsonValue &pos = params.get("position");
@@ -908,7 +886,6 @@ JsonValue LanguageServer::handle_definition(int , const JsonValue &params)
 
     const std::string &content = doc_it->second;
 
-    
     std::istringstream stream(content);
     std::string current_line;
     int ln = 0;
@@ -918,22 +895,19 @@ JsonValue LanguageServer::handle_definition(int , const JsonValue &params)
         ++ln;
     }
 
-    
     std::string word = word_at(current_line, character);
     if (word.empty())
         return JsonValue::null();
 
-    
     std::string search_name = word;
     size_t dot_pos = word.find('.');
     if (dot_pos != std::string::npos) {
-        
+
         if (word.substr(0, 2) == "z.")
             return JsonValue::null();
         search_name = word.substr(dot_pos + 1);
     }
 
-    
     std::istringstream def_stream(content);
     std::string def_line;
     int def_line_num = 0;
@@ -950,7 +924,6 @@ JsonValue LanguageServer::handle_definition(int , const JsonValue &params)
             continue;
         }
 
-        
         if (fc == 'c' && first_nonspace + 1 < def_line.size() &&
             def_line[first_nonspace + 1] == ' ') {
             size_t ns = first_nonspace + 2;
@@ -976,7 +949,6 @@ JsonValue LanguageServer::handle_definition(int , const JsonValue &params)
             }
         }
 
-        
         if (fc == 'j' && first_nonspace + 1 < def_line.size() &&
             def_line[first_nonspace + 1] == ' ') {
             size_t ns = first_nonspace + 2;
@@ -1002,7 +974,6 @@ JsonValue LanguageServer::handle_definition(int , const JsonValue &params)
             }
         }
 
-        
         if (def_line.find("m ") != std::string::npos) {
             size_t m_pos = def_line.find("m ");
             bool is_method = false;
@@ -1045,7 +1016,6 @@ JsonValue LanguageServer::handle_definition(int , const JsonValue &params)
             }
         }
 
-        
         if (def_line.substr(first_nonspace, 5) == "const" &&
             (first_nonspace + 5 >= def_line.size() || def_line[first_nonspace + 5] == ' ')) {
             size_t pos2 = first_nonspace + 5;
@@ -1073,7 +1043,6 @@ JsonValue LanguageServer::handle_definition(int , const JsonValue &params)
             }
         }
 
-        
         if (is_type_prefix(def_line, first_nonspace)) {
             size_t pos2 = first_nonspace;
             while (pos2 < def_line.size() && std::isdigit(def_line[pos2]))
@@ -1110,9 +1079,8 @@ JsonValue LanguageServer::handle_definition(int , const JsonValue &params)
         ++def_line_num;
     }
 
-    
     return JsonValue::null();
 }
 
-} 
-} 
+} // namespace lsp
+} // namespace alphabet

@@ -65,6 +65,6 @@ class TypeManager
     void register_primitive(uint16_t id, const std::string &name);
 };
 
-} 
+} // namespace alphabet
 
 #endif

@@ -31,14 +31,14 @@ void Compiler::validate_types(const std::vector<StmtPtr> &statements)
             }
         }
         else if (auto *class_stmt = dynamic_cast<const ClassStmt *>(stmt.get())) {
-            
+
             for (const auto &field : class_stmt->fields) {
                 std::string field_name = sv_to_str(field.name.lexeme);
                 uint16_t field_type =
                     static_cast<uint16_t>(std::stoi(sv_to_str(field.type_id.lexeme)));
                 var_types_[field_name] = field_type;
             }
-            
+
             for (const auto &method : class_stmt->methods) {
                 for (const auto &param : method.params) {
                     std::string param_name = sv_to_str(param.name.lexeme);
@@ -66,7 +66,7 @@ void Compiler::validate_types(const std::vector<StmtPtr> &statements)
             }
         }
         else if (auto *func_stmt = dynamic_cast<const FunctionStmt *>(stmt.get())) {
-            
+
             for (const auto &param : func_stmt->params) {
                 std::string param_name = sv_to_str(param.name.lexeme);
                 uint16_t param_type =
@@ -131,7 +131,6 @@ uint16_t Compiler::infer_expression_type(const ExprPtr &expr)
         uint16_t left_type = infer_expression_type(bin->left);
         uint16_t right_type = infer_expression_type(bin->right);
 
-        
         if (left_type == TypeManager::STR || right_type == TypeManager::STR) {
             return TypeManager::STR;
         }
@@ -153,7 +152,7 @@ uint16_t Compiler::infer_expression_type(const ExprPtr &expr)
         if (class_map_.find(name) != class_map_.end()) {
             return class_map_[name];
         }
-        
+
         auto type_it = var_types_.find(name);
         if (type_it != var_types_.end()) {
             return type_it->second;
@@ -218,7 +217,6 @@ Program Compiler::compile(const std::vector<StmtPtr> &statements)
         }
     }
 
-    
     for (const auto &stmt : statements) {
         if (auto *imps = dynamic_cast<const ImportStmt *>(stmt.get())) {
             load_module(imps->module_path);
@@ -255,7 +253,6 @@ Program Compiler::compile(const std::vector<StmtPtr> &statements)
         program.classes[cls.id] = cls;
     }
 
-    
     for (const auto &[name, cls] : pending_classes_) {
         if (program.classes.find(cls.id) == program.classes.end()) {
             program.classes[cls.id] = cls;
@@ -326,7 +323,7 @@ void Compiler::visit(const StmtPtr &stmt)
         if (imps->alias) {
             module_aliases_[*imps->alias] = imps->module_path;
         }
-        
+
         load_module(imps->module_path);
     }
     else if (auto *ms = dynamic_cast<const MatchStmt *>(stmt.get())) {
@@ -339,7 +336,7 @@ void Compiler::visit(const StmtPtr &stmt)
         visit_continue(*cs);
     }
     else if (auto *fs = dynamic_cast<const FunctionStmt *>(stmt.get())) {
-        
+
         std::string func_name = sv_to_str(fs->name.lexeme);
         CompiledMethod info;
         info.bytecode = compile_method(*fs);
@@ -468,7 +465,6 @@ void Compiler::visit_loop(const LoopStmt &stmt)
 {
     size_t start_pos = bytecode_.size();
 
-    
     emit(OpCode::LOOP_START, static_cast<int64_t>(start_pos));
 
     visit_expr(stmt.condition);
@@ -476,18 +472,14 @@ void Compiler::visit_loop(const LoopStmt &stmt)
     size_t exit_jump = bytecode_.size();
     emit(OpCode::JUMP_IF_FALSE, static_cast<int64_t>(0));
 
-    
     loop_stack_.push_back({start_pos, {}});
 
     visit(stmt.body);
 
-    
     emit(OpCode::JUMP, static_cast<int64_t>(start_pos));
 
-    
     patch_jump(exit_jump, bytecode_.size());
 
-    
     LoopContext ctx = loop_stack_.back();
     loop_stack_.pop_back();
     for (size_t break_idx : ctx.break_jumps) {
@@ -500,7 +492,7 @@ void Compiler::visit_break(const BreakStmt &stmt)
     if (loop_stack_.empty()) {
         throw CompileError("'break' outside of loop at line " + std::to_string(stmt.keyword.line));
     }
-    
+
     size_t idx = bytecode_.size();
     emit(OpCode::BREAK_JUMP, static_cast<int64_t>(0), stmt.keyword.line);
     loop_stack_.back().break_jumps.push_back(idx);
@@ -512,14 +504,13 @@ void Compiler::visit_continue(const ContinueStmt &stmt)
         throw CompileError("'continue' outside of loop at line " +
                            std::to_string(stmt.keyword.line));
     }
-    
+
     emit(OpCode::CONTINUE_JUMP, static_cast<int64_t>(loop_stack_.back().loop_start_ip),
          stmt.keyword.line);
 }
 
 void Compiler::visit_for(const ForStmt &stmt)
 {
-    
 
     if (stmt.initializer) {
         visit(stmt.initializer);
@@ -528,38 +519,31 @@ void Compiler::visit_for(const ForStmt &stmt)
     size_t loop_start = bytecode_.size();
     emit(OpCode::LOOP_START, static_cast<int64_t>(loop_start));
 
-    
     if (stmt.condition) {
         visit_expr(stmt.condition);
     }
     else {
-        emit(OpCode::PUSH_CONST, 1.0); 
+        emit(OpCode::PUSH_CONST, 1.0);
     }
 
     size_t exit_jump = bytecode_.size();
     emit(OpCode::JUMP_IF_FALSE, static_cast<int64_t>(0));
 
-    
     loop_stack_.push_back({loop_start, {}});
 
-    
     if (stmt.body) {
         visit(stmt.body);
     }
 
-    
     if (stmt.increment) {
         visit_expr(stmt.increment);
-        emit(OpCode::POP); 
+        emit(OpCode::POP);
     }
 
-    
     emit(OpCode::JUMP, static_cast<int64_t>(loop_start));
 
-    
     patch_jump(exit_jump, bytecode_.size());
 
-    
     LoopContext ctx = loop_stack_.back();
     loop_stack_.pop_back();
     for (size_t break_idx : ctx.break_jumps) {
@@ -598,58 +582,48 @@ void Compiler::visit_block(const Block &stmt)
 
 void Compiler::visit_match(const MatchStmt &stmt)
 {
-    
+
     visit_expr(stmt.expression);
 
-    
     std::vector<size_t> jump_patches;
 
     for (size_t i = 0; i < stmt.cases.size(); i++) {
         const auto &case_stmt = stmt.cases[i];
 
-        
         emit(OpCode::DUP);
 
-        
         visit_expr(case_stmt.pattern);
         emit(OpCode::EQ);
 
-        
         emit(OpCode::JUMP_IF_FALSE, static_cast<int64_t>(0));
         jump_patches.push_back(bytecode_.size() - 1);
 
-        
         emit(OpCode::POP);
 
-        
         visit(case_stmt.body);
 
-        
         if (i < stmt.cases.size() - 1 || stmt.default_case) {
             emit(OpCode::JUMP, static_cast<int64_t>(0));
             jump_patches.push_back(bytecode_.size() - 1);
         }
 
-        
         patch_jump(jump_patches[jump_patches.size() -
                                 (i == stmt.cases.size() - 1 && !stmt.default_case ? 1 : 2)],
                    bytecode_.size());
     }
 
-    
     if (stmt.default_case) {
-        
+
         emit(OpCode::POP);
         visit(stmt.default_case);
     }
 
-    
     if (!jump_patches.empty()) {
         patch_jump(jump_patches.back(), bytecode_.size());
     }
 }
 
-void Compiler::visit_class(const ClassStmt & ) {}
+void Compiler::visit_class(const ClassStmt &) {}
 
 void Compiler::visit_binary(const Binary &expr)
 {
@@ -703,7 +677,7 @@ void Compiler::visit_unary(const Unary &expr)
         emit(OpCode::NOT);
         break;
     case TokenType::MINUS:
-        emit(OpCode::PUSH_CONST, 0.0); 
+        emit(OpCode::PUSH_CONST, 0.0);
         visit_expr(expr.right);
         emit(OpCode::SUB);
         break;
@@ -718,29 +692,27 @@ void Compiler::visit_logical(const Logical &expr)
     visit_expr(expr.left);
 
     if (expr.op.type == TokenType::AND) {
-        
-        
+
         size_t false_jump = bytecode_.size();
         emit(OpCode::JUMP_IF_FALSE, static_cast<int64_t>(0));
-        
+
         visit_expr(expr.right);
         size_t to_end = bytecode_.size();
         emit(OpCode::JUMP, static_cast<int64_t>(0));
-        
+
         patch_jump(false_jump, bytecode_.size());
         emit(OpCode::PUSH_CONST, 0.0);
         patch_jump(to_end, bytecode_.size());
     }
     else if (expr.op.type == TokenType::OR) {
-        
-        
+
         size_t true_jump = bytecode_.size();
         emit(OpCode::JUMP_IF_TRUE, static_cast<int64_t>(0));
-        
+
         visit_expr(expr.right);
         size_t to_end = bytecode_.size();
         emit(OpCode::JUMP, static_cast<int64_t>(0));
-        
+
         patch_jump(true_jump, bytecode_.size());
         emit(OpCode::PUSH_CONST, 1.0);
         patch_jump(to_end, bytecode_.size());
@@ -802,7 +774,6 @@ void Compiler::visit_assign(const Assign &expr)
 {
     std::string name = sv_to_str(expr.name.lexeme);
 
-    
     if (const_vars_.count(name)) {
         throw CompileError("Cannot reassign const variable '" + name + "'");
     }
@@ -839,11 +810,11 @@ void Compiler::visit_set(const Set &expr)
 
 void Compiler::visit_new(const New &expr)
 {
-    
+
     for (const auto &arg : expr.arguments) {
         visit_expr(arg);
     }
-    
+
     emit(OpCode::NEW,
          std::make_pair(sv_to_str(expr.name.lexeme), static_cast<int>(expr.arguments.size())));
 }
@@ -851,8 +822,7 @@ void Compiler::visit_new(const New &expr)
 void Compiler::visit_call(const Call &expr)
 {
     if (auto *get = dynamic_cast<const Get *>(expr.callee.get())) {
-        
-        
+
         visit_expr(get->obj);
         for (const auto &arg : expr.arguments) {
             visit_expr(arg);
@@ -870,12 +840,11 @@ void Compiler::visit_call(const Call &expr)
     else if (auto *var = dynamic_cast<const Variable *>(expr.callee.get())) {
         std::string var_name = sv_to_str(var->name.lexeme);
 
-        
         if (var_name == "z") {
             emit(OpCode::PUSH_CONST, std::string("SYSTEM_Z"));
         }
         else {
-            
+
             visit_expr(expr.callee);
         }
 
@@ -886,8 +855,7 @@ void Compiler::visit_call(const Call &expr)
         emit(OpCode::CALL, std::make_pair(var_name, static_cast<int>(expr.arguments.size())));
     }
     else {
-        
-        
+
         visit_expr(expr.callee);
         for (const auto &arg : expr.arguments) {
             visit_expr(arg);
@@ -947,16 +915,14 @@ void Compiler::visit_index_assign(const IndexAssign &expr)
 
 void Compiler::visit_lambda(const LambdaExpr &expr)
 {
-    
+
     std::string lambda_name = "__lambda_" + std::to_string(lambda_counter_++);
 
-    
     std::vector<std::string> param_names;
     for (const auto &param : expr.params) {
         param_names.push_back(sv_to_str(param.name.lexeme));
     }
 
-    
     std::vector<Instruction> old_bytecode = std::move(bytecode_);
     bytecode_.clear();
 
@@ -976,7 +942,6 @@ void Compiler::visit_lambda(const LambdaExpr &expr)
 
     bytecode_ = std::move(old_bytecode);
 
-    
     emit(OpCode::PUSH_CONST, lambda_name);
 }
 
@@ -1049,14 +1014,13 @@ CompiledClass Compiler::compile_class_def(const ClassStmt &stmt)
     cls.static_init = std::move(bytecode_);
     bytecode_.clear();
 
-    
     for (const auto &field : stmt.fields) {
         if (!field.is_static && field.initializer) {
-            
+
             emit(OpCode::LOAD_VAR, std::string("this"));
-            
+
             visit_expr(field.initializer);
-            
+
             emit(OpCode::STORE_FIELD, sv_to_str(field.name.lexeme));
             emit(OpCode::POP);
         }
@@ -1093,18 +1057,16 @@ std::vector<Instruction> Compiler::compile_method(const FunctionStmt &method)
 
 void Compiler::load_module(const std::string &path)
 {
-    
+
     if (loaded_modules_.count(path))
         return;
     loaded_modules_.insert(path);
 
-    
     std::string resolved_path = path;
     if (!source_dir_.empty() && path.size() > 0 && path[0] != '/') {
         resolved_path = source_dir_ + "/" + path;
     }
 
-    
     {
         std::ifstream test(resolved_path);
         if (!test.good()) {
@@ -1129,7 +1091,6 @@ void Compiler::load_module(const std::string &path)
         }
     }
 
-    
     std::ifstream file(resolved_path);
     if (!file.is_open()) {
         throw CompileError("Cannot import module: " + path);
@@ -1138,7 +1099,6 @@ void Compiler::load_module(const std::string &path)
     oss << file.rdbuf();
     std::string source = oss.str();
 
-    
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
     Parser parser(tokens, source);
@@ -1148,7 +1108,6 @@ void Compiler::load_module(const std::string &path)
         throw CompileError("Syntax errors in imported module: " + path);
     }
 
-    
     for (const auto &stmt : statements) {
         if (auto *class_stmt = dynamic_cast<ClassStmt *>(stmt.get())) {
             if (!class_stmt->is_interface) {
@@ -1160,14 +1119,13 @@ void Compiler::load_module(const std::string &path)
         }
     }
 
-    
     for (const auto &stmt : statements) {
         if (auto *class_stmt = dynamic_cast<ClassStmt *>(stmt.get())) {
             if (!class_stmt->is_interface) {
                 std::string name = sv_to_str(class_stmt->name.lexeme);
                 CompiledClass cls = compile_class_def(*class_stmt);
                 pending_classes_[name] = cls;
-                
+
                 if (!cls.static_init.empty()) {
                     for (const auto &instr : cls.static_init) {
                         bytecode_.push_back(instr);
@@ -1177,7 +1135,6 @@ void Compiler::load_module(const std::string &path)
         }
     }
 
-    
     for (const auto &stmt : statements) {
         if (dynamic_cast<ClassStmt *>(stmt.get()))
             continue;
@@ -1275,4 +1232,4 @@ std::string Compiler::dump_program(const Program &program)
     return oss.str();
 }
 
-} 
+} // namespace alphabet

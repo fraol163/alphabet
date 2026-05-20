@@ -236,7 +236,7 @@ struct LoopStmt : Stmt
 
 struct ForStmt : Stmt
 {
-    StmtPtr initializer; 
+    StmtPtr initializer;
     ExprPtr condition;
     ExprPtr increment;
     StmtPtr body;
@@ -318,8 +318,8 @@ struct ClassStmt : Stmt
 
 struct ImportStmt : Stmt
 {
-    std::string module_path;          
-    std::optional<std::string> alias; 
+    std::string module_path;
+    std::optional<std::string> alias;
 
     ImportStmt(std::string path, std::optional<std::string> a = std::nullopt)
         : module_path(std::move(path)), alias(std::move(a))
@@ -329,7 +329,7 @@ struct ImportStmt : Stmt
 
 struct ExportStmt : Stmt
 {
-    std::vector<Token> names; 
+    std::vector<Token> names;
 
     explicit ExportStmt(std::vector<Token> n) : names(std::move(n)) {}
 };
@@ -354,6 +354,6 @@ struct MatchStmt : Stmt
     }
 };
 
-} 
+} // namespace alphabet
 
 #endif

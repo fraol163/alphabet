@@ -120,7 +120,7 @@ class LanguageServer
     std::string get_hover_doc(const std::string &word);
 };
 
-} 
-} 
+} // namespace lsp
+} // namespace alphabet
 
 #endif

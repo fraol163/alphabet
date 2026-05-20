@@ -87,8 +87,8 @@ class FFIBridge
 FFIValue to_ffi_value(const FFIArg &arg);
 FFIArg from_ffi_value(const FFIValue &val);
 
-} 
-} 
+} // namespace ffi
+} // namespace alphabet
 
 #endif
 

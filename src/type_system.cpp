@@ -30,8 +30,8 @@ void TypeManager::register_primitive(uint16_t id, const std::string &name)
 
 const TypeInfo *TypeManager::get_type(uint16_t id) const
 {
-    auto it = std::find_if(types_.begin(), types_.end(),
-                           [id](const TypeInfo &t) { return t.id == id; });
+    auto it =
+        std::find_if(types_.begin(), types_.end(), [id](const TypeInfo &t) { return t.id == id; });
     return it != types_.end() ? &*it : nullptr;
 }
 
@@ -91,4 +91,4 @@ bool TypeManager::implements_interface(uint16_t type_id, uint16_t interface_id) 
                        [interface_id](uint16_t iface) { return iface == interface_id; });
 }
 
-} 
+} // namespace alphabet

@@ -85,7 +85,7 @@ struct CompiledClass
     std::unordered_map<std::string, CompiledMethod> methods;
     std::unordered_map<std::string, CompiledMethod> static_methods;
     std::vector<Instruction> static_init;
-    std::vector<Instruction> field_init; 
+    std::vector<Instruction> field_init;
 };
 
 struct Program
@@ -189,6 +189,6 @@ inline const char *opcode_to_string(OpCode op)
     }
 }
 
-} 
+} // namespace alphabet
 
 #endif

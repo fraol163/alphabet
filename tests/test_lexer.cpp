@@ -41,14 +41,16 @@ TEST_CASE("Lexer recognizes single-char keywords", "[lexer]")
 
 TEST_CASE("Lexer magic header validation", "[lexer]")
 {
-    SECTION("Valid header should pass") {
+    SECTION("Valid header should pass")
+    {
         std::string source = "#alphabet<en>\n12 s = \"hello\"";
         Lexer lexer(source);
         auto tokens = lexer.scan_tokens();
         REQUIRE(tokens.size() > 0);
     }
 
-    SECTION("Missing header should throw MissingLanguageHeader") {
+    SECTION("Missing header should throw MissingLanguageHeader")
+    {
         std::string bad_source = "12 s = \"hello\"";
         Lexer bad_lexer(bad_source);
         REQUIRE_THROWS_AS(bad_lexer.scan_tokens(), MissingLanguageHeader);
@@ -462,9 +464,8 @@ static bool has_token(const std::vector<Token> &tokens, TokenType type)
 
 TEST_CASE("Amharic keywords translate correctly", "[lexer][i18n]")
 {
-    std::string source =
-        "#alphabet<am>\n"
-        "ከሆነ (5 > 3) { ውጤት.o(\"yes\") } አለበለዚህ { ውጤት.o(\"no\") }";
+    std::string source = "#alphabet<am>\n"
+                         "ከሆነ (5 > 3) { ውጤት.o(\"yes\") } አለበለዚህ { ውጤት.o(\"no\") }";
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
 
@@ -483,9 +484,8 @@ TEST_CASE("Amharic loop keyword", "[lexer][i18n]")
 
 TEST_CASE("Amharic class keywords", "[lexer][i18n]")
 {
-    std::string source =
-        "#alphabet<am>\n"
-        "ክፍል ከልሲ { ግልጽ ዘዴ 5 መደመር() { ተመለስ 1 } }";
+    std::string source = "#alphabet<am>\n"
+                         "ክፍል ከልሲ { ግልጽ ዘዴ 5 መደመር() { ተመለስ 1 } }";
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
 
@@ -497,9 +497,8 @@ TEST_CASE("Amharic class keywords", "[lexer][i18n]")
 
 TEST_CASE("Spanish keywords translate correctly", "[lexer][i18n]")
 {
-    std::string source =
-        "#alphabet<es>\n"
-        "si (5 > 3) { imprimir.o(\"yes\") } sino { imprimir.o(\"no\") }";
+    std::string source = "#alphabet<es>\n"
+                         "si (5 > 3) { imprimir.o(\"yes\") } sino { imprimir.o(\"no\") }";
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
 
@@ -518,9 +517,8 @@ TEST_CASE("Spanish loop keyword", "[lexer][i18n]")
 
 TEST_CASE("Spanish class keywords", "[lexer][i18n]")
 {
-    std::string source =
-        "#alphabet<es>\n"
-        "clase MiClase { publico metodo 5 sumar() { retornar 1 } }";
+    std::string source = "#alphabet<es>\n"
+                         "clase MiClase { publico metodo 5 sumar() { retornar 1 } }";
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
 
@@ -532,9 +530,8 @@ TEST_CASE("Spanish class keywords", "[lexer][i18n]")
 
 TEST_CASE("French keywords translate correctly", "[lexer][i18n]")
 {
-    std::string source =
-        "#alphabet<fr>\n"
-        "si (5 > 3) { afficher.o(\"yes\") } sinon { afficher.o(\"no\") }";
+    std::string source = "#alphabet<fr>\n"
+                         "si (5 > 3) { afficher.o(\"yes\") } sinon { afficher.o(\"no\") }";
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
 
@@ -553,9 +550,8 @@ TEST_CASE("French loop keyword", "[lexer][i18n]")
 
 TEST_CASE("French class keywords", "[lexer][i18n]")
 {
-    std::string source =
-        "#alphabet<fr>\n"
-        "classe MaClasse { public methode 5 additionner() { retour 1 } }";
+    std::string source = "#alphabet<fr>\n"
+                         "classe MaClasse { public methode 5 additionner() { retour 1 } }";
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
 
@@ -567,9 +563,8 @@ TEST_CASE("French class keywords", "[lexer][i18n]")
 
 TEST_CASE("German keywords translate correctly", "[lexer][i18n]")
 {
-    std::string source =
-        "#alphabet<de>\n"
-        "wenn (5 > 3) { ausgeben.o(\"yes\") } sonst { ausgeben.o(\"no\") }";
+    std::string source = "#alphabet<de>\n"
+                         "wenn (5 > 3) { ausgeben.o(\"yes\") } sonst { ausgeben.o(\"no\") }";
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
 
@@ -588,9 +583,8 @@ TEST_CASE("German loop keyword", "[lexer][i18n]")
 
 TEST_CASE("German class keywords", "[lexer][i18n]")
 {
-    std::string source =
-        "#alphabet<de>\n"
-        "klasse MeineKlasse { offentlich methode 5 addieren() { zuruck 1 } }";
+    std::string source = "#alphabet<de>\n"
+                         "klasse MeineKlasse { offentlich methode 5 addieren() { zuruck 1 } }";
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
 
@@ -602,39 +596,44 @@ TEST_CASE("German class keywords", "[lexer][i18n]")
 
 TEST_CASE("All 5 languages: try-catch keywords", "[lexer][i18n]")
 {
-    SECTION("English") {
+    SECTION("English")
+    {
         std::string src = "#alphabet<en>\ntry { } catch { }";
         Lexer l(src);
         auto toks = l.scan_tokens();
-        REQUIRE(has_token(toks, TokenType::TRY));
-        REQUIRE(has_token(toks, TokenType::HANDLE));
+        REQUIRE((has_token(toks, TokenType::TRY)));
+        REQUIRE((has_token(toks, TokenType::HANDLE)));
     }
-    SECTION("Amharic") {
+    SECTION("Amharic")
+    {
         std::string src = "#alphabet<am>\nሞክር { } ያዟ { }";
         Lexer l(src);
         auto toks = l.scan_tokens();
-        REQUIRE(has_token(toks, TokenType::TRY));
-        REQUIRE(has_token(toks, TokenType::HANDLE));
+        REQUIRE((has_token(toks, TokenType::TRY)));
+        REQUIRE((has_token(toks, TokenType::HANDLE)));
     }
-    SECTION("Spanish") {
+    SECTION("Spanish")
+    {
         std::string src = "#alphabet<es>\nintentar { } capturar { }";
         Lexer l(src);
         auto toks = l.scan_tokens();
-        REQUIRE(has_token(toks, TokenType::TRY));
-        REQUIRE(has_token(toks, TokenType::HANDLE));
+        REQUIRE((has_token(toks, TokenType::TRY)));
+        REQUIRE((has_token(toks, TokenType::HANDLE)));
     }
-    SECTION("French") {
+    SECTION("French")
+    {
         std::string src = "#alphabet<fr>\nessayer { } attraper { }";
         Lexer l(src);
         auto toks = l.scan_tokens();
-        REQUIRE(has_token(toks, TokenType::TRY));
-        REQUIRE(has_token(toks, TokenType::HANDLE));
+        REQUIRE((has_token(toks, TokenType::TRY)));
+        REQUIRE((has_token(toks, TokenType::HANDLE)));
     }
-    SECTION("German") {
+    SECTION("German")
+    {
         std::string src = "#alphabet<de>\nversuchen { } fangen { }";
         Lexer l(src);
         auto toks = l.scan_tokens();
-        REQUIRE(has_token(toks, TokenType::TRY));
-        REQUIRE(has_token(toks, TokenType::HANDLE));
+        REQUIRE((has_token(toks, TokenType::TRY)));
+        REQUIRE((has_token(toks, TokenType::HANDLE)));
     }
 }

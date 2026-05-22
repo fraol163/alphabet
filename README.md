@@ -42,7 +42,6 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
   - [Built-In Functions](#built-in-functions)
   - [Multilingual Keywords](#multilingual-keywords)
 - [Standard Library](#standard-library)
-- [Language Comparison](#language-comparison)
 - [Command Line](#command-line)
 - [Documentation](#documentation)
 - [Testing](#testing)

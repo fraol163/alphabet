@@ -19,9 +19,11 @@ jobs:
         run: docker tag alphabet-lang/alphabet:${{ github.ref_name }} alphabet-lang/alphabet:latest
 
       - name: Login to Docker Hub
+        if: ${{ secrets.DOCKERHUB_TOKEN != '' && secrets.DOCKERHUB_USERNAME != '' }}
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
       - name: Push to Docker Hub
+        if: ${{ secrets.DOCKERHUB_TOKEN != '' && secrets.DOCKERHUB_USERNAME != '' }}
         run: |
           docker push alphabet-lang/alphabet:${{ github.ref_name }}
           docker push alphabet-lang/alphabet:latest

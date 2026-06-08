@@ -1,12 +1,48 @@
 #include "project.h"
 #include <algorithm>
-#include <dirent.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#ifdef _WIN32
+#include <windows.h>
+#define stat _stat
+#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#else
+#include <dirent.h>
 #include <sys/stat.h>
+#endif
 
 namespace alphabet {
+
+static std::vector<std::string> list_abc_files(const std::string& dir) {
+    std::vector<std::string> files;
+#ifdef _WIN32
+    WIN32_FIND_DATAA findData;
+    std::string pattern = dir + "\\*.abc";
+    HANDLE hFind = FindFirstFileA(pattern.c_str(), &findData);
+    if (hFind != INVALID_HANDLE_VALUE) {
+        do {
+            if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                files.push_back(dir + "\\" + findData.cFileName);
+            }
+        } while (FindNextFileA(hFind, &findData));
+        FindClose(hFind);
+    }
+#else
+    DIR* d = opendir(dir.c_str());
+    if (d) {
+        struct dirent* entry;
+        while ((entry = readdir(d)) != nullptr) {
+            std::string name = entry->d_name;
+            if (name.size() > 4 && name.substr(name.size() - 4) == ".abc") {
+                files.push_back(dir + "/" + name);
+            }
+        }
+        closedir(d);
+    }
+#endif
+    return files;
+}
 
 ProjectConfig ProjectManager::load(const std::string& path) {
     ProjectConfig config;
@@ -113,17 +149,8 @@ std::string ProjectManager::resolve_dep(const std::string& name, const ProjectCo
 std::vector<std::string> ProjectManager::get_source_files(const ProjectConfig& config) {
     std::vector<std::string> files;
     for (const auto& dir : config.source_dirs) {
-        DIR* d = opendir(dir.c_str());
-        if (d) {
-            struct dirent* entry;
-            while ((entry = readdir(d)) != nullptr) {
-                std::string name = entry->d_name;
-                if (name.size() > 4 && name.substr(name.size() - 4) == ".abc") {
-                    files.push_back(dir + "/" + name);
-                }
-            }
-            closedir(d);
-        }
+        auto dir_files = list_abc_files(dir);
+        files.insert(files.end(), dir_files.begin(), dir_files.end());
     }
     // Also check entry point
     if (!config.entry.empty()) {
@@ -138,17 +165,8 @@ std::vector<std::string> ProjectManager::get_source_files(const ProjectConfig& c
 std::vector<std::string> ProjectManager::get_test_files(const ProjectConfig& config) {
     std::vector<std::string> files;
     for (const auto& dir : config.test_dirs) {
-        DIR* d = opendir(dir.c_str());
-        if (d) {
-            struct dirent* entry;
-            while ((entry = readdir(d)) != nullptr) {
-                std::string name = entry->d_name;
-                if (name.size() > 4 && name.substr(name.size() - 4) == ".abc") {
-                    files.push_back(dir + "/" + name);
-                }
-            }
-            closedir(d);
-        }
+        auto dir_files = list_abc_files(dir);
+        files.insert(files.end(), dir_files.begin(), dir_files.end());
     }
     return files;
 }

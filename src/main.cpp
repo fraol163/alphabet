@@ -11,11 +11,14 @@
 #include <vector>
 #ifdef _WIN32
 #include <io.h>
+#include <sys/stat.h>
 #include <windows.h>
 #define popen _popen
 #define pclose _pclose
 #define unlink _unlink
 #define chmod _chmod
+#define access _access
+#define stat _stat
 #else
 #include <dirent.h>
 #include <sys/stat.h>
@@ -57,6 +60,36 @@ namespace {
 
 constexpr const char* VERSION = ALPHABET_VERSION;
 constexpr const char* DEVELOPER = "Fraol Teshome (fraolteshome444@gmail.com)";
+
+static std::vector<std::string> list_dir_abc(const std::string& dir) {
+    std::vector<std::string> files;
+#ifdef _WIN32
+    WIN32_FIND_DATAA findData;
+    std::string pattern = dir + "\\*.abc";
+    HANDLE hFind = FindFirstFileA(pattern.c_str(), &findData);
+    if (hFind != INVALID_HANDLE_VALUE) {
+        do {
+            if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                files.push_back(dir + "\\" + findData.cFileName);
+            }
+        } while (FindNextFileA(hFind, &findData));
+        FindClose(hFind);
+    }
+#else
+    DIR* d = opendir(dir.c_str());
+    if (d) {
+        struct dirent* entry;
+        while ((entry = readdir(d)) != nullptr) {
+            std::string name = entry->d_name;
+            if (name.size() > 4 && name.substr(name.size() - 4) == ".abc") {
+                files.push_back(dir + "/" + name);
+            }
+        }
+        closedir(d);
+    }
+#endif
+    return files;
+}
 
 constexpr const char* LOGO = R"(
             d8b            d8b                 d8b
@@ -1851,18 +1884,7 @@ int main(int argc, char* argv[]) {
             }
 
             // Find all .abc files in tests/
-            std::vector<std::string> test_files;
-            DIR* dir = opendir(tests_dir.c_str());
-            if (dir) {
-                struct dirent* entry;
-                while ((entry = readdir(dir)) != nullptr) {
-                    std::string name = entry->d_name;
-                    if (name.size() > 4 && name.substr(name.size() - 4) == ".abc") {
-                        test_files.push_back(tests_dir + "/" + name);
-                    }
-                }
-                closedir(dir);
-            }
+            std::vector<std::string> test_files = list_dir_abc(tests_dir);
 
             if (test_files.empty()) {
                 std::cout << "No test files found in " << tests_dir << "/\n";
@@ -1963,10 +1985,20 @@ int main(int argc, char* argv[]) {
                     std::cerr << "Available packages: math, string_utils, json, collections, testing\n";
                     return 1;
                 }
+                std::string exe_dir;
+#ifdef _WIN32
+                char resolved[MAX_PATH] = {};
+                DWORD len = GetModuleFileNameA(nullptr, resolved, MAX_PATH);
+                if (len > 0) {
+                    exe_dir = std::string(resolved);
+                    size_t last_slash = exe_dir.rfind('\\');
+                    if (last_slash != std::string::npos)
+                        exe_dir = exe_dir.substr(0, last_slash);
+                }
+#else
                 std::string exe_path = "/proc/self/exe";
                 char resolved[4096];
                 ssize_t len = readlink(exe_path.c_str(), resolved, sizeof(resolved) - 1);
-                std::string exe_dir;
                 if (len > 0) {
                     resolved[len] = '\0';
                     exe_dir = std::string(resolved);
@@ -1974,6 +2006,7 @@ int main(int argc, char* argv[]) {
                     if (last_slash != std::string::npos)
                         exe_dir = exe_dir.substr(0, last_slash);
                 }
+#endif
                 std::string src = exe_dir + "/../stdlib/" + pkg_name + ".abc";
                 struct stat st;
                 if (stat(src.c_str(), &st) != 0) {
@@ -1999,16 +2032,13 @@ int main(int argc, char* argv[]) {
                     return 0;
                 }
                 std::cout << "Installed packages:\n";
-                DIR* dir = opendir(pkg_dir.c_str());
-                if (dir) {
-                    struct dirent* entry;
-                    while ((entry = readdir(dir)) != nullptr) {
-                        std::string name = entry->d_name;
-                        if (name.size() > 4 && name.substr(name.size() - 4) == ".abc") {
-                            std::cout << "  " << name.substr(0, name.size() - 4) << "\n";
-                        }
+                std::vector<std::string> installed = list_dir_abc(pkg_dir);
+                for (const auto& f : installed) {
+                    auto pos = f.find_last_of("/\\");
+                    std::string name = (pos != std::string::npos) ? f.substr(pos + 1) : f;
+                    if (name.size() > 4 && name.substr(name.size() - 4) == ".abc") {
+                        std::cout << "  " << name.substr(0, name.size() - 4) << "\n";
                     }
-                    closedir(dir);
                 }
                 return 0;
             } else if (pkg_cmd == "search") {

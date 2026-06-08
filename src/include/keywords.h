@@ -37,7 +37,7 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
      {{"klasse", "c"},         {"abstrakt", "a"},  {"schnittstelle", "j"}, {"methode", "m"},     {"wenn", "i"},
       {"sonst", "e"},          {"schleife", "l"},  {"solange", "l"},       {"zurück", "r"},      {"brechen", "b"},
       {"fortsetzen", "k"},     {"neu", "n"},       {"öffentlich", "v"},    {"privat", "p"},      {"statisch", "s"},
-      {"versuchen", "t"},      {"fangen", "h"},    {"ausgeben", "z.o"},      {"eingabe", "z.i"},   {"importieren", "x"},
+      {"versuchen", "t"},      {"fangen", "h"},    {"ausgeben", "z.o"},    {"eingabe", "z.i"},   {"importieren", "x"},
       {"übereinstimmen", "q"}, {"erweitert", "^"}, {"exportieren", "@"},   {"konstante", "\x80"}}}};
 
 inline std::string translate_keyword(const std::string& keyword, const std::string& lang) {

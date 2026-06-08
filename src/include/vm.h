@@ -225,7 +225,11 @@ class VM {
 
     using TraceCallback = std::function<void(const Instruction& instr, size_t stack_depth, const std::string& output)>;
     void set_trace_callback(TraceCallback cb) { trace_callback_ = std::move(cb); }
-    std::string consume_output_buffer() { std::string out = output_buffer_; output_buffer_.clear(); return out; }
+    std::string consume_output_buffer() {
+        std::string out = output_buffer_;
+        output_buffer_.clear();
+        return out;
+    }
 
   private:
     static constexpr size_t STACK_MAX = 65536;

@@ -1,9 +1,9 @@
 #ifndef ALPHABET_TEST_HELPERS_H
 #define ALPHABET_TEST_HELPERS_H
 
+#include "compiler.h"
 #include "lexer.h"
 #include "parser.h"
-#include "compiler.h"
 #include "vm.h"
 #include <iostream>
 #include <sstream>
@@ -13,22 +13,19 @@
 namespace alphabet {
 namespace test {
 
-inline std::vector<Token> lex(const std::string &source)
-{
+inline std::vector<Token> lex(const std::string& source) {
     Lexer lexer(source);
     return lexer.scan_tokens();
 }
 
-inline std::vector<StmtPtr> parse(const std::string &source)
-{
+inline std::vector<StmtPtr> parse(const std::string& source) {
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
     Parser parser(tokens, source);
     return parser.parse();
 }
 
-inline void run(const std::string &source)
-{
+inline void run(const std::string& source) {
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
     Parser parser(tokens, source);
@@ -39,10 +36,9 @@ inline void run(const std::string &source)
     vm.run();
 }
 
-inline std::string run_capture(const std::string &source)
-{
+inline std::string run_capture(const std::string& source) {
     std::ostringstream oss;
-    std::streambuf *old = std::cout.rdbuf(oss.rdbuf());
+    std::streambuf* old = std::cout.rdbuf(oss.rdbuf());
     try {
         Lexer lexer(source);
         auto tokens = lexer.scan_tokens();
@@ -52,8 +48,7 @@ inline std::string run_capture(const std::string &source)
         auto program = compiler.compile(stmts);
         VM vm(program);
         vm.run();
-    }
-    catch (...) {
+    } catch (...) {
         std::cout.rdbuf(old);
         throw;
     }
@@ -61,8 +56,7 @@ inline std::string run_capture(const std::string &source)
     return oss.str();
 }
 
-inline std::unordered_map<std::string, Value> run_get_globals(const std::string &source)
-{
+inline std::unordered_map<std::string, Value> run_get_globals(const std::string& source) {
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
     Parser parser(tokens, source);
@@ -74,7 +68,7 @@ inline std::unordered_map<std::string, Value> run_get_globals(const std::string 
     return vm.get_globals();
 }
 
-}
-}
+} // namespace test
+} // namespace alphabet
 
 #endif

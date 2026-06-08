@@ -69,8 +69,7 @@ bool VoiceInput::start(const std::string& python_path) {
     cmd_buf[sizeof(cmd_buf) - 1] = '\0';
 
     PROCESS_INFORMATION pi = {};
-    BOOL ok = CreateProcessA(nullptr, cmd_buf, nullptr, nullptr, TRUE, 0,
-                             nullptr, nullptr, &si, &pi);
+    BOOL ok = CreateProcessA(nullptr, cmd_buf, nullptr, nullptr, TRUE, 0, nullptr, nullptr, &si, &pi);
 
     CloseHandle(hChildStdinRead);
     CloseHandle(hChildStdoutWrite);
@@ -182,7 +181,8 @@ std::string VoiceInput::read_response() {
             if (ReadFile(h_stdout_, buf, sizeof(buf) - 1, &n, nullptr) && n > 0) {
                 buf[n] = '\0';
                 result += buf;
-                if (result.find('\n') != std::string::npos) break;
+                if (result.find('\n') != std::string::npos)
+                    break;
             } else {
                 break;
             }
@@ -197,7 +197,8 @@ std::string VoiceInput::read_response() {
         if (n > 0) {
             buf[n] = '\0';
             result += buf;
-            if (result.find('\n') != std::string::npos) break;
+            if (result.find('\n') != std::string::npos)
+                break;
         } else if (n == 0) {
             break;
         } else {

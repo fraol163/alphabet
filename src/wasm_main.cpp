@@ -5,8 +5,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
-#include <string>
 #include <streambuf>
+#include <string>
 
 #ifndef ALPHABET_VERSION
 #define ALPHABET_VERSION "2.3.5"
@@ -22,11 +22,14 @@ static std::string last_output;
 
 class StringBuf : public std::streambuf {
     std::string& target;
-public:
+
+  public:
     explicit StringBuf(std::string& s) : target(s) {}
-protected:
+
+  protected:
     int overflow(int c) override {
-        if (c != EOF) target += static_cast<char>(c);
+        if (c != EOF)
+            target += static_cast<char>(c);
         return c;
     }
 };
@@ -35,7 +38,8 @@ extern "C" {
 
 EMSCRIPTEN_KEEPALIVE
 const char* alphabet_run(const char* code) {
-    if (!code) return "";
+    if (!code)
+        return "";
 
     last_output.clear();
 
@@ -80,7 +84,8 @@ const char* alphabet_run(const char* code) {
 
 EMSCRIPTEN_KEEPALIVE
 const char* alphabet_eval(const char* expression) {
-    if (!expression) return "";
+    if (!expression)
+        return "";
     std::string code = std::string("#alphabet<en>\nz.o(") + expression + ")";
     return alphabet_run(code.c_str());
 }
@@ -89,5 +94,4 @@ EMSCRIPTEN_KEEPALIVE
 const char* alphabet_version() {
     return ALPHABET_VERSION;
 }
-
 }

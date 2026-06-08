@@ -34,11 +34,11 @@
 #include "nl_to_code.h"
 #include "parser.h"
 #include "project.h"
+#include "trace_utils.h"
 #include "type_system.h"
 #include "version.h"
 #include "vm.h"
 #include "voice.h"
-#include "trace_utils.h"
 
 #ifdef _WIN32
 #define RED(x) x
@@ -237,7 +237,8 @@ int count_braces_safe(const std::string& line) {
 bool is_command(const std::string& line) {
     if (line == "quit" || line == "exit" || line == "help" || line == "clear" || line == "reset" || line == "reload" ||
         line == "vars" || line == "history" || line == "keywords" || line == "builtins" || line == "voice" ||
-        line == "lang" || line == "trace" || line == "trace on" || line == "trace off" || line == "trace slow" || line == "trace fast" || line == "!!" || (line.size() > 1 && line[0] == '!' && line[1] != '!'))
+        line == "lang" || line == "trace" || line == "trace on" || line == "trace off" || line == "trace slow" ||
+        line == "trace fast" || line == "!!" || (line.size() > 1 && line[0] == '!' && line[1] != '!'))
         return true;
 
     if (line.rfind("#alphabet<", 0) == 0 && line.size() > 10 && line.back() == '>')
@@ -248,38 +249,46 @@ bool is_command(const std::string& line) {
 } // namespace repl
 
 static std::string format_operand(const alphabet::Operand& op) {
-    return std::visit([](const auto& v) -> std::string {
-        using T = std::decay_t<decltype(v)>;
-        if constexpr (std::is_same_v<T, std::monostate>) return "";
-        else if constexpr (std::is_same_v<T, int64_t>) return std::to_string(v);
-        else if constexpr (std::is_same_v<T, double>) {
-            std::string s = std::to_string(v);
-            if (s.find('.') != std::string::npos && s.find_last_not_of('0') == s.find('.'))
-                s.erase(s.find('.'));
-            return s;
-        }
-        else if constexpr (std::is_same_v<T, std::string>) return "\"" + v + "\"";
-        else if constexpr (std::is_same_v<T, std::nullptr_t>) return "null";
-        else if constexpr (std::is_same_v<T, std::pair<std::string, int>>)
-            return v.first + "@" + std::to_string(v.second);
-        return "";
-    }, op);
+    return std::visit(
+        [](const auto& v) -> std::string {
+            using T = std::decay_t<decltype(v)>;
+            if constexpr (std::is_same_v<T, std::monostate>)
+                return "";
+            else if constexpr (std::is_same_v<T, int64_t>)
+                return std::to_string(v);
+            else if constexpr (std::is_same_v<T, double>) {
+                std::string s = std::to_string(v);
+                if (s.find('.') != std::string::npos && s.find_last_not_of('0') == s.find('.'))
+                    s.erase(s.find('.'));
+                return s;
+            } else if constexpr (std::is_same_v<T, std::string>)
+                return "\"" + v + "\"";
+            else if constexpr (std::is_same_v<T, std::nullptr_t>)
+                return "null";
+            else if constexpr (std::is_same_v<T, std::pair<std::string, int>>)
+                return v.first + "@" + std::to_string(v.second);
+            return "";
+        },
+        op);
 }
 
 static std::string format_instruction(const alphabet::Instruction& instr, size_t index) {
     std::string result = std::to_string(index) + ": ";
     result += alphabet::opcode_to_string(instr.op);
     std::string operand = format_operand(instr.operand);
-    if (!operand.empty()) result += " " + operand;
+    if (!operand.empty())
+        result += " " + operand;
     return result;
 }
 
 static void slow_delay(bool slow) {
-    if (slow) std::this_thread::sleep_for(std::chrono::milliseconds(80));
+    if (slow)
+        std::this_thread::sleep_for(std::chrono::milliseconds(80));
 }
 
 static void slow_delay_long(bool slow) {
-    if (slow) std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    if (slow)
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
 }
 
 void start_repl() {
@@ -473,7 +482,8 @@ void start_repl() {
         }
         if (buffer.empty() && line == "trace") {
             std::cout << "Trace mode: " << (trace_mode ? "ON" : "OFF");
-            if (trace_mode) std::cout << " (" << (trace_slow ? "slow" : "fast") << ")";
+            if (trace_mode)
+                std::cout << " (" << (trace_slow ? "slow" : "fast") << ")";
             std::cout << "\n";
             std::cout << "Commands: trace on, trace off, trace slow, trace fast\n";
             continue;
@@ -777,7 +787,8 @@ void start_repl() {
                     std::istringstream iss(all_source);
                     std::string line;
                     while (std::getline(iss, line)) {
-                        if (!line.empty()) new_input = line;
+                        if (!line.empty())
+                            new_input = line;
                     }
                 }
 
@@ -790,7 +801,8 @@ void start_repl() {
                     std::string line_buf;
                     int col = 0;
                     for (const auto& tok : new_tokens) {
-                        if (tok.type == alphabet::TokenType::EOF_TOKEN) break;
+                        if (tok.type == alphabet::TokenType::EOF_TOKEN)
+                            break;
                         std::string formatted = std::string(tok.lexeme);
                         if (col + (int)formatted.size() + 1 > 56) {
                             std::cout << CYAN("│ ") << line_buf << "\n";
@@ -799,7 +811,10 @@ void start_repl() {
                             line_buf.clear();
                             col = 0;
                         }
-                        if (!line_buf.empty()) { line_buf += " "; col++; }
+                        if (!line_buf.empty()) {
+                            line_buf += " ";
+                            col++;
+                        }
                         line_buf += formatted;
                         col += (int)formatted.size();
                         slow_delay(trace_slow);
@@ -871,13 +886,15 @@ void start_repl() {
                             std::cout.flush();
                             slow_delay(trace_slow);
                             for (const auto& [mname, m] : cls.methods) {
-                                std::cout << CYAN("│ ") << "  METHOD " << mname << " (" << m.bytecode.size() << " instructions)\n";
+                                std::cout << CYAN("│ ") << "  METHOD " << mname << " (" << m.bytecode.size()
+                                          << " instructions)\n";
                                 std::cout.flush();
                                 slow_delay(trace_slow);
                             }
                         }
                         for (const auto& [fname, fn] : program.functions) {
-                            std::cout << CYAN("│ ") << "FUNC " << fname << " (" << fn.bytecode.size() << " instructions)\n";
+                            std::cout << CYAN("│ ") << "FUNC " << fname << " (" << fn.bytecode.size()
+                                      << " instructions)\n";
                             std::cout.flush();
                             slow_delay(trace_slow);
                         }
@@ -899,7 +916,9 @@ void start_repl() {
                         std::cout.flush();
                         size_t exec_idx = 0;
                         size_t skip_up_to = prev_bytecode_size;
-                        vm.set_trace_callback([&, exec_idx, skip_up_to](const alphabet::Instruction& instr, size_t stack_depth, const std::string&) mutable {
+                        vm.set_trace_callback([&, exec_idx, skip_up_to](const alphabet::Instruction& instr,
+                                                                        size_t stack_depth,
+                                                                        const std::string&) mutable {
                             std::string output = vm.consume_output_buffer();
                             if (!output.empty()) {
                                 std::cout << CYAN("│ ") << "→ " << output << "\n";
@@ -909,7 +928,8 @@ void start_repl() {
                             if (exec_idx >= skip_up_to) {
                                 std::string line = format_instruction(instr, exec_idx - skip_up_to);
                                 std::string padding;
-                                if (line.size() < 56) padding = std::string(56 - line.size(), ' ');
+                                if (line.size() < 56)
+                                    padding = std::string(56 - line.size(), ' ');
                                 std::cout << CYAN("│ ") << line << padding << CYAN("│ depth:") << stack_depth << "\n";
                                 std::cout.flush();
                                 slow_delay(trace_slow);

@@ -19,6 +19,13 @@
 #define chmod _chmod
 #define access _access
 #define stat _stat
+#define mkdir(path, mode) _mkdir(path)
+#ifndef F_OK
+#define F_OK 0
+#endif
+#ifndef STDERR_FILENO
+#define STDERR_FILENO 2
+#endif
 #else
 #include <dirent.h>
 #include <sys/stat.h>
@@ -910,8 +917,13 @@ void start_repl() {
 
                     int saved_stderr = -1;
                     if (trace_mode) {
+#ifdef _WIN32
+                        saved_stderr = _dup(STDERR_FILENO);
+                        freopen("NUL", "w", stderr);
+#else
                         saved_stderr = dup(STDERR_FILENO);
                         freopen("/dev/null", "w", stderr);
+#endif
                         std::cout << CYAN("┌─ Executing ──────────────────────────────┐\n");
                         std::cout.flush();
                         size_t exec_idx = 0;
@@ -948,9 +960,14 @@ void start_repl() {
 
                     if (trace_mode && saved_stderr >= 0) {
                         fflush(stderr);
+#ifdef _WIN32
+                        _dup2(saved_stderr, STDERR_FILENO);
+                        _close(saved_stderr);
+#else
                         dup2(saved_stderr, STDERR_FILENO);
                         close(saved_stderr);
                         stderr = fdopen(STDERR_FILENO, "w");
+#endif
                     }
 
                     if (!vm.get_unhandled_error().empty()) {

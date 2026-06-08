@@ -1,0 +1,8 @@
+#alphabet<en>
+// === EXPORT TESTS ===
+@ exported_fn()
+m 11 exported_fn() { r 42 }
+i (exported_fn() == 42) { z.o("PASS:export_s1") }
+@ EXPORTED_VAR
+5 EXPORTED_VAR = 99
+i (EXPORTED_VAR == 99) { z.o("PASS:export_s2") }

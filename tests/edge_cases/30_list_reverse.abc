@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 30: List reverse
+13 lst = [1, 2, 3, 4, 5]
+13 rev = z.reverse(lst)
+i (rev[0] == 5 && rev[4] == 1) { z.o("PASS:list_30_reverse") } e { z.o("FAIL:list_30_reverse") }

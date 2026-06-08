@@ -1,0 +1,50 @@
+#alphabet<am>
+@ factorial, gcd, lcm, ከፍተኛ, ትንሽ, clamp, ምልክት, ሙሉ, ጎዶሎ
+
+m 5 factorial(5 n) {
+  i (n <= 1) { r 1 }
+  r n * factorial(n - 1)
+}
+
+m 5 gcd(5 a, 5 b) {
+  l (b != 0) {
+    5 temp = b
+    b = a % b
+    a = temp
+  }
+  r a
+}
+
+m 5 lcm(5 a, 5 b) {
+  r (a * b) / gcd(a, b)
+}
+
+m 5 ከፍተኛ(5 a, 5 b) {
+  i (a > b) { r a }
+  r b
+}
+
+m 5 ትንሽ(5 a, 5 b) {
+  i (a < b) { r a }
+  r b
+}
+
+m 5 clamp(5 val, 5 lo, 5 hi) {
+  i (val < lo) { r lo }
+  i (val > hi) { r hi }
+  r val
+}
+
+m 5 ምልክት(5 n) {
+  i (n > 0) { r 1 }
+  i (n < 0) { r -1 }
+  r 0
+}
+
+m 5 ሙሉ(5 n) {
+  r n % 2 == 0
+}
+
+m 5 ጎዶሎ(5 n) {
+  r n % 2 != 0
+}

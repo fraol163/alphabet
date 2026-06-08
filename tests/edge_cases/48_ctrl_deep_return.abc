@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 48: Return from deep function
+m 11 deep(11 n) { i (n <= 0) { r 0 } r 1 + deep(n - 1) }
+5 result = deep(50)
+i (result == 50) { z.o("PASS:ctrl_48_deep_return") } e { z.o("FAIL:ctrl_48_deep_return") }

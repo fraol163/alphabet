@@ -1,0 +1,31 @@
+#alphabet<fr>
+// === TRY / HANDLE TESTS ===
+// S1: try succeeds
+essayer { z.o("PASS:try_s1") } attraper (error) { z.o("FAIL:try_s1") }
+// S2: try throws, handle catches
+essayer { z.i("before") z.t("custom error") z.o("FAIL:try_s2") } attraper (error) { z.o("PASS:try_s2") }
+// S3: error var accessible
+essayer { z.t("oops") } attraper (error) { z.o("PASS:try_s3") }
+// S4: nested try
+essayer { essayer { z.t("inner") } attraper (error) { z.o("PASS:try_s4") } } attraper (error) { }
+// S5: return in try
+méthode 11 try_ret() { essayer { r 1 } attraper (error) { r -1 } }
+si (try_ret() == 1) { z.o("PASS:try_s5") }
+// S6: function call throws
+méthode 11 will_throw() { z.t("err") }
+essayer { will_throw() } attraper (error) { z.o("PASS:try_s6") }
+// S7: top level try
+essayer { 5 val_a = 10 } attraper (error) { }
+z.o("PASS:try_s7")
+// S8: in function
+méthode 11 safe_op() { essayer { r 42 } attraper (error) { r 0 } }
+si (safe_op() == 42) { z.o("PASS:try_s8") }
+// S9: in loop
+5 cnt = 0
+5 idx_a = 0
+boucle (idx_a < 3) { essayer { cnt = cnt + 1 } attraper (error) { } idx_a = idx_a + 1 }
+si (cnt == 3) { z.o("PASS:try_s9") }
+// S10: in class method
+classe TryCls { public méthode 11 safe() { essayer { r 100 } attraper (error) { r 0 } } }
+15 tc = n TryCls()
+si (tc.safe() == 100) { z.o("PASS:try_s10") }

@@ -1,0 +1,7 @@
+#alphabet<en>
+5 x = len("abc")
+z.o(x)
+z.o("len is: " + str(x))
+5 y = len([1, 2, 3])
+z.o(y)
+z.o("list len: " + str(y))

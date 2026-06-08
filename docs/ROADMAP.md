@@ -1,14 +1,14 @@
-# Alphabet Project Roadmap - v2.3.4
+# Alphabet Project Roadmap - v2.3.5
 
 **Project Owner: Fraol Teshome**
 
-## Completed (v2.0.0 - v2.3.4)
+## Completed (v2.0.0 - v2.3.5)
 
 ### Core Language
 - [x] Lexer with 19 single-letter keywords
 - [x] Recursive descent parser
 - [x] Stack-based bytecode compiler
-- [x] Virtual machine with 42 opcodes
+- [x] Virtual machine with 45 opcodes
 - [x] Numeric type system (type IDs 0-14, all numbers stored as double internally)
 - [x] OOP: classes, methods, inheritance, interfaces, visibility
 - [x] Exception handling (try/handle)
@@ -116,4 +116,4 @@
 
 ---
 
-*Status: v2.3.4 Released. Core language and standard library complete. Focus on ecosystem and internationalization.*
+*Status: v2.3.5 Released. Core language and standard library complete. Focus on ecosystem and internationalization.*

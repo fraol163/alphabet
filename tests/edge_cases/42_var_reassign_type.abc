@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 42: Reassign different types
+5 x = 42
+x = "now a string"
+i (x == "now a string") { z.o("PASS:var_42_reassign_type") } e { z.o("FAIL:var_42_reassign_type") }

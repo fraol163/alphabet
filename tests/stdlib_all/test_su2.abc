@@ -1,0 +1,4 @@
+#alphabet<en>
+x "../../stdlib/string_utils.abc"
+12 rev = str_reverse("abc")
+z.o(rev)

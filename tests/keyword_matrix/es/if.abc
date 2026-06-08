@@ -1,0 +1,53 @@
+#alphabet<es>
+// === IF TESTS ===
+5 val_a = 10
+// S1: basic true
+si (val_a == 10) { z.o("PASS:if_s1") }
+// S2: basic false
+si (val_a == 20) { z.o("FAIL:if_s2") } z.o("PASS:if_s2")
+// S3: comparison >
+si (val_a > 5) { z.o("PASS:if_s3") }
+// S4: comparison <
+si (val_a < 5) { z.o("FAIL:if_s4") } z.o("PASS:if_s4")
+// S5: arithmetic expr
+si (val_a + 5 == 15) { z.o("PASS:if_s5") }
+// S6: bool var
+11 flag_a = true
+si (flag_a) { z.o("PASS:if_s6") }
+// S7: logical AND
+si (val_a > 5 && val_a < 20) { z.o("PASS:if_s7") }
+// S8: logical OR
+si (val_a == 5 || val_a == 10) { z.o("PASS:if_s8") }
+// S9: logical NOT
+si (!(val_a == 20)) { z.o("PASS:if_s9") }
+// S10: nested if
+si (val_a > 5) { si (val_a > 8) { z.o("PASS:if_s10") } }
+// S11: string comparison
+12 name_a = "hello"
+si (name_a == "hello") { z.o("PASS:if_s11") }
+// S12: list length
+13 lst_a = [1, 2, 3]
+si (z.len(lst_a) == 3) { z.o("PASS:if_s12") }
+// S13: map key
+14 map_a = {{"k": 100}}
+si (z.has(map_a, "k")) { z.o("PASS:if_s13") }
+// S14: function as condition
+método 11 is_positive(11 num_a) { r num_a > 0 }
+si (is_positive(5)) { z.o("PASS:if_s14") }
+// S15: f-string in body
+si (val_a == 10) { z.i(f"PASS:if_s15 val={val_a}") }
+// S16: single statement
+si (val_a == 10) z.o("PASS:if_s16")
+// S17: in function
+método 11 test_if_fn() { si (1 == 1) { r 1 } r 0 }
+si (test_if_fn() == 1) { z.o("PASS:if_s17") }
+// S18: in loop
+5 cnt_a = 0
+bucle (cnt_a < 5) { si (cnt_a == 3) { z.o("PASS:if_s18") } cnt_a = cnt_a + 1 }
+// S19: in class method
+clase IfCls { público método 11 check() { si (1 == 1) { r 1 } r 0 } }
+15 obj_a = n IfCls()
+si (obj_a.check() == 1) { z.o("PASS:if_s19") }
+// S20: chained comparisons
+5 val_b = 15
+si (val_a < val_b && val_b < 20) { z.o("PASS:if_s20") }

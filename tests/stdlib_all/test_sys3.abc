@@ -1,0 +1,29 @@
+#alphabet<en>
+x "../../stdlib/system.abc"
+5 ok = 1
+t {
+  5 home = env_get("HOME")
+  z.o(home)
+  i (home == null) {
+    z.o("home is null - FAIL")
+    ok = 0
+  } e {
+    z.o("home is not null - OK")
+  }
+} h (0 e) {
+  z.o("exception in home check")
+  ok = 0
+}
+z.o("ok1: " + ok)
+t {
+  5 has = env_has("HOME")
+  z.o(has)
+  i (has != 1) {
+    z.o("env_has HOME failed")
+    ok = 0
+  }
+} h (0 e) {
+  z.o("exception in env_has")
+  ok = 0
+}
+z.o("ok2: " + ok)

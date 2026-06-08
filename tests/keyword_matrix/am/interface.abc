@@ -1,0 +1,10 @@
+#alphabet<am>
+// === INTERFACE TESTS ===
+ክፍል Drawable { ግልጽ ዘዴ 11 draw() { } }
+ክፍል Circle በይነገጽ Drawable { ግልጽ ዘዴ 11 draw() { r "circle" } }
+15 ci = n Circle()
+ከሆነ (ci.draw() == "circle") { z.o("PASS:iface_s1") }
+ክፍል Formattable { ግልጽ ዘዴ 12 fmt() { } ግልጽ ዘዴ 11 validate() { } }
+ክፍል Email በይነገጽ Formattable { ግልጽ ዘዴ 12 fmt() { r "formatted" } ግልጽ ዘዴ 11 validate() { r 1 } }
+15 em = n Email()
+ከሆነ (em.fmt() == "formatted" && em.validate() == 1) { z.o("PASS:iface_s2") }

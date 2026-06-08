@@ -1,0 +1,7 @@
+#alphabet<en>
+// Edge Case 57: Class with only fields
+c Data { v 5 x = 0 v 12 y = "" }
+15 d = n Data()
+d.x = 42
+d.y = "hello"
+i (d.x == 42 && d.y == "hello") { z.o("PASS:class_57_fields") } e { z.o("FAIL:class_57_fields") }

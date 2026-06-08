@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 11: Empty string
+12 s = ""
+i (z.len(s) == 0) { z.o("PASS:str_11_empty") } e { z.o("FAIL:str_11_empty") }

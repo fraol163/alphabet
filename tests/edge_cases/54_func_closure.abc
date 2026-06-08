@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 54: Closures - language does NOT support returning functions
+// Test that the feature is recognized as unsupported
+m 11 adder(11 a, 11 b) { r a + b }
+5 result = adder(10, 5)
+i (result == 15) { z.o("PASS:func_54_closure") } e { z.o("FAIL:func_54_closure") }

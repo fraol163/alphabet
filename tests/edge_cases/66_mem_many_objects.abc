@@ -1,0 +1,12 @@
+#alphabet<en>
+// Edge Case 66: Many small objects
+c Box { v 5 val = 0 }
+5 i = 0
+5 ok = 1
+l (i < 100) {
+  15 b = n Box()
+  b.val = i
+  i (b.val != i) { ok = 0 }
+  i = i + 1
+}
+i (ok == 1) { z.o("PASS:mem_66_many_objects") } e { z.o("FAIL:mem_66_many_objects") }

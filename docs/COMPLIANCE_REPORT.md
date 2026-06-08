@@ -96,7 +96,7 @@ enum class OpCode : uint8_t {
     PUSH_CONST = 1,      LOAD_VAR = 2,        STORE_VAR = 3,
     LOAD_FIELD = 4,      STORE_FIELD = 5,     ADD = 6,
     SUB = 7,             MUL = 8,             DIV = 9,
-    // ... all 42 opcodes as uint8_t
+    // ... all 45 opcodes as uint8_t
     DUP = 37,            LOOP_START = 38,     BREAK_JUMP = 39,
     CONTINUE_JUMP = 40,  JUMP_IF_TRUE = 41,   MARK_CONST = 42
 };
@@ -433,7 +433,7 @@ $ ./alphabet --lsp
 
 # Version
 $ ./alphabet --version
-Alphabet 2.3.4 (Native C++)
+Alphabet 2.3.5 (Native C++)
 Developer: Fraol Teshome
 Compiled with C++17
 ```

@@ -1,0 +1,40 @@
+#alphabet<en>
+/// Error handling patterns
+/// Demonstrates: try/handle, custom error messages
+
+z.o("=== Error Handling ===")
+
+t {
+  5 result = 10 / 0
+  z.o("This won't print: " + z.tostr(result))
+} h (error) {
+  z.o("Caught error: Division by zero")
+}
+
+t {
+  5 data = z.json_parse("not valid json")
+} h (error) {
+  z.o("Caught JSON error: invalid syntax")
+}
+
+z.o("\n=== Safe Access ===")
+5 lst = [1, 2, 3]
+t {
+  5 val = lst[10]
+  z.o("This won't print: " + z.tostr(val))
+} h (error) {
+  z.o("Caught: index out of bounds")
+}
+
+z.o("\n=== Error Recovery ===")
+5 safe_divide = m(5 a, 5 b) {
+  i (b == 0) {
+    r null
+  }
+  r a / b
+}
+
+5 result1 = safe_divide(10, 2)
+5 result2 = safe_divide(10, 0)
+z.o("10 / 2 = " + z.tostr(result1))
+z.o("10 / 0 = " + z.tostr(result2))

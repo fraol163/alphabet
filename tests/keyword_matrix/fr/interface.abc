@@ -1,0 +1,10 @@
+#alphabet<fr>
+// === INTERFACE TESTS ===
+classe Drawable { public méthode 11 draw() { } }
+classe Circle interface Drawable { public méthode 11 draw() { r "circle" } }
+15 ci = n Circle()
+si (ci.draw() == "circle") { z.o("PASS:iface_s1") }
+classe Formattable { public méthode 12 fmt() { } public méthode 11 validate() { } }
+classe Email interface Formattable { public méthode 12 fmt() { r "formatted" } public méthode 11 validate() { r 1 } }
+15 em = n Email()
+si (em.fmt() == "formatted" && em.validate() == 1) { z.o("PASS:iface_s2") }

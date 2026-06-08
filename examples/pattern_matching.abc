@@ -1,0 +1,37 @@
+#alphabet<en>
+/// Pattern matching example
+/// Demonstrates: match/case, type checking
+
+z.o("=== Pattern Matching ===")
+
+5 describe = m(5 val) {
+  q (z.type(val)) {
+    "null": { r "nothing here" }
+    "number": { r "a number: " + z.tostr(val) }
+    "string": { r "text: " + val }
+    "list": { r "a list with " + z.tostr(z.len(val)) + " items" }
+    "map": { r "a map with " + z.tostr(z.len(val)) + " keys" }
+    default: { r "something else" }
+  }
+}
+
+z.o(describe(null))
+z.o(describe(42))
+z.o(describe("hello"))
+z.o(describe([1, 2, 3]))
+z.o(describe({"a": 1}))
+
+z.o("\n=== Number Classifier ===")
+5 classify = m(5 n) {
+  q (1) {
+    n < 0: { r "negative" }
+    n == 0: { r "zero" }
+    n < 10: { r "single digit" }
+    n < 100: { r "double digit" }
+    default: { r "large number" }
+  }
+}
+
+l (5 i = -2 : i <= 15 : i = i + 5) {
+  z.o(z.tostr(i) + " -> " + classify(i))
+}

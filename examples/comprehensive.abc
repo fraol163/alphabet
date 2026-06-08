@@ -1,0 +1,115 @@
+#alphabet<en>
+/// Comprehensive feature test
+/// Tests all major features in one file
+
+z.o("=== ALPHABET v2.3.5 FEATURE TEST ===")
+
+z.o("\n--- Variables ---")
+5 x = 42
+12 name = "Fraol"
+5 flag = 1
+z.o("x=" + z.tostr(x) + " name=" + name + " flag=" + z.tostr(flag))
+
+z.o("\n--- Arithmetic ---")
+z.o("Add: " + z.tostr(10 + 20))
+z.o("Sub: " + z.tostr(30 - 5))
+z.o("Mul: " + z.tostr(6 * 7))
+z.o("Div: " + z.tostr(100 / 4))
+z.o("Mod: " + z.tostr(17 % 5))
+
+z.o("\n--- Strings ---")
+12 greeting = "Hello, " + name + "!"
+z.o(greeting)
+z.o("Upper: " + z.upper(greeting))
+z.o("Lower: " + z.lower(greeting))
+z.o("Length: " + z.tostr(z.len(greeting)))
+z.o("Find 'Fraol': " + z.tostr(z.find(greeting, "Fraol")))
+
+z.o("\n--- Lists ---")
+5 nums = [1, 2, 3, 4, 5]
+z.o("List: " + z.tostr(nums))
+z.o("Length: " + z.tostr(z.len(nums)))
+append(nums, 6)
+z.o("After append: " + z.tostr(nums))
+z.o("Sum: " + z.tostr(z.sum(nums)))
+z.o("Avg: " + z.tostr(z.avg(nums)))
+
+z.o("\n--- Maps ---")
+5 person = {"name": "Fraol", "age": 21}
+z.o("Map: " + z.tostr(person))
+z.o("Keys: " + z.tostr(z.keys(person)))
+z.o("Values: " + z.tostr(z.values(person)))
+
+z.o("\n--- Control Flow ---")
+i (x > 40) {
+  z.o("x is greater than 40")
+} e i (x > 30) {
+  z.o("x is greater than 30")
+} e {
+  z.o("x is 30 or less")
+}
+
+z.o("\n--- Loops ---")
+5 total = 0
+l (5 i = 0 : i < 5 : i = i + 1) {
+  total = total + i
+}
+z.o("Loop sum: " + z.tostr(total))
+
+z.o("\n--- Ternary ---")
+5 val = 10
+let result = val > 5 ? "big" : "small"
+z.o("Ternary: " + result)
+
+z.o("\n--- Range ---")
+5 range_list = 1..5
+z.o("Range: " + z.tostr(range_list))
+
+z.o("\n--- Destructuring ---")
+5 a = 0
+5 b = 0
+[a, b] = [10, 20]
+z.o("Destructured: a=" + z.tostr(a) + " b=" + z.tostr(b))
+
+z.o("\n--- Functions ---")
+m 5 factorial(5 num) {
+  i (num <= 1) { r 1 }
+  r num * factorial(num - 1)
+}
+z.o("Factorial 5: " + z.tostr(factorial(5)))
+z.o("Factorial 10: " + z.tostr(factorial(10)))
+
+z.o("\n--- Lambdas ---")
+5 double_it = m(5 val) { r val * 2 }
+z.o("Double 5: " + z.tostr(double_it(5)))
+
+z.o("\n--- Closures ---")
+5 multiplier = 3
+5 multiply = m(5 val) { r val * multiplier }
+z.o("Multiply 5: " + z.tostr(multiply(5)))
+z.o("Multiply 10: " + z.tostr(multiply(10)))
+
+z.o("\n--- z.map/filter/reduce ---")
+5 lst = [1, 2, 3, 4, 5]
+5 doubled = z.map(lst, m(5 val) { r val * 2 })
+z.o("Doubled: " + z.tostr(doubled))
+5 evens = z.filter(lst, m(5 val) { r val % 2 == 0 })
+z.o("Evens: " + z.tostr(evens))
+5 sum = z.reduce(lst, 0, m(5 acc, 5 val) { r acc + val })
+z.o("Sum: " + z.tostr(sum))
+
+z.o("\n--- JSON ---")
+5 data = {"name": "Fraol", "scores": [95, 87, 92]}
+5 json_str = z.json_stringify(data)
+z.o("JSON: " + json_str)
+5 parsed = z.json_parse(json_str)
+z.o("Parsed name: " + parsed["name"])
+
+z.o("\n--- Type System ---")
+z.o("Type 42: " + z.type(42))
+z.o("Type 'hi': " + z.type("hi"))
+z.o("Type [1]: " + z.type([1]))
+z.o("Type {}: " + z.type({}))
+z.o("Type null: " + z.type(null))
+
+z.o("\n=== ALL TESTS PASSED ===")

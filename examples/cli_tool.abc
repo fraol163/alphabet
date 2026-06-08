@@ -1,0 +1,53 @@
+#alphabet<en>
+/// CLI Tool Example
+/// Demonstrates: args, conditionals, functions, file I/O
+
+z.o("=== Alphabet CLI Tool ===")
+
+5 args = z.args()
+
+i (z.len(args) == 0) {
+  z.o("Usage: alphabet run cli_tool.abc [command] [args]")
+  z.o("")
+  z.o("Commands:")
+  z.o("  greet <name>    Say hello")
+  z.o("  count <file>    Count lines in file")
+  z.o("  info            Show system info")
+  z.exit(0)
+}
+
+5 command = args[0]
+
+q (command) {
+  "greet": {
+    i (z.len(args) > 1) {
+      z.o("Hello, " + args[1] + "!")
+    } e {
+      z.o("Hello, World!")
+    }
+  }
+  "count": {
+    i (z.len(args) > 1) {
+      5 filename = args[1]
+      i (z.exists(filename)) {
+        5 content = z.f(filename)
+        5 lines = z.split(content, "\n")
+        z.o(filename + ": " + z.tostr(z.len(lines)) + " lines")
+      } e {
+        z.o("File not found: " + filename)
+      }
+    } e {
+      z.o("Usage: count <filename>")
+    }
+  }
+  "info": {
+    z.o("Platform: " + z.env("OSTYPE"))
+    z.o("User: " + z.env("USER"))
+    z.o("Home: " + z.env("HOME"))
+    z.o("Alphabet: v2.3.5")
+  }
+  default: {
+    z.o("Unknown command: " + command)
+    z.o("Run without arguments for help.")
+  }
+}

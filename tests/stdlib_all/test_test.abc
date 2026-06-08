@@ -1,0 +1,17 @@
+#alphabet<en>
+x "../../stdlib/test.abc"
+5 ok = 1
+t {
+  assert_true(1 == 1, "true works")
+  assert_false(1 == 0, "false works")
+  assert_eq(2 + 2, 4, "eq works")
+  assert_neq(1, 2, "neq works")
+  assert_null(null, "null works")
+  assert_not_null(42, "not null works")
+  test_summary()
+} h (0 e) { ok = 0 }
+i (ok) {
+  z.o("PASS: test")
+} e {
+  z.o("FAIL: test")
+}

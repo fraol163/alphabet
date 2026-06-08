@@ -1,0 +1,89 @@
+." Alphabet Language - a multilingual compiled programming language
+.TH ALPHABET 1 "May 2026" "v2.3.5" "User Commands"
+.SH NAME
+alphabet \- a multilingual compiled programming language with bytecode VM
+.SH SYNOPSIS
+.B alphabet
+.RI [ options ]
+.RI [ file.abc ]
+.SH DESCRIPTION
+.B Alphabet
+is a custom compiled programming language with a C++17 bytecode VM.
+Supports 5 languages: English, Amharic, Spanish, French, German.
+.SH OPTIONS
+.TP
+.B \-\-help
+Show help message
+.TP
+.B \-\-version
+Show version
+.TP
+.B \-\-debug
+Run with debugger (breakpoints, step, inspect)
+.TP
+.B \-\-sandbox
+Run in sandbox mode (no FFI, no file access)
+.TP
+.B \-\-dump\-bytecode
+Print compiled bytecode to stdout
+.TP
+.B \-\-profile
+Show instruction profiling after execution
+.TP
+.B \-c, \-\-compile
+Compile only, don't run
+.SH SUBCOMMANDS
+.TP
+.B alphabet run <file.abc> [args...]
+Run a file with optional arguments
+.TP
+.B alphabet watch <file.abc>
+Re\-run file on changes (500ms polling)
+.TP
+.B alphabet init <name>
+Create new Alphabet project
+.TP
+.B alphabet test
+Run all tests
+.TP
+.B alphabet learn [lesson]
+Interactive learning system
+.TP
+.B alphabet fmt <file.abc>
+Format source code
+.TP
+.B alphabet lint <file.abc>
+Lint source code for issues
+.SH SYNTAX
+The first line must be a language header:
+.B #alphabet<en>
+.PP
+Type annotations use numeric IDs:
+.B 5 x = 10
+(integer), 12 = string, 11 = bool
+.PP
+Named type keywords also work:
+.B int x = 10
+.SH EXAMPLES
+.TP
+.B #alphabet<en>
+.B z.o("Hello, World!")
+Print "Hello, World!"
+.TP
+.B #alphabet<en>
+.B 5 x = 10
+.B i (x > 5) { z.o("big") }
+Conditional
+.SH ENVIRONMENT
+.TP
+.B ALPHABET_PATH
+Colon\-separated list of directories to search for imports
+.SH FILES
+.TP
+.I stdlib/
+Standard library modules (math, io, string, list)
+.SH SEE ALSO
+.B Project repository:
+https://github.com/fraol163/alphabet
+.SH BUGS
+Report bugs at https://github.com/fraol163/alphabet/issues

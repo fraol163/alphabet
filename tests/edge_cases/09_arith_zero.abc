@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 09: Zero arithmetic
+5 a = 0 * 1000000
+5 b = 0 / 1
+5 c = 0 + 0
+i (a == 0 && b == 0 && c == 0) { z.o("PASS:arith_09_zero") } e { z.o("FAIL:arith_09_zero") }

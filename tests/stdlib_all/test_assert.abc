@@ -1,0 +1,23 @@
+#alphabet<en>
+x "../../stdlib/assert.abc"
+5 ok = 1
+t {
+  assert(1 == 1, "basic assert works")
+} h (0 e) {
+  ok = 0
+}
+t {
+  assert_eq(2 + 2, 4, "addition")
+} h (0 e) {
+  ok = 0
+}
+t {
+  assert_eq("hello", "hello", "string eq")
+} h (0 e) {
+  ok = 0
+}
+i (ok) {
+  z.o("PASS: assert")
+} e {
+  z.o("FAIL: assert")
+}

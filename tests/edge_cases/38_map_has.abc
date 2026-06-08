@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 38: Map has key (z.has returns 0/1 as number)
+14 m = {"a": 1, "b": 2}
+5 has_a = z.has(m, "a")
+5 has_z = z.has(m, "z")
+i (has_a == 1 && has_z == 0) { z.o("PASS:map_38_has") } e { z.o("FAIL:map_38_has a=" + has_a + " z=" + has_z) }

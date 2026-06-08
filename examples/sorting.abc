@@ -1,0 +1,44 @@
+#alphabet<en>
+/// Sorting algorithms
+/// Demonstrates: loops, comparisons, list manipulation
+
+z.o("=== Sorting Algorithms ===")
+
+5 bubble_sort(5 lst) {
+  5 n = z.len(lst)
+  l (5 i = 0 : i < n - 1 : i = i + 1) {
+    l (5 j = 0 : j < n - i - 1 : j = j + 1) {
+      i (lst[j] > lst[j + 1]) {
+        5 temp = lst[j]
+        lst[j] = lst[j + 1]
+        lst[j + 1] = temp
+      }
+    }
+  }
+  r lst
+}
+
+5 selection_sort(5 lst) {
+  5 n = z.len(lst)
+  l (5 i = 0 : i < n - 1 : i = i + 1) {
+    5 min_idx = i
+    l (5 j = i + 1 : j < n : j = j + 1) {
+      i (lst[j] < lst[min_idx]) {
+        min_idx = j
+      }
+    }
+    i (min_idx != i) {
+      5 temp = lst[i]
+      lst[i] = lst[min_idx]
+      lst[min_idx] = temp
+    }
+  }
+  r lst
+}
+
+5 data1 = [64, 34, 25, 12, 22, 11, 90]
+z.o("Original: " + z.tostr(data1))
+z.o("Bubble:    " + z.tostr(bubble_sort(data1)))
+
+5 data2 = [64, 34, 25, 12, 22, 11, 90]
+z.o("Selection: " + z.tostr(selection_sort(data2)))

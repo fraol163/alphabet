@@ -1,0 +1,39 @@
+# Maintainer: Fraol Teshome <fraolteshome444@gmail.com>
+pkgname=alphabet-lang
+pkgver=2.3.5
+pkgrel=1
+pkgdesc="Multilingual programming language — code in English, Amharic, Spanish, French, or German"
+arch=('x86_64')
+url="https://github.com/alphabet-lang/alphabet"
+license=('MIT')
+depends=('gcc-libs')
+makedepends=('cmake' 'nlohmann-json')
+source=("$url/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$srcdir/alphabet-$pkgver"
+  cmake -S . -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build
+}
+
+check() {
+  cd "$srcdir/alphabet-$pkgver/build"
+  ctest --output-on-failure
+}
+
+package() {
+  cd "$srcdir/alphabet-$pkgver"
+  cmake --install build --prefix "$pkgdir/usr"
+
+  # Install stdlib
+  install -dm755 "$pkgdir/usr/share/alphabet"
+  cp -r stdlib "$pkgdir/usr/share/alphabet/"
+  cp -r examples "$pkgdir/usr/share/alphabet/"
+  cp -r learn "$pkgdir/usr/share/alphabet/"
+
+  # Install license
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

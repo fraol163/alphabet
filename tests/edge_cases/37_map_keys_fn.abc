@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 37: Map keys function
+14 m = {"x": 1, "y": 2, "z": 3}
+13 keys = z.keys(m)
+i (z.len(keys) == 3) { z.o("PASS:map_37_keys_fn") } e { z.o("FAIL:map_37_keys_fn") }

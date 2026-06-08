@@ -1,0 +1,67 @@
+#alphabet<es}
+// === COMPREHENSIVE KEYWORD TEST: SPANISH ===
+
+// === VARIABLES ===
+5 valor = 42
+5 cantidad = 10
+12 nombre = "Alphabet"
+z.o("PASS:es_variables")
+
+// === ARITHMETIC ===
+5 suma = valor + cantidad
+i (suma == 52) { z.o("PASS:es_arithmetic") }
+
+// === IF/ELSE ===
+i (valor > 5) { z.o("PASS:es_if") } sino { z.o("FAIL:es_if") }
+i (valor < 5) { z.o("FAIL:es_else") } sino { z.o("PASS:es_else") }
+
+// === LOOP ===
+5 suma_b = 0
+5 indice = 0
+bucle (indice < 5) { suma_b = suma_b + indice indice = indice + 1 }
+i (suma_b == 10) { z.o("PASS:es_loop") }
+
+// === LOOP WITH BREAK ===
+5 sal = 0
+bucle (true) { sal = sal + 1 i (sal == 5) { romper } }
+i (sal == 5) { z.o("PASS:es_break") }
+
+// === LOOP WITH CONTINUE ===
+13 pares = []
+5 contador = 0
+bucle (contador < 10) { contador = contador + 1 i (contador % 2 != 0) { continuar } z.append(pares, contador) }
+i (z.len(pares) == 5) { z.o("PASS:es_continue") }
+
+// === FUNCTION ===
+método 11 factorial(11 num) {
+  i (num <= 1) { retornar 1 }
+  retornar num * factorial(num - 1)
+}
+i (factorial(5) == 120) { z.o("PASS:es_function") }
+
+// === CLASS ===
+clase Calculadora {
+  método 11 sumar(11 a, 11 b) { retornar a + b }
+}
+15 calc = nuevo Calculadora()
+i (calc.sumar(3, 4) == 7) { z.o("PASS:es_class") }
+
+// === INHERITANCE ===
+clase Animal {
+  método hablar() { retornar "..." }
+}
+clase Perro extiende Animal {
+  método hablar() { retornar "woof" }
+}
+15 perro = nuevo Perro()
+i (perro.hablar() == "woof") { z.o("PASS:es_inheritance") }
+
+// === TRY/HANDLE ===
+intentar { z.o("PASS:es_try") } capturar (15 error) { z.o("FAIL:es_try") }
+
+// === MATCH ===
+5 elegir = 2
+coincidir (elegir) { 1: z.i("one") 2: z.o("PASS:es_match") 3: z.i("three") }
+
+// === ALL DONE ===
+z.o("COMPREHENSIVE_ES_COMPLETE")

@@ -1,0 +1,32 @@
+#alphabet<es>
+// === NEW TESTS ===
+clase MyObj { público 5 oval = 0 }
+// S1: create object
+15 o1 = n MyObj()
+z.o("PASS:new_s1")
+// S2: set field
+o1.oval = 42
+si (o1.oval == 42) { z.o("PASS:new_s2") }
+// S3: assign to var
+15 o2 = n MyObj()
+o2.oval = 99
+si (o2.oval == 99) { z.o("PASS:new_s3") }
+// S4: as function arg
+método 11 get_val(15 obj_a) { r obj_a.oval }
+si (get_val(o1) == 42) { z.o("PASS:new_s4") }
+// S5: return from func
+método 15 make_obj() { 15 obj_b = n MyObj() obj_b.oval = 77 r obj_b }
+15 o3 = make_obj()
+si (o3.oval == 77) { z.o("PASS:new_s5") }
+// S6: multiple objects
+15 oa = n MyObj()
+15 ob = n MyObj()
+oa.oval = 1
+ob.oval = 2
+si (oa.oval == 1 && ob.oval == 2) { z.o("PASS:new_s6") }
+// S7: create list
+13 lst = [10, 20, 30]
+si (z.len(lst) == 3) { z.o("PASS:new_s7") }
+// S8: create map
+14 mp = {{"a": 1, "b": 2}}
+si (z.len(mp) == 2) { z.o("PASS:new_s8") }

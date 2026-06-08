@@ -1,0 +1,13 @@
+#alphabet<en>
+// Edge Case 68: Type checking (avoid keyword conflicts - n=new, x=import)
+5 num = 42
+12 str_val = "hello"
+8 flt = 3.14
+11 bool_val = true
+13 list_val = []
+14 map_val = {}
+i (z.type(num) == "number") { z.o("PASS:type_68_number") } e { z.o("FAIL:type_68_number") }
+i (z.type(str_val) == "string") { z.o("PASS:type_68_string") } e { z.o("FAIL:type_68_string") }
+i (z.type(flt) == "number") { z.o("PASS:type_68_float") } e { z.o("FAIL:type_68_float") }
+i (z.type(list_val) == "list") { z.o("PASS:type_68_list") } e { z.o("FAIL:type_68_list") }
+i (z.type(map_val) == "map") { z.o("PASS:type_68_map") } e { z.o("FAIL:type_68_map") }

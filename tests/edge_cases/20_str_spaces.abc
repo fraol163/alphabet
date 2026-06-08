@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 20: String with only spaces
+12 s = "   "
+i (z.len(s) == 3) { z.o("PASS:str_20_spaces") } e { z.o("FAIL:str_20_spaces") }

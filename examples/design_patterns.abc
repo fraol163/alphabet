@@ -1,0 +1,84 @@
+#alphabet<en>
+/// Design Patterns in Alphabet
+/// Demonstrates: classes, interfaces, lambdas, closures
+
+z.o("=== Design Patterns ===")
+
+z.o("\n--- Singleton ---")
+c Singleton {
+  s 5 instance = null
+  12 name
+
+  v s get_instance() {
+    i (z.is_null(Singleton.instance)) {
+      Singleton.instance = n Singleton("Default")
+    }
+    r Singleton.instance
+  }
+
+  m Singleton(12 n) {
+    this.name = n
+  }
+
+  v m get_name() {
+    r this.name
+  }
+}
+
+5 s1 = Singleton.get_instance()
+5 s2 = Singleton.get_instance()
+z.o("Same instance: " + z.tostr(s1 == s2))
+
+z.o("\n--- Observer ---")
+c Observer {
+  12 name
+  m Observer(12 n) { this.name = n }
+  v m update(12 msg) {
+    z.o(this.name + " received: " + msg)
+  }
+}
+
+c Subject {
+  13 observers = []
+  v m subscribe(5 obs) {
+    append(this.observers, obs)
+  }
+  v m notify(12 msg) {
+    l (5 obs : this.observers) {
+      obs.update(msg)
+    }
+  }
+}
+
+5 subject = n Subject()
+5 obs1 = n Observer("Observer1")
+5 obs2 = n Observer("Observer2")
+subject.subscribe(obs1)
+subject.subscribe(obs2)
+subject.notify("Hello observers!")
+
+z.o("\n--- Strategy ---")
+c Strategy {
+  v abstract m 5 execute(5 a, 5 b)
+}
+
+c AddStrategy ^ Strategy {
+  v m 5 execute(5 a, 5 b) { r a + b }
+}
+
+c MultiplyStrategy ^ Strategy {
+  v m 5 execute(5 a, 5 b) { r a * b }
+}
+
+c Context {
+  5 strategy
+  m Context(5 s) { this.strategy = s }
+  v m do_work(5 a, 5 b) {
+    r this.strategy.execute(a, b)
+  }
+}
+
+5 ctx1 = n Context(n AddStrategy())
+z.o("Add: " + z.tostr(ctx1.do_work(5, 3)))
+5 ctx2 = n Context(n MultiplyStrategy())
+z.o("Multiply: " + z.tostr(ctx2.do_work(5, 3)))

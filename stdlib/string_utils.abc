@@ -1,0 +1,79 @@
+#alphabet<en>
+// Alphabet Standard Library: String Utilities
+// String manipulation helpers
+
+// contains(str, sub) - check if str contains substring sub
+m 11 contains(12 str, 12 sub) {
+    r z.contains(str, sub)
+}
+
+// starts_with(str, prefix) - check if str starts with prefix
+m 11 starts_with(12 str, 12 prefix) {
+    r z.starts_with(str, prefix)
+}
+
+// ends_with(str, suffix) - check if str ends with suffix
+m 11 ends_with(12 str, 12 suffix) {
+    r z.ends_with(str, suffix)
+}
+
+// repeat(str, count) - repeat str count times
+m 12 repeat(12 str, 11 count) {
+    m 12 result = ""
+    m 11 idx = 0
+    l (idx < count) {
+        result = result + str
+        idx = idx + 1
+    }
+    r result
+}
+
+// reverse(str) - reverse a string
+m 12 reverse(12 str) {
+    r z.reverse(str)
+}
+
+// capitalize(str) - capitalize the first character
+m 12 capitalize(12 str) {
+    i (z.len(str) == 0) { r str }
+    m 12 first = z.upper(z.substr(str, 0, 1))
+    i (z.len(str) == 1) { r first }
+    r first + z.substr(str, 1, z.len(str) - 1)
+}
+
+// count_char(str, ch) - count occurrences of character ch in str
+m 11 count_char(12 str, 12 ch) {
+    m 11 cnt = 0
+    m 11 idx = 0
+    m 11 len = z.len(str)
+    l (idx < len) {
+        i (z.substr(str, idx, 1) == ch) {
+            cnt = cnt + 1
+        }
+        idx = idx + 1
+    }
+    r cnt
+}
+
+// pad_left(str, width, pad_ch) - pad str on the left to reach width
+m 12 pad_left(12 str, 11 width, 12 pad_ch) {
+    m 11 len = z.len(str)
+    m 12 result = str
+    l (z.len(result) < width) {
+        result = pad_ch + result
+    }
+    r result
+}
+
+// pad_right(str, width, pad_ch) - pad str on the right to reach width
+m 12 pad_right(12 str, 11 width, 12 pad_ch) {
+    m 11 len = z.len(str)
+    m 12 result = str
+    l (z.len(result) < width) {
+        result = result + pad_ch
+    }
+    r result
+}
+
+// Export all functions
+@ contains, starts_with, ends_with, repeat, reverse, capitalize, count_char, pad_left, pad_right

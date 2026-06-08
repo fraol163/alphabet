@@ -1,6 +1,7 @@
 #ifndef ALPHABET_LEXER_H
 #define ALPHABET_LEXER_H
 
+#include "keywords.h"
 #include <cstdint>
 #include <deque>
 #include <stdexcept>
@@ -8,7 +9,6 @@
 #include <string_view>
 #include <unordered_map>
 #include <vector>
-#include "keywords.h"
 
 namespace alphabet {
 
@@ -34,6 +34,7 @@ enum class TokenType : int {
     IMPORT = 117,
     MATCH = 118,
     TOK_CONST = 119,
+    QUESTION = '?',
 
     EXTENDS = '^',
     EXPORT = '@',
@@ -60,6 +61,8 @@ enum class TokenType : int {
     NOT = 306,
 
     DOT = '.',
+    DOTDOT = 307,
+    QUESTION_DOT = 308,
     AT = '@',
     LBRACE = '{',
     RBRACE = '}',
@@ -73,8 +76,7 @@ enum class TokenType : int {
     EOF_TOKEN = 0
 };
 
-struct Token
-{
+struct Token {
     TokenType type;
     std::string_view lexeme;
     double literal;
@@ -83,30 +85,23 @@ struct Token
 
     Token() : type(TokenType::EOF_TOKEN), literal(0), line(1), column(0) {}
     Token(TokenType t, std::string_view lex, double lit, size_t ln, size_t col = 0)
-        : type(t), lexeme(lex), literal(lit), line(ln), column(col)
-    {
-    }
+        : type(t), lexeme(lex), literal(lit), line(ln), column(col) {}
 };
 
-class MissingLanguageHeader : public std::runtime_error
-{
+class MissingLanguageHeader : public std::runtime_error {
   public:
-    MissingLanguageHeader() : std::runtime_error("Missing magic header '#alphabet<lang>' on line 1")
-    {
-    }
+    MissingLanguageHeader() : std::runtime_error("Missing magic header '#alphabet<lang>' on line 1") {}
 };
 
-class Lexer
-{
+class Lexer {
   public:
     explicit Lexer(std::string_view source, bool skip_header = false);
 
     std::vector<Token> scan_tokens();
 
-    std::deque<std::string> &get_string_pool()
-    {
-        return string_pool_;
-    }
+    std::deque<std::string>& get_string_pool() { return string_pool_; }
+
+    [[nodiscard]] bool is_strict() const { return strict_mode_; }
 
   private:
     std::string_view source_;
@@ -119,6 +114,7 @@ class Lexer
     size_t start_column_ = 0;
     std::string language_ = "en";
     bool skip_header_ = false;
+    bool strict_mode_ = false;
 
     [[nodiscard]] bool is_at_end() const;
     void scan_token();
@@ -132,6 +128,7 @@ class Lexer
     void number();
     void identifier();
     void fstring();
+    void raw_string();
     [[nodiscard]] bool is_keyword_char(char c) const;
     [[nodiscard]] TokenType keyword_type(char c) const;
     void validate_header();
@@ -139,7 +136,7 @@ class Lexer
     std::string extract_identifier_string() const;
 };
 
-const char *token_type_to_string(TokenType type);
+const char* token_type_to_string(TokenType type);
 
 } // namespace alphabet
 

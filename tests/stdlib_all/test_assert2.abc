@@ -1,0 +1,4 @@
+#alphabet<en>
+x "../../stdlib/assert.abc"
+assert(1 == 1, "test")
+z.o("PASS: assert")

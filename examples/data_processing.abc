@@ -1,0 +1,51 @@
+#alphabet<en>
+/// Data processing pipeline
+/// Demonstrates: maps, lists, string processing, JSON
+
+z.o("=== Student Grade Processor ===")
+
+5 students = [
+  {"name": "Fraol", "grade": 95, "subject": "CS"},
+  {"name": "Mitsat", "grade": 87, "subject": "Math"},
+  {"name": "Bereket", "grade": 92, "subject": "CS"},
+  {"name": "Seran", "grade": 78, "subject": "Physics"},
+  {"name": "Hana", "grade": 88, "subject": "CS"}
+]
+
+z.o("All students:")
+l (5 s : students) {
+  z.o("  " + s["name"] + " - " + z.tostr(s["grade"]) + "% (" + s["subject"] + ")")
+}
+
+5 cs_students = []
+l (5 s : students) {
+  i (s["subject"] == "CS") {
+    append(cs_students, s)
+  }
+}
+
+z.o("\nCS students:")
+l (5 s : cs_students) {
+  z.o("  " + s["name"] + ": " + z.tostr(s["grade"]) + "%")
+}
+
+5 total = 0
+l (5 s : students) {
+  total = total + s["grade"]
+}
+5 avg = total / z.len(students)
+z.o("\nClass average: " + z.tostr(avg) + "%")
+
+5 highest = 0
+5 top_student = ""
+l (5 s : students) {
+  i (s["grade"] > highest) {
+    highest = s["grade"]
+    top_student = s["name"]
+  }
+}
+z.o("Top student: " + top_student + " with " + z.tostr(highest) + "%")
+
+5 json_output = z.json_stringify(students)
+z.o("\nJSON output (" + z.tostr(z.len(json_output)) + " chars):")
+z.o(json_output)

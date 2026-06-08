@@ -1,0 +1,8 @@
+#alphabet<en>
+x "../../stdlib/system.abc"
+5 home = env_get("HOME")
+z.o(home)
+5 has = env_has("HOME")
+z.o(has)
+5 pa = platform_name()
+z.o(pa)

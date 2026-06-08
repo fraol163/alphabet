@@ -1,0 +1,5 @@
+#alphabet<en>
+int multiply(int a, int b) {
+  r a * b
+}
+z.o(multiply(6, 7))

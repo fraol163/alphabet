@@ -1,0 +1,28 @@
+#alphabet<en>
+@ compose, pipe, partial, identity, constantly, flip, negate
+
+m identity(5 x) {
+  r x
+}
+
+m constantly(5 val) {
+  r m(5 ignored) { r val }
+}
+
+m negate(5 fn) {
+  r m(5 x) { r !fn(x) }
+}
+
+m compose(5 f, 5 g) {
+  r m(5 x) { r f(g(x)) }
+}
+
+m pipe(5 fns) {
+  r m(5 x) {
+    5 result = x
+    l (5 fn : fns) {
+      result = fn(result)
+    }
+    r result
+  }
+}

@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 05: Negative modulo
+5 a = -7 % 3
+z.o("-7 % 3 = " + str(a))
+i (a != 0) { z.o("PASS:arith_05_neg_mod") } e { z.o("FAIL:arith_05_neg_mod") }

@@ -12,34 +12,27 @@
 
 namespace alphabet {
 
-std::string value_to_string(const Value &value)
-{
+std::string value_to_string(const Value& value) {
     return std::visit(
-        [](const auto &v) -> std::string {
+        [](const auto& v) -> std::string {
             using T = std::decay_t<decltype(v)>;
             if constexpr (std::is_same_v<T, std::monostate>) {
                 return "null";
-            }
-            else if constexpr (std::is_same_v<T, bool>) {
+            } else if constexpr (std::is_same_v<T, bool>) {
                 return v ? "true" : "false";
-            }
-            else if constexpr (std::is_same_v<T, int64_t>) {
+            } else if constexpr (std::is_same_v<T, int64_t>) {
                 return std::to_string(v);
-            }
-            else if constexpr (std::is_same_v<T, double>) {
+            } else if constexpr (std::is_same_v<T, double>) {
                 std::ostringstream oss;
                 if (v == std::floor(v)) {
                     oss << static_cast<int64_t>(v);
-                }
-                else {
+                } else {
                     oss << v;
                 }
                 return oss.str();
-            }
-            else if constexpr (std::is_same_v<T, std::string>) {
+            } else if constexpr (std::is_same_v<T, std::string>) {
                 return v;
-            }
-            else if constexpr (std::is_same_v<T, std::shared_ptr<Value::List>>) {
+            } else if constexpr (std::is_same_v<T, std::shared_ptr<Value::List>>) {
                 if (!v)
                     return "[]";
                 std::ostringstream oss;
@@ -51,14 +44,13 @@ std::string value_to_string(const Value &value)
                 }
                 oss << "]";
                 return oss.str();
-            }
-            else if constexpr (std::is_same_v<T, std::shared_ptr<Value::Map>>) {
+            } else if constexpr (std::is_same_v<T, std::shared_ptr<Value::Map>>) {
                 if (!v)
                     return "{}";
                 std::ostringstream oss;
                 oss << "{";
                 bool first = true;
-                for (const auto &[k, val] : *v) {
+                for (const auto& [k, val] : *v) {
                     if (!first)
                         oss << ", ";
                     oss << k << ": " << value_to_string(val);
@@ -66,8 +58,7 @@ std::string value_to_string(const Value &value)
                 }
                 oss << "}";
                 return oss.str();
-            }
-            else if constexpr (std::is_same_v<T, ObjectPtr>) {
+            } else if constexpr (std::is_same_v<T, ObjectPtr>) {
                 return v ? "Object#" + std::to_string(v->class_id) : "null";
             }
             return "unknown";
@@ -75,8 +66,7 @@ std::string value_to_string(const Value &value)
         value.data);
 }
 
-static std::string value_type_name(const Value &value)
-{
+static std::string value_type_name(const Value& value) {
     if (value.is_null())
         return "null";
     if (value.is_bool())
@@ -98,20 +88,18 @@ static std::string value_type_name(const Value &value)
 
 VM::VM() : stack_(std::make_unique<Value[]>(STACK_MAX)), stack_ptr_(stack_.get()) {}
 
-VM::~VM()
-{
+VM::~VM() {
     ffi_close_all();
 }
 
-void VM::ffi_close_all()
-{
+void VM::ffi_close_all() {
 #ifdef _WIN32
-    for (auto &[path, handle] : ffi_library_cache_) {
+    for (auto& [path, handle] : ffi_library_cache_) {
         if (handle)
             FreeLibrary(reinterpret_cast<HMODULE>(handle));
     }
 #else
-    for (auto &[path, handle] : ffi_library_cache_) {
+    for (auto& [path, handle] : ffi_library_cache_) {
         if (handle)
             dlclose(handle);
     }
@@ -119,21 +107,110 @@ void VM::ffi_close_all()
     ffi_library_cache_.clear();
 }
 
-VM::VM(const Program &program)
-    : stack_(std::make_unique<Value[]>(STACK_MAX)), stack_ptr_(stack_.get())
-{
+Value VM::call_lambda(const std::string& lambda_name, const std::vector<Value>& args) {
+    auto it = global_functions_.find(lambda_name);
+    if (it == global_functions_.end()) {
+        throw RuntimeError("Lambda not found: " + lambda_name);
+    }
+
+    const auto& func = it->second;
+    size_t saved_stack = stack_ptr_ - stack_.get();
+    size_t saved_frames = frames_.size();
+
+    for (const auto& arg : args) {
+        push(arg);
+    }
+
+    CallFrame frame(&func.bytecode);
+    frame.locals["this"] = Value(nullptr);
+    for (size_t i = 0; i < func.param_names.size() && i < args.size(); ++i) {
+        frame.locals[func.param_names[i]] = args[i];
+    }
+
+    for (const auto& [name, val] : globals_) {
+        if (frame.locals.find(name) == frame.locals.end()) {
+            frame.locals[name] = val;
+        }
+    }
+
+    frames_.push_back(frame);
+
+    while (!frames_.empty() && frames_.size() > saved_frames) {
+        auto& current_frame = frames_.back();
+        if (current_frame.ip >= current_frame.bytecode->size()) {
+            break;
+        }
+        execute_instruction(current_frame);
+    }
+
+    Value result(nullptr);
+    if (stack_ptr_ > stack_.get() + saved_stack) {
+        result = pop();
+    }
+
+    stack_ptr_ = stack_.get() + saved_stack;
+    return result;
+}
+
+Value VM::call_lambda_public(const std::string& lambda_name, const std::vector<Value>& args,
+                             const std::unordered_map<std::string, CompiledMethod>& fns) {
+    auto it = fns.find(lambda_name);
+    if (it == fns.end()) {
+        return Value(nullptr);
+    }
+
+    const auto& func = it->second;
+    size_t saved_stack = stack_ptr_ - stack_.get();
+    size_t saved_frames = frames_.size();
+
+    for (const auto& arg : args) {
+        push(arg);
+    }
+
+    CallFrame frame(&func.bytecode);
+    frame.locals["this"] = Value(nullptr);
+    for (size_t i = 0; i < func.param_names.size() && i < args.size(); ++i) {
+        frame.locals[func.param_names[i]] = args[i];
+    }
+
+    for (const auto& [name, val] : globals_) {
+        if (frame.locals.find(name) == frame.locals.end()) {
+            frame.locals[name] = val;
+        }
+    }
+
+    frames_.push_back(frame);
+
+    while (!frames_.empty() && frames_.size() > saved_frames) {
+        auto& current_frame = frames_.back();
+        if (current_frame.ip >= current_frame.bytecode->size()) {
+            break;
+        }
+        execute_instruction(current_frame);
+    }
+
+    Value result(nullptr);
+    if (stack_ptr_ > stack_.get() + saved_stack) {
+        result = pop();
+    }
+
+    stack_ptr_ = stack_.get() + saved_stack;
+    return result;
+}
+
+VM::VM(const Program& program) : stack_(std::make_unique<Value[]>(STACK_MAX)), stack_ptr_(stack_.get()) {
     init(program);
 }
 
-void VM::init(const Program &program)
-{
+void VM::init(const Program& program) {
     classes_ = program.classes;
     globals_by_index_ = program.globals;
     global_functions_ = program.functions;
+    constant_pool_ = program.constant_pool;
     stack_ptr_ = stack_.get();
 
     class_name_to_id_.clear();
-    for (const auto &[id, cls] : classes_) {
+    for (const auto& [id, cls] : classes_) {
         class_name_to_id_[cls.name] = id;
     }
 
@@ -147,19 +224,17 @@ void VM::init(const Program &program)
     }
 }
 
-void VM::run()
-{
+void VM::run() {
     run_loop();
 }
 
-void VM::run_from(const Program &program, size_t bytecode_offset)
-{
+void VM::run_from(const Program& program, size_t bytecode_offset) {
     classes_ = program.classes;
     globals_by_index_ = program.globals;
     global_functions_ = program.functions;
 
     class_name_to_id_.clear();
-    for (const auto &[id, cls] : classes_) {
+    for (const auto& [id, cls] : classes_) {
         class_name_to_id_[cls.name] = id;
     }
 
@@ -172,39 +247,53 @@ void VM::run_from(const Program &program, size_t bytecode_offset)
     }
 }
 
-void VM::push(const Value &value)
-{
+void VM::run_incremental(const Program& program, size_t bytecode_offset) {
+    classes_ = program.classes;
+    globals_by_index_ = program.globals;
+    global_functions_ = program.functions;
+    constant_pool_ = program.constant_pool;
+
+    class_name_to_id_.clear();
+    for (const auto& [id, cls] : classes_) {
+        class_name_to_id_[cls.name] = id;
+    }
+
+    if (!program.main.empty() && bytecode_offset < program.main.size()) {
+        CallFrame frame(&program.main);
+        frame.ip = bytecode_offset;
+        frames_.push_back(frame);
+        run_loop();
+    }
+}
+
+void VM::push(const Value& value) {
     if (stack_ptr_ - stack_.get() >= static_cast<ptrdiff_t>(STACK_MAX)) {
         throw RuntimeError("Stack overflow");
     }
     *stack_ptr_++ = value;
 }
 
-Value VM::pop()
-{
+Value VM::pop() {
     if (stack_ptr_ == stack_.get()) {
         throw RuntimeError("Stack underflow");
     }
     return *--stack_ptr_;
 }
 
-Value &VM::peek(size_t distance)
-{
+Value& VM::peek(size_t distance) {
     if (stack_ptr_ - stack_.get() <= static_cast<ptrdiff_t>(distance)) {
         throw RuntimeError("Stack peek out of bounds");
     }
     return *(stack_ptr_ - 1 - distance);
 }
 
-void VM::run_loop()
-{
+void VM::run_loop() {
     size_t start_frame_count = frames_.size();
 
     while (!frames_.empty()) {
-        CallFrame &frame = frames_.back();
+        CallFrame& frame = frames_.back();
 
         if (frame.ip >= frame.bytecode->size()) {
-
             push(Value(nullptr));
             frames_.pop_back();
             if (frames_.size() < start_frame_count) {
@@ -213,45 +302,98 @@ void VM::run_loop()
             continue;
         }
 
-        execute_instruction(frame);
+        try {
+            execute_instruction(frame);
+        } catch (const RuntimeError& e) {
+            throw_exception(Value(std::string(e.what())));
+        }
     }
 }
 
-void VM::execute_instruction(CallFrame &frame)
-{
-    const Instruction &instr = (*frame.bytecode)[frame.ip];
+void VM::execute_instruction(CallFrame& frame) {
+    const Instruction& instr = (*frame.bytecode)[frame.ip];
 
     if (debug_mode_) {
         check_breakpoints(instr);
     }
 
+    if (trace_callback_) {
+        size_t depth = stack_ptr_ - stack_.get();
+        trace_callback_(instr, depth, "");
+    }
+
+    size_t current_offset = frame.ip;
     frame.ip++;
+    if (instr.line > 0)
+        last_line_ = instr.line;
 
     switch (instr.op) {
     case OpCode::PUSH_CONST: {
-        if (auto *d = std::get_if<double>(&instr.operand)) {
+        if (auto* d = std::get_if<double>(&instr.operand)) {
             push(Value(*d));
-        }
-        else if (auto *s = std::get_if<std::string>(&instr.operand)) {
+        } else if (auto* s = std::get_if<std::string>(&instr.operand)) {
             push(Value(*s));
-        }
-        else if (auto *i = std::get_if<int64_t>(&instr.operand)) {
+        } else if (auto* i = std::get_if<int64_t>(&instr.operand)) {
             push(Value(static_cast<double>(*i)));
-        }
-        else if (std::holds_alternative<std::monostate>(instr.operand) ||
-                 std::holds_alternative<std::nullptr_t>(instr.operand)) {
+        } else if (std::holds_alternative<std::monostate>(instr.operand) ||
+                   std::holds_alternative<std::nullptr_t>(instr.operand)) {
             push(Value(nullptr));
         }
         break;
     }
 
+    case OpCode::PUSH_CONST_POOL: {
+        auto* idx = std::get_if<int64_t>(&instr.operand);
+        if (idx && static_cast<size_t>(*idx) < constant_pool_.size()) {
+            const Operand& val = constant_pool_[*idx];
+            if (auto* d = std::get_if<double>(&val)) {
+                push(Value(*d));
+            } else if (auto* s = std::get_if<std::string>(&val)) {
+                push(Value(*s));
+            } else if (auto* i = std::get_if<int64_t>(&val)) {
+                push(Value(static_cast<double>(*i)));
+            } else if (std::holds_alternative<std::nullptr_t>(val)) {
+                push(Value(nullptr));
+            } else {
+                push(Value(nullptr));
+            }
+        } else {
+            push(Value(nullptr));
+        }
+        break;
+    }
+
+    case OpCode::LOAD_SUPER: {
+        Value this_val;
+        auto local_it = frame.locals.find("this");
+        if (local_it != frame.locals.end()) {
+            this_val = local_it->second;
+        }
+        if (this_val.is_object()) {
+            ObjectPtr obj = this_val.as_object();
+            auto class_it = classes_.find(obj->class_id);
+            if (class_it != classes_.end()) {
+                const CompiledClass& cls = class_it->second;
+                if (!cls.superclass.empty()) {
+                    auto sid = class_name_to_id_.find(cls.superclass);
+                    if (sid != class_name_to_id_.end()) {
+                        push(Value(static_cast<double>(sid->second)));
+                        return;
+                    }
+                }
+            }
+        }
+        push(Value(nullptr));
+        break;
+    }
+
     case OpCode::LOAD_VAR: {
         std::visit(
-            [this, &frame](const auto &op) {
+            [this, &frame](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, int64_t>) {
                     if (static_cast<size_t>(op) < globals_by_index_.size()) {
-                        const std::string &name = globals_by_index_[op];
+                        const std::string& name = globals_by_index_[op];
                         auto local_it = frame.locals.find(name);
                         if (local_it != frame.locals.end()) {
                             push(local_it->second);
@@ -264,8 +406,7 @@ void VM::execute_instruction(CallFrame &frame)
                         }
                     }
                     push(Value(nullptr));
-                }
-                else if constexpr (std::is_same_v<T, std::string>) {
+                } else if constexpr (std::is_same_v<T, std::string>) {
                     auto local_it = frame.locals.find(op);
                     if (local_it != frame.locals.end()) {
                         push(local_it->second);
@@ -297,39 +438,34 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::STORE_VAR: {
         Value val = peek();
         std::visit(
-            [this, &val, &frame](const auto &op) {
+            [this, &val, &frame](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, int64_t>) {
                     if (static_cast<size_t>(op) < globals_by_index_.size()) {
-                        const std::string &name = globals_by_index_[op];
+                        const std::string& name = globals_by_index_[op];
                         if (const_vars_.count(name)) {
                             throw RuntimeError("Cannot reassign const variable '" + name + "'");
                         }
                         auto local_it = frame.locals.find(name);
                         if (local_it != frame.locals.end()) {
                             local_it->second = val;
-                        }
-                        else {
+                        } else {
                             globals_[name] = val;
                         }
                     }
-                }
-                else if constexpr (std::is_same_v<T, std::string>) {
+                } else if constexpr (std::is_same_v<T, std::string>) {
                     if (const_vars_.count(op)) {
-                        throw RuntimeError("Cannot reassign const variable '" + std::string(op) +
-                                           "'");
+                        throw RuntimeError("Cannot reassign const variable '" + std::string(op) + "'");
                     }
                     auto local_it = frame.locals.find(op);
                     if (local_it != frame.locals.end()) {
                         local_it->second = val;
-                    }
-                    else {
+                    } else {
                         auto this_it = frame.locals.find("this");
                         if (this_it != frame.locals.end() && this_it->second.is_object()) {
                             ObjectPtr obj = this_it->second.as_object();
                             obj->fields[op] = std::make_shared<Value>(val);
-                        }
-                        else {
+                        } else {
                             globals_[op] = val;
                         }
                     }
@@ -353,8 +489,7 @@ void VM::execute_instruction(CallFrame &frame)
 
     case OpCode::BREAK_JUMP:
     case OpCode::CONTINUE_JUMP: {
-
-        if (auto *target = std::get_if<int64_t>(&instr.operand)) {
+        if (auto* target = std::get_if<int64_t>(&instr.operand)) {
             frame.ip = static_cast<size_t>(*target);
         }
         break;
@@ -365,25 +500,18 @@ void VM::execute_instruction(CallFrame &frame)
         Value a = pop();
         if (a.is_integer() && b.is_integer()) {
             push(Value(a.as_integer() + b.as_integer()));
-        }
-        else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
+        } else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(a.as_number() + b.as_number()));
-        }
-        else if (a.is_string() && b.is_string()) {
+        } else if (a.is_string() && b.is_string()) {
             push(Value(a.as_string() + b.as_string()));
-        }
-        else if (a.is_string() && (b.is_number() || b.is_bool())) {
+        } else if (a.is_string() && (b.is_number() || b.is_bool())) {
             push(Value(a.as_string() + value_to_string(b)));
-        }
-        else if ((a.is_number() || a.is_bool()) && b.is_string()) {
+        } else if ((a.is_number() || a.is_bool()) && b.is_string()) {
             push(Value(value_to_string(a) + b.as_string()));
-        }
-        else if (a.is_null() || b.is_null()) {
+        } else if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
-        }
-        else {
-            throw RuntimeError("Type error: cannot add " + value_type_name(a) + " and " +
-                               value_type_name(b));
+        } else {
+            throw RuntimeError("Type error: cannot add " + value_type_name(a) + " and " + value_type_name(b));
         }
         break;
     }
@@ -393,16 +521,13 @@ void VM::execute_instruction(CallFrame &frame)
         Value a = pop();
         if (a.is_integer() && b.is_integer()) {
             push(Value(a.as_integer() - b.as_integer()));
-        }
-        else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
+        } else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(a.as_number() - b.as_number()));
-        }
-        else if (a.is_null() || b.is_null()) {
+        } else if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
-        }
-        else {
-            throw RuntimeError("Type error: cannot subtract " + value_type_name(b) + " from " +
-                               value_type_name(a) + " (both must be numbers)");
+        } else {
+            throw RuntimeError("Type error: cannot subtract " + value_type_name(b) + " from " + value_type_name(a) +
+                               " (both must be numbers)");
         }
         break;
     }
@@ -412,16 +537,13 @@ void VM::execute_instruction(CallFrame &frame)
         Value a = pop();
         if (a.is_integer() && b.is_integer()) {
             push(Value(a.as_integer() * b.as_integer()));
-        }
-        else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
+        } else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(a.as_number() * b.as_number()));
-        }
-        else if (a.is_null() || b.is_null()) {
+        } else if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
-        }
-        else {
-            throw RuntimeError("Type error: cannot multiply " + value_type_name(a) + " and " +
-                               value_type_name(b) + " (both must be numbers)");
+        } else {
+            throw RuntimeError("Type error: cannot multiply " + value_type_name(a) + " and " + value_type_name(b) +
+                               " (both must be numbers)");
         }
         break;
     }
@@ -432,17 +554,14 @@ void VM::execute_instruction(CallFrame &frame)
         if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             if (b.as_number() != 0) {
                 push(Value(a.as_number() / b.as_number()));
-            }
-            else {
+            } else {
                 throw RuntimeError("Division by zero");
             }
-        }
-        else if (a.is_null() || b.is_null()) {
+        } else if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
-        }
-        else {
-            throw RuntimeError("Type error: cannot divide " + value_type_name(a) + " by " +
-                               value_type_name(b) + " (both must be numbers)");
+        } else {
+            throw RuntimeError("Type error: cannot divide " + value_type_name(a) + " by " + value_type_name(b) +
+                               " (both must be numbers)");
         }
         break;
     }
@@ -452,13 +571,11 @@ void VM::execute_instruction(CallFrame &frame)
         Value a = pop();
         if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(std::fmod(a.as_number(), b.as_number())));
-        }
-        else if (a.is_null() || b.is_null()) {
+        } else if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
-        }
-        else {
-            throw RuntimeError("Type error: cannot modulo " + value_type_name(a) + " by " +
-                               value_type_name(b) + " (both must be numbers)");
+        } else {
+            throw RuntimeError("Type error: cannot modulo " + value_type_name(a) + " by " + value_type_name(b) +
+                               " (both must be numbers)");
         }
         break;
     }
@@ -475,16 +592,13 @@ void VM::execute_instruction(CallFrame &frame)
         Value a = pop();
         if (a.is_integer() && b.is_integer()) {
             push(Value(a.as_integer() > b.as_integer()));
-        }
-        else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
+        } else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(a.as_number() > b.as_number()));
-        }
-        else if (a.is_null() || b.is_null()) {
+        } else if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
-        }
-        else {
-            throw RuntimeError("Type error: cannot compare " + value_type_name(a) + " > " +
-                               value_type_name(b) + " (both must be numbers)");
+        } else {
+            throw RuntimeError("Type error: cannot compare " + value_type_name(a) + " > " + value_type_name(b) +
+                               " (both must be numbers)");
         }
         break;
     }
@@ -494,16 +608,13 @@ void VM::execute_instruction(CallFrame &frame)
         Value a = pop();
         if (a.is_integer() && b.is_integer()) {
             push(Value(a.as_integer() < b.as_integer()));
-        }
-        else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
+        } else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(a.as_number() < b.as_number()));
-        }
-        else if (a.is_null() || b.is_null()) {
+        } else if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
-        }
-        else {
-            throw RuntimeError("Type error: cannot compare " + value_type_name(a) + " < " +
-                               value_type_name(b) + " (both must be numbers)");
+        } else {
+            throw RuntimeError("Type error: cannot compare " + value_type_name(a) + " < " + value_type_name(b) +
+                               " (both must be numbers)");
         }
         break;
     }
@@ -520,16 +631,13 @@ void VM::execute_instruction(CallFrame &frame)
         Value a = pop();
         if (a.is_integer() && b.is_integer()) {
             push(Value(a.as_integer() >= b.as_integer()));
-        }
-        else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
+        } else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(a.as_number() >= b.as_number()));
-        }
-        else if (a.is_null() || b.is_null()) {
+        } else if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
-        }
-        else {
-            throw RuntimeError("Type error: cannot compare " + value_type_name(a) +
-                               " >= " + value_type_name(b) + " (both must be numbers)");
+        } else {
+            throw RuntimeError("Type error: cannot compare " + value_type_name(a) + " >= " + value_type_name(b) +
+                               " (both must be numbers)");
         }
         break;
     }
@@ -539,16 +647,13 @@ void VM::execute_instruction(CallFrame &frame)
         Value a = pop();
         if (a.is_integer() && b.is_integer()) {
             push(Value(a.as_integer() <= b.as_integer()));
-        }
-        else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
+        } else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(a.as_number() <= b.as_number()));
-        }
-        else if (a.is_null() || b.is_null()) {
+        } else if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
-        }
-        else {
-            throw RuntimeError("Type error: cannot compare " + value_type_name(a) +
-                               " <= " + value_type_name(b) + " (both must be numbers)");
+        } else {
+            throw RuntimeError("Type error: cannot compare " + value_type_name(a) + " <= " + value_type_name(b) +
+                               " (both must be numbers)");
         }
         break;
     }
@@ -563,7 +668,7 @@ void VM::execute_instruction(CallFrame &frame)
     }
 
     case OpCode::JUMP: {
-        if (auto *target = std::get_if<int64_t>(&instr.operand)) {
+        if (auto* target = std::get_if<int64_t>(&instr.operand)) {
             frame.ip = static_cast<size_t>(*target);
         }
         break;
@@ -572,11 +677,10 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::JUMP_IF_FALSE: {
         Value cond = pop();
         bool is_false = cond.is_null() || (cond.is_number() && cond.as_number() == 0) ||
-                        (cond.is_integer() && cond.as_integer() == 0) ||
-                        (cond.is_bool() && !cond.as_bool()) ||
+                        (cond.is_integer() && cond.as_integer() == 0) || (cond.is_bool() && !cond.as_bool()) ||
                         (cond.is_string() && cond.as_string().empty());
         if (is_false) {
-            if (auto *target = std::get_if<int64_t>(&instr.operand)) {
+            if (auto* target = std::get_if<int64_t>(&instr.operand)) {
                 frame.ip = static_cast<size_t>(*target);
             }
         }
@@ -586,11 +690,10 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::JUMP_IF_TRUE: {
         Value cond = pop();
         bool is_true = !cond.is_null() && !(cond.is_number() && cond.as_number() == 0) &&
-                       !(cond.is_integer() && cond.as_integer() == 0) &&
-                       !(cond.is_bool() && !cond.as_bool()) &&
+                       !(cond.is_integer() && cond.as_integer() == 0) && !(cond.is_bool() && !cond.as_bool()) &&
                        !(cond.is_string() && cond.as_string().empty());
         if (is_true) {
-            if (auto *target = std::get_if<int64_t>(&instr.operand)) {
+            if (auto* target = std::get_if<int64_t>(&instr.operand)) {
                 frame.ip = static_cast<size_t>(*target);
             }
         }
@@ -602,11 +705,9 @@ void VM::execute_instruction(CallFrame &frame)
         CallFrame finished_frame = frames_.back();
         frames_.pop_back();
         if (!frames_.empty()) {
-
             if (finished_frame.push_post_action_on_return) {
                 push(finished_frame.post_action_value);
-            }
-            else {
+            } else {
                 push(ret_val);
             }
         }
@@ -615,10 +716,10 @@ void VM::execute_instruction(CallFrame &frame)
 
     case OpCode::CALL: {
         std::visit(
-            [this](const auto &op) {
+            [this, &frame](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, std::pair<std::string, int>>) {
-                    const auto &[method_name, arg_count] = op;
+                    const auto& [method_name, arg_count] = op;
 
                     std::vector<Value> args;
                     for (int i = 0; i < arg_count; ++i) {
@@ -629,27 +730,23 @@ void VM::execute_instruction(CallFrame &frame)
                     Value callee = pop();
 
                     if (callee.is_string() && callee.as_string() == "SYSTEM_Z") {
-
                         if (method_name == "dyn" && args.size() >= 2) {
-
                             if (sandbox_mode_) {
                                 throw RuntimeError("FFI: z.dyn blocked in sandbox mode");
                             }
                             if (!args[0].is_string() || !args[1].is_string()) {
-                                throw RuntimeError(
-                                    "z.dyn requires string library path and function name");
+                                throw RuntimeError("z.dyn requires string library path and function name");
                             }
                             std::string lib_path = args[0].as_string();
                             std::string func_name_str = args[1].as_string();
 
-                            void *handle = nullptr;
+                            void* handle = nullptr;
                             auto cache_it = ffi_library_cache_.find(lib_path);
                             if (cache_it != ffi_library_cache_.end()) {
                                 handle = cache_it->second;
-                            }
-                            else {
+                            } else {
 #ifdef _WIN32
-                                handle = reinterpret_cast<void *>(LoadLibraryA(lib_path.c_str()));
+                                handle = reinterpret_cast<void*>(LoadLibraryA(lib_path.c_str()));
 #else
                                 handle = dlopen(lib_path.c_str(), RTLD_NOW);
 #endif
@@ -665,14 +762,13 @@ void VM::execute_instruction(CallFrame &frame)
                             }
 
 #ifdef _WIN32
-                            FARPROC raw_func = GetProcAddress(reinterpret_cast<HMODULE>(handle),
-                                                              func_name_str.c_str());
+                            FARPROC raw_func = GetProcAddress(reinterpret_cast<HMODULE>(handle), func_name_str.c_str());
 #else
-                            void *raw_func = dlsym(handle, func_name_str.c_str());
+                            void* raw_func = dlsym(handle, func_name_str.c_str());
 #endif
                             if (!raw_func) {
-                                throw RuntimeError("FFI: Function '" + func_name_str +
-                                                   "' not found in library " + lib_path);
+                                throw RuntimeError("FFI: Function '" + func_name_str + "' not found in library " +
+                                                   lib_path);
                             }
 
                             int ffi_arg_count = static_cast<int>(args.size()) - 2;
@@ -680,54 +776,29 @@ void VM::execute_instruction(CallFrame &frame)
                             if (ffi_arg_count == 0) {
                                 typedef int64_t (*Func0)();
                                 result = reinterpret_cast<Func0>(raw_func)();
-                            }
-                            else if (ffi_arg_count == 1) {
+                            } else if (ffi_arg_count == 1) {
                                 typedef int64_t (*Func1)(int64_t);
-                                int64_t a0 = args[2].is_number()
-                                                 ? static_cast<int64_t>(args[2].as_number())
-                                                 : 0;
+                                int64_t a0 = args[2].is_number() ? static_cast<int64_t>(args[2].as_number()) : 0;
                                 result = reinterpret_cast<Func1>(raw_func)(a0);
-                            }
-                            else if (ffi_arg_count == 2) {
+                            } else if (ffi_arg_count == 2) {
                                 typedef int64_t (*Func2)(int64_t, int64_t);
-                                int64_t a0 = args[2].is_number()
-                                                 ? static_cast<int64_t>(args[2].as_number())
-                                                 : 0;
-                                int64_t a1 = args[3].is_number()
-                                                 ? static_cast<int64_t>(args[3].as_number())
-                                                 : 0;
+                                int64_t a0 = args[2].is_number() ? static_cast<int64_t>(args[2].as_number()) : 0;
+                                int64_t a1 = args[3].is_number() ? static_cast<int64_t>(args[3].as_number()) : 0;
                                 result = reinterpret_cast<Func2>(raw_func)(a0, a1);
-                            }
-                            else if (ffi_arg_count == 3) {
+                            } else if (ffi_arg_count == 3) {
                                 typedef int64_t (*Func3)(int64_t, int64_t, int64_t);
-                                int64_t a0 = args[2].is_number()
-                                                 ? static_cast<int64_t>(args[2].as_number())
-                                                 : 0;
-                                int64_t a1 = args[3].is_number()
-                                                 ? static_cast<int64_t>(args[3].as_number())
-                                                 : 0;
-                                int64_t a2 = args[4].is_number()
-                                                 ? static_cast<int64_t>(args[4].as_number())
-                                                 : 0;
+                                int64_t a0 = args[2].is_number() ? static_cast<int64_t>(args[2].as_number()) : 0;
+                                int64_t a1 = args[3].is_number() ? static_cast<int64_t>(args[3].as_number()) : 0;
+                                int64_t a2 = args[4].is_number() ? static_cast<int64_t>(args[4].as_number()) : 0;
                                 result = reinterpret_cast<Func3>(raw_func)(a0, a1, a2);
-                            }
-                            else if (ffi_arg_count == 4) {
+                            } else if (ffi_arg_count == 4) {
                                 typedef int64_t (*Func4)(int64_t, int64_t, int64_t, int64_t);
-                                int64_t a0 = args[2].is_number()
-                                                 ? static_cast<int64_t>(args[2].as_number())
-                                                 : 0;
-                                int64_t a1 = args[3].is_number()
-                                                 ? static_cast<int64_t>(args[3].as_number())
-                                                 : 0;
-                                int64_t a2 = args[4].is_number()
-                                                 ? static_cast<int64_t>(args[4].as_number())
-                                                 : 0;
-                                int64_t a3 = args[5].is_number()
-                                                 ? static_cast<int64_t>(args[5].as_number())
-                                                 : 0;
+                                int64_t a0 = args[2].is_number() ? static_cast<int64_t>(args[2].as_number()) : 0;
+                                int64_t a1 = args[3].is_number() ? static_cast<int64_t>(args[3].as_number()) : 0;
+                                int64_t a2 = args[4].is_number() ? static_cast<int64_t>(args[4].as_number()) : 0;
+                                int64_t a3 = args[5].is_number() ? static_cast<int64_t>(args[5].as_number()) : 0;
                                 result = reinterpret_cast<Func4>(raw_func)(a0, a1, a2, a3);
-                            }
-                            else {
+                            } else {
                                 throw RuntimeError("FFI: z.dyn supports up to 4 arguments");
                             }
 
@@ -735,7 +806,7 @@ void VM::execute_instruction(CallFrame &frame)
                             return;
                         }
 
-                        for (auto &arg : args) {
+                        for (auto& arg : args) {
                             push(arg);
                         }
                         system_call(method_name, arg_count);
@@ -745,11 +816,10 @@ void VM::execute_instruction(CallFrame &frame)
                     if (callee.is_string()) {
                         auto func_it = global_functions_.find(callee.as_string());
                         if (func_it != global_functions_.end()) {
-                            const CompiledMethod &method_info = func_it->second;
+                            const CompiledMethod& method_info = func_it->second;
                             check_call_depth();
                             CallFrame new_frame(&method_info.bytecode);
-                            for (size_t i = 0;
-                                 i < args.size() && i < method_info.param_names.size(); ++i) {
+                            for (size_t i = 0; i < args.size() && i < method_info.param_names.size(); ++i) {
                                 new_frame.locals[method_info.param_names[i]] = args[i];
                             }
                             frames_.push_back(std::move(new_frame));
@@ -760,14 +830,102 @@ void VM::execute_instruction(CallFrame &frame)
                     if (callee.is_null()) {
                         auto func_it = global_functions_.find(method_name);
                         if (func_it != global_functions_.end()) {
-                            const CompiledMethod &method_info = func_it->second;
+                            const CompiledMethod& method_info = func_it->second;
                             check_call_depth();
                             CallFrame new_frame(&method_info.bytecode);
-                            for (size_t i = 0;
-                                 i < args.size() && i < method_info.param_names.size(); ++i) {
+                            for (size_t i = 0; i < args.size() && i < method_info.param_names.size(); ++i) {
                                 new_frame.locals[method_info.param_names[i]] = args[i];
                             }
                             frames_.push_back(std::move(new_frame));
+                            return;
+                        }
+
+                        static const std::unordered_set<std::string> BUILTIN_NAMES = {"o",
+                                                                                      "i",
+                                                                                      "t",
+                                                                                      "f",
+                                                                                      "fw",
+                                                                                      "fa",
+                                                                                      "exists",
+                                                                                      "exec",
+                                                                                      "system",
+                                                                                      "exit",
+                                                                                      "args",
+                                                                                      "sqrt",
+                                                                                      "sin",
+                                                                                      "cos",
+                                                                                      "tan",
+                                                                                      "abs",
+                                                                                      "floor",
+                                                                                      "ceil",
+                                                                                      "round",
+                                                                                      "pow",
+                                                                                      "min",
+                                                                                      "max",
+                                                                                      "log",
+                                                                                      "log10",
+                                                                                      "rand",
+                                                                                      "randint",
+                                                                                      "clamp",
+                                                                                      "len",
+                                                                                      "tostr",
+                                                                                      "tonum",
+                                                                                      "type",
+                                                                                      "is_null",
+                                                                                      "is_empty",
+                                                                                      "split",
+                                                                                      "join",
+                                                                                      "replace",
+                                                                                      "trim",
+                                                                                      "upper",
+                                                                                      "lower",
+                                                                                      "substr",
+                                                                                      "chr",
+                                                                                      "ord",
+                                                                                      "starts_with",
+                                                                                      "ends_with",
+                                                                                      "find",
+                                                                                      "count",
+                                                                                      "range",
+                                                                                      "append",
+                                                                                      "pop_back",
+                                                                                      "contains",
+                                                                                      "keys",
+                                                                                      "values",
+                                                                                      "builder",
+                                                                                      "set",
+                                                                                      "add",
+                                                                                      "has",
+                                                                                      "set_size",
+                                                                                      "append_str",
+                                                                                      "build",
+                                                                                      "reverse",
+                                                                                      "sort",
+                                                                                      "insert",
+                                                                                      "remove",
+                                                                                      "flatten",
+                                                                                      "flatten_str",
+                                                                                      "slice",
+                                                                                      "swap",
+                                                                                      "unique",
+                                                                                      "zip",
+                                                                                      "enumerate",
+                                                                                      "sum",
+                                                                                      "avg",
+                                                                                      "sleep",
+                                                                                      "http_get",
+                                                                                      "http_post",
+                                                                                      "timestamp",
+                                                                                      "env",
+                                                                                      "json_parse",
+                                                                                      "json_stringify",
+                                                                                      "assert",
+                                                                                      "assert_eq"};
+                        if (BUILTIN_NAMES.count(method_name)) {
+                            for (auto& arg : args) {
+                                push(arg);
+                            }
+                            system_call(method_name, arg_count);
                             return;
                         }
                     }
@@ -777,13 +935,12 @@ void VM::execute_instruction(CallFrame &frame)
 
                         auto class_it = classes_.find(obj->class_id);
                         if (class_it == classes_.end()) {
-                            throw RuntimeError("Unknown class ID: " +
-                                               std::to_string(obj->class_id));
+                            throw RuntimeError("Unknown class ID: " + std::to_string(obj->class_id));
                         }
 
-                        const CompiledClass &cls = class_it->second;
+                        const CompiledClass& cls = class_it->second;
 
-                        const CompiledClass *current_cls = &cls;
+                        const CompiledClass* current_cls = &cls;
                         auto method_it = current_cls->methods.end();
                         while (current_cls) {
                             method_it = current_cls->methods.find(method_name);
@@ -807,22 +964,66 @@ void VM::execute_instruction(CallFrame &frame)
                                 push(callee);
                                 return;
                             }
-                            throw RuntimeError("Method '" + method_name + "' not found in class '" +
-                                               cls.name + "'");
+                            throw RuntimeError("Method '" + method_name + "' not found in class '" + cls.name + "'");
                         }
 
-                        const CompiledMethod &method_info = method_it->second;
+                        const CompiledMethod& method_info = method_it->second;
                         check_call_depth();
                         CallFrame new_frame(&method_info.bytecode);
                         new_frame.locals["this"] = callee;
 
-                        for (size_t i = 0; i < args.size() && i < method_info.param_names.size();
-                             ++i) {
+                        for (size_t i = 0; i < args.size() && i < method_info.param_names.size(); ++i) {
                             new_frame.locals[method_info.param_names[i]] = args[i];
                         }
 
                         frames_.push_back(std::move(new_frame));
                         return;
+                    }
+
+                    if (callee.is_integer() || (callee.is_number() && !callee.is_null())) {
+                        double dval = callee.as_number();
+                        int64_t ival = static_cast<int64_t>(dval);
+                        if (static_cast<double>(ival) == dval && ival > 0) {
+                            uint16_t static_class_id = static_cast<uint16_t>(ival);
+                            auto class_it = classes_.find(static_class_id);
+                            if (class_it != classes_.end()) {
+                                const CompiledClass& cls = class_it->second;
+
+                                if (method_name == "super") {
+                                    Value this_val;
+                                    auto local_it = frame.locals.find("this");
+                                    if (local_it != frame.locals.end()) {
+                                        this_val = local_it->second;
+                                    }
+                                    auto method_it = cls.methods.find(cls.name);
+                                    if (method_it == cls.methods.end())
+                                        method_it = cls.methods.find("init");
+                                    if (method_it != cls.methods.end()) {
+                                        const CompiledMethod& method_info = method_it->second;
+                                        check_call_depth();
+                                        CallFrame new_frame(&method_info.bytecode);
+                                        new_frame.locals["this"] = this_val;
+                                        for (size_t i = 0; i < args.size() && i < method_info.param_names.size(); ++i) {
+                                            new_frame.locals[method_info.param_names[i]] = args[i];
+                                        }
+                                        frames_.push_back(std::move(new_frame));
+                                        return;
+                                    }
+                                }
+
+                                auto method_it = cls.static_methods.find(method_name);
+                                if (method_it != cls.static_methods.end()) {
+                                    const CompiledMethod& method_info = method_it->second;
+                                    check_call_depth();
+                                    CallFrame new_frame(&method_info.bytecode);
+                                    for (size_t i = 0; i < args.size() && i < method_info.param_names.size(); ++i) {
+                                        new_frame.locals[method_info.param_names[i]] = args[i];
+                                    }
+                                    frames_.push_back(std::move(new_frame));
+                                    return;
+                                }
+                            }
+                        }
                     }
 
                     push(Value(nullptr));
@@ -834,10 +1035,10 @@ void VM::execute_instruction(CallFrame &frame)
 
     case OpCode::NEW: {
         std::visit(
-            [this](const auto &op) {
+            [this](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, std::pair<std::string, int>>) {
-                    const auto &[class_name, arg_count] = op;
+                    const auto& [class_name, arg_count] = op;
                     uint16_t class_id = 0;
                     auto name_it = class_name_to_id_.find(class_name);
                     if (name_it != class_name_to_id_.end()) {
@@ -853,13 +1054,14 @@ void VM::execute_instruction(CallFrame &frame)
 
                     auto class_it = classes_.find(class_id);
                     if (class_it != classes_.end()) {
-
                         run_field_init(obj, class_it->second);
 
-                        const CompiledClass *init_cls = &class_it->second;
+                        const CompiledClass* init_cls = &class_it->second;
                         bool found_init = false;
                         while (init_cls) {
                             auto it = init_cls->methods.find("init");
+                            if (it == init_cls->methods.end())
+                                it = init_cls->methods.find(class_name);
                             if (it != init_cls->methods.end()) {
                                 found_init = true;
                                 break;
@@ -877,13 +1079,15 @@ void VM::execute_instruction(CallFrame &frame)
                             break;
                         }
                         if (found_init) {
-                            auto &init_method = init_cls->methods.find("init")->second;
+                            auto it = init_cls->methods.find("init");
+                            if (it == init_cls->methods.end())
+                                it = init_cls->methods.find(class_name);
+                            auto& init_method = it->second;
                             CallFrame init_frame(&init_method.bytecode);
                             init_frame.locals["this"] = Value(obj);
 
                             if (arg_count > 0) {
-                                for (size_t i = 0;
-                                     i < args.size() && i < init_method.param_names.size(); ++i) {
+                                for (size_t i = 0; i < args.size() && i < init_method.param_names.size(); ++i) {
                                     init_frame.locals[init_method.param_names[i]] = args[i];
                                 }
                             }
@@ -897,8 +1101,7 @@ void VM::execute_instruction(CallFrame &frame)
                     }
 
                     push(Value(obj));
-                }
-                else if constexpr (std::is_same_v<T, std::string>) {
+                } else if constexpr (std::is_same_v<T, std::string>) {
                     uint16_t class_id = 0;
                     auto name_it = class_name_to_id_.find(op);
                     if (name_it != class_name_to_id_.end()) {
@@ -912,8 +1115,7 @@ void VM::execute_instruction(CallFrame &frame)
                     }
 
                     push(Value(obj));
-                }
-                else if constexpr (std::is_same_v<T, int64_t>) {
+                } else if constexpr (std::is_same_v<T, int64_t>) {
                     ObjectPtr obj = std::make_shared<AlphabetObject>(static_cast<uint16_t>(op));
                     push(Value(obj));
                 }
@@ -925,7 +1127,14 @@ void VM::execute_instruction(CallFrame &frame)
     case OpCode::PRINT: {
         Value val = pop();
         Value obj = pop();
-        std::cout << value_to_string(val) << std::endl;
+        if (frame.ip - 1 >= executed_up_to_) {
+            if (trace_callback_) {
+                output_buffer_ = value_to_string(val);
+            } else {
+                std::cout << value_to_string(val) << std::endl;
+                std::cout.flush();
+            }
+        }
         push(Value(nullptr));
         break;
     }
@@ -936,10 +1145,9 @@ void VM::execute_instruction(CallFrame &frame)
 
     case OpCode::SETUP_TRY: {
         std::visit(
-            [&frame, this](const auto &op) {
+            [&frame, this](const auto& op) {
                 if constexpr (std::is_same_v<std::decay_t<decltype(op)>, int64_t>) {
-                    frame.try_stack.emplace_back(static_cast<size_t>(op),
-                                                 (stack_ptr_ - stack_.get()));
+                    frame.try_stack.emplace_back(static_cast<size_t>(op), (stack_ptr_ - stack_.get()));
                 }
             },
             instr.operand);
@@ -960,7 +1168,7 @@ void VM::execute_instruction(CallFrame &frame)
 
     case OpCode::GET_STATIC: {
         std::visit(
-            [this](const auto &op) {
+            [this](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, std::string>) {
                     Value class_val = pop();
@@ -985,7 +1193,7 @@ void VM::execute_instruction(CallFrame &frame)
 
     case OpCode::SET_STATIC: {
         std::visit(
-            [this](const auto &op) {
+            [this](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, std::string>) {
                     Value val = pop();
@@ -1007,7 +1215,7 @@ void VM::execute_instruction(CallFrame &frame)
 
     case OpCode::LOAD_FIELD: {
         std::visit(
-            [this](const auto &op) {
+            [this](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, std::string>) {
                     Value obj_val = pop();
@@ -1017,12 +1225,10 @@ void VM::execute_instruction(CallFrame &frame)
                         if (it != obj->fields.end()) {
                             auto field_ptr = it->second;
                             push(*field_ptr);
-                        }
-                        else {
+                        } else {
                             push(Value(nullptr));
                         }
-                    }
-                    else {
+                    } else {
                         push(Value(nullptr));
                     }
                 }
@@ -1033,7 +1239,7 @@ void VM::execute_instruction(CallFrame &frame)
 
     case OpCode::STORE_FIELD: {
         std::visit(
-            [this](const auto &op) {
+            [this](const auto& op) {
                 using T = std::decay_t<decltype(op)>;
                 if constexpr (std::is_same_v<T, std::string>) {
                     Value val = pop();
@@ -1050,7 +1256,7 @@ void VM::execute_instruction(CallFrame &frame)
 
     case OpCode::BUILD_LIST: {
         std::visit(
-            [this](const auto &op) {
+            [this](const auto& op) {
                 if constexpr (std::is_same_v<std::decay_t<decltype(op)>, int64_t>) {
                     size_t count = static_cast<size_t>(op);
                     Value::List items;
@@ -1067,7 +1273,7 @@ void VM::execute_instruction(CallFrame &frame)
 
     case OpCode::BUILD_MAP: {
         std::visit(
-            [this](const auto &op) {
+            [this](const auto& op) {
                 if constexpr (std::is_same_v<std::decay_t<decltype(op)>, int64_t>) {
                     size_t count = static_cast<size_t>(op);
                     Value::Map m;
@@ -1090,7 +1296,7 @@ void VM::execute_instruction(CallFrame &frame)
         Value obj = pop();
 
         if (obj.is_list() && idx.is_number()) {
-            const auto &list = obj.as_list();
+            const auto& list = obj.as_list();
             double raw = idx.as_number();
             int64_t index = static_cast<int64_t>(raw);
 
@@ -1098,22 +1304,18 @@ void VM::execute_instruction(CallFrame &frame)
                 index += static_cast<int64_t>(list.size());
             if (index >= 0 && static_cast<size_t>(index) < list.size()) {
                 push(list[static_cast<size_t>(index)]);
-            }
-            else {
+            } else {
                 push(Value(nullptr));
             }
-        }
-        else if (obj.is_map() && idx.is_string()) {
-            const auto &map = obj.as_map();
+        } else if (obj.is_map() && idx.is_string()) {
+            const auto& map = obj.as_map();
             auto it = map.find(idx.as_string());
             if (it != map.end()) {
                 push(it->second);
-            }
-            else {
+            } else {
                 push(Value(nullptr));
             }
-        }
-        else {
+        } else {
             push(Value(nullptr));
         }
         break;
@@ -1125,7 +1327,7 @@ void VM::execute_instruction(CallFrame &frame)
         Value obj = pop();
 
         if (obj.is_list() && idx.is_number()) {
-            auto &list = obj.as_list();
+            auto& list = obj.as_list();
             double raw = idx.as_number();
             int64_t index = static_cast<int64_t>(raw);
             if (index < 0)
@@ -1133,9 +1335,8 @@ void VM::execute_instruction(CallFrame &frame)
             if (index >= 0 && static_cast<size_t>(index) < list.size()) {
                 list[static_cast<size_t>(index)] = val;
             }
-        }
-        else if (obj.is_map() && idx.is_string()) {
-            auto &map = obj.as_map();
+        } else if (obj.is_map() && idx.is_string()) {
+            auto& map = obj.as_map();
             map[idx.as_string()] = val;
         }
         push(val);
@@ -1155,10 +1356,8 @@ void VM::execute_instruction(CallFrame &frame)
     }
 }
 
-void VM::check_breakpoints(const Instruction &instr)
-{
+void VM::check_breakpoints(const Instruction& instr) {
     if (step_over_ || (breakpoints_.find(instr.line) != breakpoints_.end())) {
-
         std::cout << "{\"event\":\"stopped\",\"line\":" << instr.line << ",\"reason\":\""
                   << (step_over_ ? "step" : "breakpoint") << "\"}" << std::endl;
         step_over_ = false;
@@ -1166,33 +1365,27 @@ void VM::check_breakpoints(const Instruction &instr)
     }
 }
 
-void VM::wait_for_debugger_command()
-{
+void VM::wait_for_debugger_command() {
     std::string line;
     while (std::getline(std::cin, line)) {
         if (line == "continue" || line == "c") {
             break;
-        }
-        else if (line == "step" || line == "s") {
+        } else if (line == "step" || line == "s") {
             step_over_ = true;
             break;
-        }
-        else if (line == "locals" || line == "l") {
+        } else if (line == "locals" || line == "l") {
             if (!frames_.empty()) {
                 std::cout << get_locals_json(frames_.back()) << std::endl;
-            }
-            else {
+            } else {
                 std::cout << "{}" << std::endl;
             }
-        }
-        else if (line == "stack" || line == "bt") {
+        } else if (line == "stack" || line == "bt") {
             std::cout << get_stack_trace() << std::endl;
-        }
-        else if (line == "globals" || line == "g") {
+        } else if (line == "globals" || line == "g") {
             std::ostringstream oss;
             oss << "{";
             bool first = true;
-            for (const auto &[name, val] : globals_) {
+            for (const auto& [name, val] : globals_) {
                 if (!first)
                     oss << ",";
                 oss << "\"" << name << "\": \"" << value_to_string(val) << "\"";
@@ -1200,9 +1393,7 @@ void VM::wait_for_debugger_command()
             }
             oss << "}";
             std::cout << oss.str() << std::endl;
-        }
-        else if (line == "print" || line == "p") {
-
+        } else if (line == "print" || line == "p") {
             std::ostringstream oss;
             oss << "[";
             for (size_t i = 0; i < static_cast<size_t>(stack_ptr_ - stack_.get()); ++i) {
@@ -1212,20 +1403,17 @@ void VM::wait_for_debugger_command()
             }
             oss << "]";
             std::cout << oss.str() << std::endl;
-        }
-        else if (line.find("add_break ") == 0 || line.find("b ") == 0) {
+        } else if (line.find("add_break ") == 0 || line.find("b ") == 0) {
             size_t space_pos = line.find(' ');
             int l = std::stoi(line.substr(space_pos + 1));
             add_breakpoint(l);
             std::cout << "{\"ok\":true,\"breakpoint\":" << l << "}" << std::endl;
-        }
-        else if (line.find("del_break ") == 0 || line.find("db ") == 0) {
+        } else if (line.find("del_break ") == 0 || line.find("db ") == 0) {
             size_t space_pos = line.find(' ');
             int l = std::stoi(line.substr(space_pos + 1));
             remove_breakpoint(l);
             std::cout << "{\"ok\":true,\"removed\":" << l << "}" << std::endl;
-        }
-        else if (line == "breakpoints" || line == "bl") {
+        } else if (line == "breakpoints" || line == "bl") {
             std::ostringstream oss;
             oss << "[";
             bool first = true;
@@ -1237,8 +1425,7 @@ void VM::wait_for_debugger_command()
             }
             oss << "]";
             std::cout << oss.str() << std::endl;
-        }
-        else if (line == "help" || line == "?") {
+        } else if (line == "help" || line == "?") {
             std::cout << "Debugger commands:\n"
                       << "  continue (c)      Resume execution\n"
                       << "  step (s)          Step to next line\n"
@@ -1254,8 +1441,7 @@ void VM::wait_for_debugger_command()
     }
 }
 
-std::string VM::get_stack_trace()
-{
+std::string VM::get_stack_trace() {
     std::ostringstream oss;
     oss << "{\"frames\":[";
     for (size_t i = 0; i < frames_.size(); ++i) {
@@ -1267,12 +1453,11 @@ std::string VM::get_stack_trace()
     return oss.str();
 }
 
-std::string VM::get_locals_json(const CallFrame &frame)
-{
+std::string VM::get_locals_json(const CallFrame& frame) {
     std::ostringstream oss;
     oss << "{";
     bool first = true;
-    for (const auto &[name, val] : frame.locals) {
+    for (const auto& [name, val] : frame.locals) {
         if (!first)
             oss << ",";
         oss << "\"" << name << "\": \"" << value_to_string(val) << "\"";
@@ -1282,11 +1467,9 @@ std::string VM::get_locals_json(const CallFrame &frame)
     return oss.str();
 }
 
-void VM::run_field_init(ObjectPtr obj, const CompiledClass &cls)
-{
-
-    std::vector<const CompiledClass *> chain;
-    const CompiledClass *current = &cls;
+void VM::run_field_init(ObjectPtr obj, const CompiledClass& cls) {
+    std::vector<const CompiledClass*> chain;
+    const CompiledClass* current = &cls;
     while (current) {
         chain.push_back(current);
         if (!current->superclass.empty()) {
@@ -1304,38 +1487,51 @@ void VM::run_field_init(ObjectPtr obj, const CompiledClass &cls)
 
     std::reverse(chain.begin(), chain.end());
 
-    for (const auto *c : chain) {
+    for (const auto* c : chain) {
         if (c->field_init.empty())
             continue;
-        const auto &fi = c->field_init;
+        const auto& fi = c->field_init;
         for (size_t ip = 0; ip < fi.size();) {
-            const auto &instr = fi[ip];
+            const auto& instr = fi[ip];
             if (instr.op == OpCode::RET)
                 break;
             if (instr.op == OpCode::LOAD_VAR) {
                 push(Value(obj));
-            }
-            else if (instr.op == OpCode::PUSH_CONST) {
-                if (auto *i = std::get_if<int64_t>(&instr.operand)) {
-                    push(Value(*i));
+            } else if (instr.op == OpCode::PUSH_CONST || instr.op == OpCode::PUSH_CONST_POOL) {
+                if (instr.op == OpCode::PUSH_CONST_POOL) {
+                    auto* idx = std::get_if<int64_t>(&instr.operand);
+                    if (idx && static_cast<size_t>(*idx) < constant_pool_.size()) {
+                        const Operand& val = constant_pool_[*idx];
+                        if (auto* i = std::get_if<int64_t>(&val)) {
+                            push(Value(*i));
+                        } else if (auto* d = std::get_if<double>(&val)) {
+                            push(Value(*d));
+                        } else if (auto* s = std::get_if<std::string>(&val)) {
+                            push(Value(*s));
+                        } else {
+                            push(Value(nullptr));
+                        }
+                    } else {
+                        push(Value(nullptr));
+                    }
+                } else {
+                    if (auto* i = std::get_if<int64_t>(&instr.operand)) {
+                        push(Value(*i));
+                    } else if (auto* d = std::get_if<double>(&instr.operand)) {
+                        push(Value(*d));
+                    } else if (auto* s = std::get_if<std::string>(&instr.operand)) {
+                        push(Value(*s));
+                    } else {
+                        push(Value(nullptr));
+                    }
                 }
-                else if (auto *d = std::get_if<double>(&instr.operand)) {
-                    push(Value(*d));
-                }
-                else if (auto *s = std::get_if<std::string>(&instr.operand)) {
-                    push(Value(*s));
-                }
-                else {
-                    push(Value(nullptr));
-                }
-            }
-            else if (instr.op == OpCode::STORE_FIELD) {
+            } else if (instr.op == OpCode::STORE_FIELD) {
                 Value val = pop();
                 Value obj_val = pop();
                 if (obj_val.is_object()) {
                     auto o = obj_val.as_object();
                     std::visit(
-                        [&](const auto &f) {
+                        [&](const auto& f) {
                             if constexpr (std::is_same_v<std::decay_t<decltype(f)>, std::string>) {
                                 o->fields[f] = std::make_shared<Value>(val);
                             }
@@ -1343,8 +1539,7 @@ void VM::run_field_init(ObjectPtr obj, const CompiledClass &cls)
                         instr.operand);
                 }
                 push(val);
-            }
-            else if (instr.op == OpCode::POP) {
+            } else if (instr.op == OpCode::POP) {
                 pop();
             }
             ip++;
@@ -1352,15 +1547,13 @@ void VM::run_field_init(ObjectPtr obj, const CompiledClass &cls)
     }
 }
 
-void VM::mark_const(const std::string &name)
-{
+void VM::mark_const(const std::string& name) {
     const_vars_.insert(name);
 }
 
-void VM::throw_exception(const Value &value)
-{
+void VM::throw_exception(const Value& value) {
     while (!frames_.empty()) {
-        CallFrame &frame = frames_.back();
+        CallFrame& frame = frames_.back();
 
         if (!frame.try_stack.empty()) {
             auto [handler_ip, stack_depth] = frame.try_stack.back();
@@ -1378,13 +1571,13 @@ void VM::throw_exception(const Value &value)
         frames_.pop_back();
     }
 
+    last_unhandled_error_ = value_to_string(value);
     std::cerr << "Unhandled exception: " << value_to_string(value) << std::endl;
 }
 
-const std::vector<Instruction> *VM::lookup_method(const CompiledClass &cls, const std::string &name,
-                                                  const std::string &)
-{
-    const CompiledClass *current = &cls;
+const std::vector<Instruction>* VM::lookup_method(const CompiledClass& cls, const std::string& name,
+                                                  const std::string&) {
+    const CompiledClass* current = &cls;
     while (current) {
         auto it = current->methods.find(name);
         if (it != current->methods.end()) {

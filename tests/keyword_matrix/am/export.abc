@@ -1,0 +1,8 @@
+#alphabet<am>
+// === EXPORT TESTS ===
+ላክ exported_fn()
+ዘዴ 11 exported_fn() { r 42 }
+ከሆነ (exported_fn() == 42) { z.o("PASS:export_s1") }
+ላክ EXPORTED_VAR
+5 EXPORTED_VAR = 99
+ከሆነ (EXPORTED_VAR == 99) { z.o("PASS:export_s2") }

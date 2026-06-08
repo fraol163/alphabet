@@ -1,0 +1,41 @@
+#alphabet<en>
+/// Web API Example
+/// Demonstrates: HTTP requests, JSON, error handling
+
+z.o("=== Web API Example ===")
+
+z.o("\n--- GET Request ---")
+5 response = z.http_get("https://httpbin.org/get")
+i (response != "") {
+  5 data = z.json_parse(response)
+  z.o("URL: " + data["url"])
+  z.o("Origin: " + data["origin"])
+} e {
+  z.o("Request failed (offline or network error)")
+}
+
+z.o("\n--- POST Request ---")
+5 payload = z.json_stringify({"name": "Alphabet", "version": "2.3.5"})
+5 post_response = z.http_post("https://httpbin.org/post", payload)
+i (post_response != "") {
+  5 post_data = z.json_parse(post_response)
+  z.o("Status: OK")
+  z.o("Data sent: " + post_data["data"])
+} e {
+  z.o("POST failed (offline or network error)")
+}
+
+z.o("\n--- JSON Processing ---")
+5 users = [
+  {"name": "Fraol", "age": 21, "lang": "Amharic"},
+  {"name": "Alice", "age": 25, "lang": "English"},
+  {"name": "Bob", "age": 30, "lang": "French"}
+]
+
+z.o("Users:")
+l (5 user : users) {
+  z.o("  " + user["name"] + " (age " + z.tostr(user["age"]) + ") - " + user["lang"])
+}
+
+5 adults = z.filter(users, m(5 u) { r u["age"] >= 25 })
+z.o("\nAdults (25+): " + z.tostr(z.len(adults)))

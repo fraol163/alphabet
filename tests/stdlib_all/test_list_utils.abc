@@ -1,0 +1,40 @@
+#alphabet<en>
+x "../../stdlib/list_utils.abc"
+5 ok = 1
+t {
+  i (list_sum([1, 2, 3]) != 6) { ok = 0 }
+  i (list_avg([2, 4]) != 3) { ok = 0 }
+  i (list_min([3, 1, 2]) != 1) { ok = 0 }
+  i (list_max([3, 1, 2]) != 3) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  5 med = list_median([1, 2, 3])
+  i (med != 2) { ok = 0 }
+  5 med2 = list_median([1, 2, 3, 4])
+  i (med2 != 2) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  5 m = list_mode([1, 1, 2, 3])
+  i (m != 1) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  13 flat = list_flatten_deep([[1, 2], [3, [4, 5]]])
+  i (len(flat) != 5) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  13 chunks = list_chunk([1, 2, 3, 4, 5], 2)
+  i (len(chunks) != 3) { ok = 0 }
+  i (len(chunks[0]) != 2) { ok = 0 }
+  i (len(chunks[2]) != 1) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  13 zipped = list_zip_with([1, 2, 3], [10, 20, 30], m(5 a, 5 b) { r a + b })
+  i (zipped[0] != 11) { ok = 0 }
+  i (zipped[1] != 22) { ok = 0 }
+  i (zipped[2] != 33) { ok = 0 }
+} h (0 e) { ok = 0 }
+i (ok) {
+  z.o("PASS: list_utils")
+} e {
+  z.o("FAIL: list_utils")
+}

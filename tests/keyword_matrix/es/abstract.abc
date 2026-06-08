@@ -1,0 +1,11 @@
+#alphabet<es>
+// === ABSTRACT TESTS ===
+clase Shape { público abstracto método 11 area() { } }
+clase Circle abstracto Shape { público 5 rad = 5 público método 11 area() { r 3 * rad * rad } }
+15 ci = n Circle()
+si (ci.area() == 75) { z.o("PASS:abs_s1") }
+clase Rect abstracto Shape { público 5 rw = 0 público 5 rh = 0 público método 11 area() { r rw * rh } }
+15 re = n Rect()
+re.rw = 3
+re.rh = 4
+si (re.area() == 12) { z.o("PASS:abs_s2") }

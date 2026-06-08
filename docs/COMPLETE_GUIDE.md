@@ -1,6 +1,6 @@
 # Alphabet Language - Complete Guide
 
-**Comprehensive tutorial for Alphabet Programming Language v2.3.4**
+**Comprehensive tutorial for Alphabet Programming Language v2.3.5**
 
 ---
 
@@ -84,7 +84,7 @@ alphabet --version
 
 **Expected output:**
 ```
-Alphabet 2.3.4 (Native C++)
+Alphabet 2.3.5 (Native C++)
 Developer: Fraol Teshome (fraolteshome444@gmail.com)
 ```
 

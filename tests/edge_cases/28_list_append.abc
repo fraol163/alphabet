@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 28: List append and delete
+13 lst = [1, 2, 3]
+z.append(lst, 4)
+z.append(lst, 5)
+i (z.len(lst) == 5 && lst[3] == 4 && lst[4] == 5) { z.o("PASS:list_28_append") } e { z.o("FAIL:list_28_append") }

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alphabet Language Playground</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      min-height: 100vh;
+    }
+    .header {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: #58a6ff;
+    }
+    .logo span { color: #f0883e; }
+    .version {
+      font-size: 12px;
+      color: #8b949e;
+      background: #21262d;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      height: calc(100vh - 52px);
+    }
+    .editor-panel {
+      border-right: 1px solid #30363d;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-header {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #8b949e;
+    }
+    .btn {
+      background: #238636;
+      color: #fff;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #2ea043; }
+    .btn:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+    .btn.secondary {
+      background: #21262d;
+      border: 1px solid #30363d;
+    }
+    .btn.secondary:hover { background: #30363d; }
+    .editor {
+      flex: 1;
+      background: #0d1117;
+      color: #c9d1d9;
+      border: none;
+      padding: 16px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      resize: none;
+      outline: none;
+      tab-size: 2;
+    }
+    .output-panel {
+      display: flex;
+      flex-direction: column;
+    }
+    .output {
+      flex: 1;
+      background: #0d1117;
+      padding: 16px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .output .stdout { color: #c9d1d9; }
+    .output .stderr { color: #f85149; }
+    .output .info { color: #58a6ff; }
+    .toolbar {
+      background: #161b22;
+      border-top: 1px solid #30363d;
+      padding: 8px 16px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .lang-select, .examples-dropdown {
+      background: #21262d;
+      color: #c9d1d9;
+      border: 1px solid #30363d;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .status {
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    .status.ready { color: #3fb950; background: #0d1117; border: 1px solid #238636; }
+    .status.loading { color: #d29922; background: #0d1117; border: 1px solid #9e6a03; }
+    .status.error { color: #f85149; background: #0d1117; border: 1px solid #da3633; }
+    @media (max-width: 768px) {
+      .container { grid-template-columns: 1fr; }
+      .editor-panel { border-right: none; border-bottom: 1px solid #30363d; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">Alphabet <span>Playground</span></div>
+    <div class="version">v2.3.5</div>
+  </div>
+
+  <div class="container">
+    <div class="editor-panel">
+      <div class="panel-header">
+        <span class="panel-title">Editor</span>
+        <div style="display: flex; gap: 8px;">
+          <select class="lang-select" id="langSelect">
+            <option value="en">English</option>
+            <option value="am">Amharic</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+          </select>
+          <select class="examples-dropdown" id="examplesSelect">
+            <option value="">Examples...</option>
+            <option value="hello">Hello World</option>
+            <option value="variables">Variables</option>
+            <option value="loops">Loops</option>
+            <option value="functions">Functions</option>
+            <option value="classes">Classes</option>
+            <option value="functional">Functional</option>
+            <option value="json">JSON</option>
+          </select>
+          <button class="btn secondary" onclick="clearEditor()">Clear</button>
+          <button class="btn" id="runBtn" onclick="runCode()">▶ Run</button>
+        </div>
+      </div>
+      <textarea class="editor" id="codeEditor" spellcheck="false">#alphabet<en>
+/// Alphabet Playground
+/// Edit this code and click Run!
+
+z.o("Hello from Alphabet Playground!")
+z.o("")
+
+5 name = "World"
+5 age = 21
+z.o("Name: " + name)
+z.o("Age: " + z.tostr(age))
+
+z.o("")
+z.o("--- Loops ---")
+5 total = 0
+l (5 i = 1 : i <= 10 : i = i + 1) {
+  total = total + i
+}
+z.o("Sum 1..10 = " + z.tostr(total))
+
+z.o("")
+z.o("--- Functions ---")
+m 5 factorial(5 num) {
+  i (num <= 1) { r 1 }
+  r num * factorial(num - 1)
+}
+z.o("5! = " + z.tostr(factorial(5)))
+
+z.o("")
+z.o("--- Lambdas ---")
+5 lst = [1, 2, 3, 4, 5]
+5 doubled = z.map(lst, m(5 val) { r val * 2 })
+z.o("Doubled: " + z.tostr(doubled))</textarea>
+    </div>
+
+    <div class="output-panel">
+      <div class="panel-header">
+        <span class="panel-title">Output</span>
+        <button class="btn secondary" onclick="clearOutput()">Clear</button>
+      </div>
+      <div class="output" id="output">
+        <span class="info">Initializing Alphabet VM...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <span id="status" class="status loading">Loading WASM...</span>
+    <span style="font-size: 12px; color: #8b949e; margin-left: auto;">
+      Ctrl+Enter to run | Tab to indent | 90+ builtins | 5 languages
+    </span>
+  </div>
+
+  <script src="alphabet.js"></script>
+  <script src="alphabet-wasm.js"></script>
+  <script>
+    const examples = {
+      hello: `#alphabet<en>
+z.o("Hello, World!")
+z.o("Welcome to Alphabet!")`,
+
+      variables: `#alphabet<en>
+5 x = 42
+12 name = "Fraol"
+11 flag = 1
+
+z.o("Number: " + z.tostr(x))
+z.o("String: " + name)
+z.o("Boolean: " + z.tostr(flag))
+z.o("Type: " + z.type(x))`,
+
+      loops: `#alphabet<en>
+z.o("--- For Loop ---")
+l (5 i = 0 : i < 5 : i = i + 1) {
+  z.o("i = " + z.tostr(i))
+}
+
+z.o("")
+z.o("--- While Loop ---")
+5 count = 0
+l (count < 3) {
+  z.o("count = " + z.tostr(count))
+  count = count + 1
+}
+
+z.o("")
+z.o("--- For-Each ---")
+5 fruits = ["apple", "banana", "cherry"]
+l (fruit : fruits) {
+  z.o("Fruit: " + fruit)
+}`,
+
+      functions: `#alphabet<en>
+m 5 add(5 a, 5 b) {
+  r a + b
+}
+
+m 12 greet(12 name, 12 msg = "Hello") {
+  r msg + ", " + name + "!"
+}
+
+m 5 factorial(5 num) {
+  i (num <= 1) { r 1 }
+  r num * factorial(num - 1)
+}
+
+z.o("add(3, 4) = " + z.tostr(add(3, 4)))
+z.o(greet("Fraol"))
+z.o(greet("World", "Hi"))
+z.o("10! = " + z.tostr(factorial(10)))`,
+
+      classes: `#alphabet<en>
+c Animal {
+  string name
+  string sound
+
+  m Animal(string n, string s) {
+    this.name = n
+    this.sound = s
+  }
+
+  m speak() {
+    r this.name + " says " + this.sound
+  }
+}
+
+c Dog ^ Animal {
+  m Dog(string n) {
+    this.name = n
+    this.sound = "Woof!"
+  }
+}
+
+5 dog = n Dog("Buddy")
+z.o(dog.speak())
+z.o("Type: " + z.type(dog))`,
+
+      functional: `#alphabet<en>
+5 lst = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+z.o("Original: " + z.tostr(lst))
+
+5 evens = z.filter(lst, m(5 val) { r val % 2 == 0 })
+z.o("Evens: " + z.tostr(evens))
+
+5 squared = z.map(lst, m(5 val) { r val * val })
+z.o("Squared: " + z.tostr(squared))
+
+5 sum = z.reduce(lst, 0, m(5 acc, 5 val) { r acc + val })
+z.o("Sum: " + z.tostr(sum))`,
+
+      json: `#alphabet<en>
+5 data = {
+  "name": "Fraol",
+  "age": 21,
+  "skills": ["C++", "Python", "Alphabet"]
+}
+
+5 json = z.json_stringify(data)
+z.o("JSON: " + json)
+
+5 parsed = z.json_parse(json)
+z.o("Name: " + parsed["name"])
+z.o("Skills: " + z.tostr(parsed["skills"]))`
+    };
+
+    let alpha = null;
+
+    // Initialize WASM
+    async function initPlayground() {
+      const statusEl = document.getElementById('status');
+      const outputEl = document.getElementById('output');
+
+      try {
+        if (typeof Alphabet !== 'undefined') {
+          alpha = new Alphabet();
+          await alpha.init();
+          statusEl.className = 'status ready';
+          statusEl.textContent = 'Ready (WASM)';
+          outputEl.innerHTML = '<span class="info">Ready. Click Run or press Ctrl+Enter.</span>';
+        } else {
+          throw new Error('WASM module not loaded');
+        }
+      } catch (e) {
+        statusEl.className = 'status error';
+        statusEl.textContent = 'WASM not available — use CLI';
+        outputEl.innerHTML = '<span class="info">Playground requires alphabet.wasm (not built yet).\n\nTo run Alphabet code locally:\n  alphabet --repl              Interactive REPL\n  alphabet run program.abc     Run a file\n  alphabet examples            See examples\n  alphabet tour                Interactive tour</span>';
+      }
+    }
+
+    async function runCode() {
+      const code = document.getElementById('codeEditor').value;
+      const output = document.getElementById('output');
+      const runBtn = document.getElementById('runBtn');
+
+      if (!alpha) {
+        output.innerHTML = '<span class="stderr">Alphabet WASM not loaded. Use CLI instead:\n  alphabet --repl\n  alphabet run file.abc</span>';
+        return;
+      }
+
+      runBtn.disabled = true;
+      runBtn.textContent = '⏳ Running...';
+      output.innerHTML = '<span class="info">Running...</span>';
+
+      try {
+        const result = alpha.run(code);
+        if (result.success) {
+          output.innerHTML = '<span class="stdout">' + escapeHtml(result.output || '(no output)') + '</span>';
+        } else {
+          output.innerHTML = '<span class="stderr">Error: ' + escapeHtml(result.error) + '</span>';
+        }
+      } catch (e) {
+        output.innerHTML = '<span class="stderr">Error: ' + escapeHtml(e.message) + '</span>';
+      } finally {
+        runBtn.disabled = false;
+        runBtn.textContent = '▶ Run';
+      }
+    }
+
+    function clearEditor() {
+      document.getElementById('codeEditor').value = '#alphabet<en>\n\n';
+    }
+
+    function clearOutput() {
+      document.getElementById('output').innerHTML = '<span class="info">Ready.</span>';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Load example
+    document.getElementById('examplesSelect').addEventListener('change', function() {
+      const key = this.value;
+      if (examples[key]) {
+        document.getElementById('codeEditor').value = examples[key];
+        this.value = '';
+      }
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        runCode();
+      }
+    });
+
+    // Tab support in editor
+    document.getElementById('codeEditor').addEventListener('keydown', function(e) {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 2;
+      }
+    });
+
+    // Initialize on load
+    initPlayground();
+  </script>
+</body>
+</html>

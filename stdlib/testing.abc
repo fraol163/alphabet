@@ -1,0 +1,54 @@
+#alphabet<en>
+// Alphabet Standard Library: Testing
+// Test framework helpers
+
+// assert(condition) - assert that condition is truthy
+m 11 assert(11 condition) {
+    z.assert(condition)
+    r 1
+}
+
+// assert_eq(actual, expected) - assert that two values are equal
+m 11 assert_eq(11 actual, 11 expected) {
+    z.assert_eq(actual, expected)
+    r 1
+}
+
+// assert_throws(fn, msg) - assert that calling fn throws an error
+m 11 assert_throws(11 fn, 12 msg) {
+    m 11 caught = 0
+    t {
+        fn()
+    } h (11 err) {
+        caught = 1
+    }
+    i (caught == 0) {
+        z.o("ASSERT_THROWS FAILED: " + msg + " - no exception thrown")
+        z.t("Assertion failed: expected exception")
+    }
+    r 1
+}
+
+// test_suite(name) - print the start of a test suite
+m 11 test_suite(12 name) {
+    z.o("=== TEST SUITE: " + name + " ===")
+    r 1
+}
+
+// test_case(name, fn) - run a single test case with error handling
+m 11 test_case(12 name, 11 fn) {
+    m 11 passed = 0
+    t {
+        fn()
+        passed = 1
+    } h (11 err) {
+        z.o("  FAIL: " + name + " - " + z.tostr(err))
+    }
+    i (passed == 1) {
+        z.o("  PASS: " + name)
+    }
+    r passed
+}
+
+// Export all functions
+@ assert, assert_eq, assert_throws, test_suite, test_case

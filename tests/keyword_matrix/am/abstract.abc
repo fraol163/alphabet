@@ -1,0 +1,11 @@
+#alphabet<am>
+// === ABSTRACT TESTS ===
+ክፍል Shape { ግልጽ ስር ዘዴ 11 area() { } }
+ክፍል Circle ስር Shape { ግልጽ 5 rad = 5 ግልጽ ዘዴ 11 area() { r 3 * rad * rad } }
+15 ci = n Circle()
+ከሆነ (ci.area() == 75) { z.o("PASS:abs_s1") }
+ክፍል Rect ስር Shape { ግልጽ 5 rw = 0 ግልጽ 5 rh = 0 ግልጽ ዘዴ 11 area() { r rw * rh } }
+15 re = n Rect()
+re.rw = 3
+re.rh = 4
+ከሆነ (re.area() == 12) { z.o("PASS:abs_s2") }

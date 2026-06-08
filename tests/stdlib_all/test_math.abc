@@ -1,0 +1,25 @@
+#alphabet<en>
+x "../../stdlib/math.abc"
+5 ok = 1
+t {
+  i (max(10, 20) != 20) { ok = 0 }
+  i (min(10, 20) != 10) { ok = 0 }
+  i (clamp(15, 0, 10) != 10) { ok = 0 }
+  i (clamp(-5, 0, 10) != 0) { ok = 0 }
+  i (clamp(5, 0, 10) != 5) { ok = 0 }
+  i (sign(5) != 1) { ok = 0 }
+  i (sign(-5) != -1) { ok = 0 }
+  i (sign(0) != 0) { ok = 0 }
+  i (is_even(4) != 1) { ok = 0 }
+  i (is_even(3) != 0) { ok = 0 }
+  i (is_odd(3) != 1) { ok = 0 }
+  i (factorial(5) != 120) { ok = 0 }
+  i (factorial(0) != 1) { ok = 0 }
+  i (gcd(48, 18) != 6) { ok = 0 }
+  i (lcm(4, 6) != 12) { ok = 0 }
+} h (0 e) { ok = 0 }
+i (ok) {
+  z.o("PASS: math")
+} e {
+  z.o("FAIL: math")
+}

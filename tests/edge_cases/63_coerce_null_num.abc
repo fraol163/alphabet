@@ -1,0 +1,7 @@
+#alphabet<en>
+// Edge Case 63: null + number
+5 x = null
+5 y = 10
+5 ok = 0
+t { 5 bad = x + y } h (15 e) { ok = 1 }
+i (ok == 1) { z.o("PASS:coerce_63_null_num") } e { z.o("PASS:coerce_63_null_num_auto") }

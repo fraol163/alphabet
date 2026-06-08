@@ -1,0 +1,90 @@
+#alphabet<en>
+@ stack_new, stack_push, stack_pop, stack_peek, stack_size, stack_empty
+@ queue_new, queue_enqueue, queue_dequeue, queue_peek, queue_size, queue_empty
+@ deque_new, deque_push_front, deque_push_back, deque_pop_front, deque_pop_back, deque_size
+
+m 5 stack_new() {
+  r []
+}
+
+m 0 stack_push(5 stack, value) {
+  append(stack, value)
+}
+
+m stack_pop(5 stack) {
+  i (z.len(stack) == 0) { r null }
+  5 val = stack[z.len(stack) - 1]
+  pop_back(stack)
+  r val
+}
+
+m stack_peek(5 stack) {
+  i (z.len(stack) == 0) { r null }
+  r stack[z.len(stack) - 1]
+}
+
+m 5 stack_size(5 stack) {
+  r z.len(stack)
+}
+
+m 11 stack_empty(5 stack) {
+  r z.len(stack) == 0
+}
+
+m 5 queue_new() {
+  r []
+}
+
+m 0 queue_enqueue(5 queue, value) {
+  append(queue, value)
+}
+
+m queue_dequeue(5 queue) {
+  i (z.len(queue) == 0) { r null }
+  5 val = queue[0]
+  z.remove(queue, 0)
+  r val
+}
+
+m queue_peek(5 queue) {
+  i (z.len(queue) == 0) { r null }
+  r queue[0]
+}
+
+m 5 queue_size(5 queue) {
+  r z.len(queue)
+}
+
+m 11 queue_empty(5 queue) {
+  r z.len(queue) == 0
+}
+
+m 5 deque_new() {
+  r []
+}
+
+m 0 deque_push_front(5 deque, value) {
+  z.insert(deque, 0, value)
+}
+
+m 0 deque_push_back(5 deque, value) {
+  append(deque, value)
+}
+
+m deque_pop_front(5 deque) {
+  i (z.len(deque) == 0) { r null }
+  5 val = deque[0]
+  z.remove(deque, 0)
+  r val
+}
+
+m deque_pop_back(5 deque) {
+  i (z.len(deque) == 0) { r null }
+  5 val = deque[z.len(deque) - 1]
+  pop_back(deque)
+  r val
+}
+
+m 5 deque_size(5 deque) {
+  r z.len(deque)
+}

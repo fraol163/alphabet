@@ -1,0 +1,110 @@
+#alphabet<en>
+/// Mini Text Adventure
+/// Demonstrates: maps, state, functions, match/case
+
+z.o("=== Mini Text Adventure ===")
+z.o("You wake up in a dark room...")
+z.o("")
+
+5 player = {
+  "name": "Hero",
+  "hp": 100,
+  "gold": 0,
+  "room": "start"
+}
+
+5 rooms = {
+  "start": {
+    "desc": "A dark room with a door to the north.",
+    "exits": {"north": "hallway"},
+    "items": ["key"]
+  },
+  "hallway": {
+    "desc": "A long hallway. Doors lead south and east.",
+    "exits": {"south": "start", "east": "treasure"},
+    "items": []
+  },
+  "treasure": {
+    "desc": "A room filled with gold!",
+    "exits": {"west": "hallway"},
+    "items": ["gold"]
+  }
+}
+
+5 inventory = []
+
+m 0 look() {
+  5 room = rooms[player["room"]]
+  z.o("")
+  z.o(room["desc"])
+  i (z.len(room["items"]) > 0) {
+    z.o("You see: " + z.tostr(room["items"]))
+  }
+  z.o("Exits: " + z.tostr(z.keys(room["exits"])))
+}
+
+m 0 go(12 direction) {
+  5 room = rooms[player["room"]]
+  i (z.is_null(room["exits"][direction])) {
+    z.o("You can't go that way.")
+    r
+  }
+  player["room"] = room["exits"][direction]
+  look()
+}
+
+m 0 take(12 item) {
+  5 room = rooms[player["room"]]
+  i (z.contains(room["items"], item)) {
+    append(inventory, item)
+    z.o("You took the " + item + ".")
+    i (item == "gold") {
+      player["gold"] = player["gold"] + 100
+      z.o("You found 100 gold!")
+    }
+  } e {
+    z.o("There's no " + item + " here.")
+  }
+}
+
+look()
+z.o("")
+z.o("Commands: go <dir>, take <item>, look, quit")
+z.o("")
+
+5 playing = 1
+l (playing) {
+  z.o(">")
+  5 input = z.i("")
+  5 parts = z.split(input, " ")
+  5 cmd = parts[0]
+
+  q (cmd) {
+    "go": {
+      i (z.len(parts) > 1) {
+        go(parts[1])
+      } e {
+        z.o("Go where?")
+      }
+    }
+    "take": {
+      i (z.len(parts) > 1) {
+        take(parts[1])
+      } e {
+        z.o("Take what?")
+      }
+    }
+    "look": { look() }
+    "inventory": {
+      z.o("Inventory: " + z.tostr(inventory))
+      z.o("Gold: " + z.tostr(player["gold"]))
+    }
+    "quit": {
+      z.o("Thanks for playing!")
+      playing = 0
+    }
+    default: {
+      z.o("Unknown command: " + cmd)
+    }
+  }
+}

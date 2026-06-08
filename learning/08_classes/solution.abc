@@ -1,0 +1,10 @@
+#alphabet<en>
+c Cat {
+  str name = ""
+  void meow() {
+    z.o(name + " says meow!")
+  }
+}
+Cat c = new Cat()
+c.name = "Whiskers"
+c.meow()

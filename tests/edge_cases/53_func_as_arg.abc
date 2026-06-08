@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 53: Function as argument (lambda)
+m 11 apply_twice(11 fn, 11 val) { r fn(fn(val)) }
+m 11 double(11 x) { r x * 2 }
+5 result = apply_twice(double, 3)
+i (result == 12) { z.o("PASS:func_53_as_arg") } e { z.o("FAIL:func_53_as_arg result=" + str(result)) }

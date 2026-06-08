@@ -1,0 +1,5 @@
+#alphabet<en>
+x "../../stdlib/io.abc"
+z.o("module loaded")
+5 result = print("hello from print")
+z.o("result is: " + str(result))

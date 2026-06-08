@@ -1,0 +1,32 @@
+#alphabet<am>
+// === CONTINUE TESTS ===
+// S1: skips rest
+13 kept = []
+5 idx_a = 0
+ሉፕ (idx_a < 5) { idx_a = idx_a + 1 ከሆነ (idx_a == 3) { ቀጥል } z.append(kept, idx_a) }
+ከሆነ (z.len(kept) == 4) { z.o("PASS:cont_s1") }
+// S2: inside if in loop
+13 res = []
+5 idx_b = 0
+ሉፕ (idx_b < 5) { idx_b = idx_b + 1 ከሆነ (idx_b == 3) { ከሆነ (true) { ቀጥል } } z.append(res, idx_b) }
+ከሆነ (z.len(res) == 4) { z.o("PASS:cont_s2") }
+// S3: inside nested loop
+5 inner_cnt = 0
+5 idx_c = 0
+ሉፕ (idx_c < 3) { inner_cnt = 0 5 idx_d = 0 ሉፕ (idx_d < 3) { idx_d = idx_d + 1 ከሆነ (idx_d == 2) { ቀጥል } inner_cnt = inner_cnt + 1 } idx_c = idx_c + 1 }
+ከሆነ (inner_cnt == 2) { z.o("PASS:cont_s3") }
+// S4: at end of body
+13 evens = []
+5 num_a = 0
+ሉፕ (num_a < 6) { num_a = num_a + 1 ከሆነ (num_a % 2 != 0) { ቀጥል } z.append(evens, num_a) }
+ከሆነ (z.len(evens) == 3) { z.o("PASS:cont_s4") }
+// S5: conditional continue
+13 vals = []
+5 val_a = 0
+ሉፕ (val_a < 8) { val_a = val_a + 1 ከሆነ (val_a % 3 == 0) { ቀጥል } z.append(vals, val_a) }
+ከሆነ (z.len(vals) == 5) { z.o("PASS:cont_s5") }
+// S6: break + continue together
+13 mixed = []
+5 idx_e = 0
+ሉፕ (idx_e < 10) { idx_e = idx_e + 1 ከሆነ (idx_e == 3) { ቀጥል } ከሆነ (idx_e == 8) { ስበር } z.append(mixed, idx_e) }
+ከሆነ (z.len(mixed) == 6) { z.o("PASS:cont_s6") }

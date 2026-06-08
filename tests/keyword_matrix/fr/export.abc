@@ -1,0 +1,8 @@
+#alphabet<fr>
+// === EXPORT TESTS ===
+exporter exported_fn()
+méthode 11 exported_fn() { r 42 }
+si (exported_fn() == 42) { z.o("PASS:export_s1") }
+exporter EXPORTED_VAR
+5 EXPORTED_VAR = 99
+si (EXPORTED_VAR == 99) { z.o("PASS:export_s2") }

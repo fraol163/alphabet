@@ -1,0 +1,71 @@
+#alphabet<en>
+/// Matrix operations
+/// Demonstrates: nested lists, functions, loops
+
+z.o("=== Matrix Operations ===")
+
+m 13 matrix_create(5 rows, 5 cols, 5 init) {
+  5 mat = []
+  l (5 i = 0 : i < rows : i = i + 1) {
+    5 row = []
+    l (5 j = 0 : j < cols : j = j + 1) {
+      append(row, init)
+    }
+    append(mat, row)
+  }
+  r mat
+}
+
+m 13 matrix_add(5 a, 5 b) {
+  5 result = []
+  l (5 i = 0 : i < z.len(a) : i = i + 1) {
+    5 row = []
+    l (5 j = 0 : j < z.len(a[i]) : j = j + 1) {
+      append(row, a[i][j] + b[i][j])
+    }
+    append(result, row)
+  }
+  r result
+}
+
+m 13 matrix_multiply(5 a, 5 b) {
+  5 rows = z.len(a)
+  5 cols = z.len(b[0])
+  5 inner = z.len(b)
+  5 result = matrix_create(rows, cols, 0)
+  l (5 i = 0 : i < rows : i = i + 1) {
+    l (5 j = 0 : j < cols : j = j + 1) {
+      5 sum = 0
+      l (5 k = 0 : k < inner : k = k + 1) {
+        sum = sum + a[i][k] * b[k][j]
+      }
+      result[i][j] = sum
+    }
+  }
+  r result
+}
+
+m 0 matrix_print(5 mat) {
+  l (5 row : mat) {
+    5 line = ""
+    l (5 val : row) {
+      line = line + z.tostr(val) + "\t"
+    }
+    z.o(line)
+  }
+}
+
+5 A = [[1, 2], [3, 4]]
+5 B = [[5, 6], [7, 8]]
+
+z.o("Matrix A:")
+matrix_print(A)
+z.o("")
+z.o("Matrix B:")
+matrix_print(B)
+z.o("")
+z.o("A + B:")
+matrix_print(matrix_add(A, B))
+z.o("")
+z.o("A * B:")
+matrix_print(matrix_multiply(A, B))

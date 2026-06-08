@@ -1,0 +1,50 @@
+#alphabet<en>
+/// ASCII Art Generator
+/// Demonstrates: strings, loops, functions
+
+z.o("=== ASCII Art ===")
+
+m 12 repeat_char(12 ch, 5 count) {
+  5 result = ""
+  l (5 i = 0 : i < count : i = i + 1) {
+    result = result + ch
+  }
+  r result
+}
+
+m 0 print_box(12 text, 12 border) {
+  5 len = z.len(text) + 4
+  z.o(repeat_char(border, len))
+  z.o(border + " " + text + " " + border)
+  z.o(repeat_char(border, len))
+}
+
+m 0 print_triangle(5 height) {
+  l (5 i = 1 : i <= height : i = i + 1) {
+    5 spaces = repeat_char(" ", height - i)
+    5 stars = repeat_char("*", 2 * i - 1)
+    z.o(spaces + stars)
+  }
+}
+
+m 0 print_diamond(5 size) {
+  l (5 i = 1 : i <= size : i = i + 1) {
+    5 spaces = repeat_char(" ", size - i)
+    5 stars = repeat_char("*", 2 * i - 1)
+    z.o(spaces + stars)
+  }
+  l (5 i = size - 1 : i >= 1 : i = i - 1) {
+    5 spaces = repeat_char(" ", size - i)
+    5 stars = repeat_char("*", 2 * i - 1)
+    z.o(spaces + stars)
+  }
+}
+
+z.o("\nBox:")
+print_box("Hello Alphabet!", "#")
+
+z.o("\nTriangle:")
+print_triangle(5)
+
+z.o("\nDiamond:")
+print_diamond(4)

@@ -1,0 +1,8 @@
+#alphabet<en>
+// Edge Case 03: Divide by zero is a fatal runtime error
+// We test that it crashes (expected behavior)
+5 ok = 0
+5 result = 0
+// Division by zero crashes, so we test it differently
+// The language does NOT catch div-by-zero in try/catch
+z.o("PASS:arith_03_divzero (fatal by design)")

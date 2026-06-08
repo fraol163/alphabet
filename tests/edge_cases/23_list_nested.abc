@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 23: Nested lists
+13 inner = [1, 2]
+13 outer = [inner, [3, 4]]
+i (z.len(outer) == 2) { z.o("PASS:list_23_nested") } e { z.o("FAIL:list_23_nested") }

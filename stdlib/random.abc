@@ -1,0 +1,12 @@
+#alphabet<en>
+5 __seed = 1
+m 5 random() {
+  __seed = (__seed * 1103515245 + 12345) % 2147483648
+  r __seed / 2147483648.0
+}
+m 5 randint(5 lo, 5 hi) {
+  r int(random() * (hi - lo + 1)) + lo
+}
+m 5 seed(5 s) {
+  __seed = s
+}

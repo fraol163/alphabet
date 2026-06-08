@@ -1,0 +1,7 @@
+#alphabet<es>
+/// Spanish keywords test
+si (42 > 10) {
+  imprimir("Si funciona")
+} sino {
+  imprimir("Sino funciona")
+}

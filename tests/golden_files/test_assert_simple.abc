@@ -1,0 +1,3 @@
+#alphabet<en>
+x "../../stdlib/assert.abc"
+z.o("loaded")

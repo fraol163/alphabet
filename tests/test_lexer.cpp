@@ -465,7 +465,7 @@ static bool has_token(const std::vector<Token> &tokens, alphabet::TokenType type
 TEST_CASE("Amharic keywords translate correctly", "[lexer][i18n]")
 {
     std::string source = "#alphabet<am>\n"
-                         "ከሆነ (5 > 3) { ውጤት.o(\"yes\") } አለበለዚህ { ውጤት.o(\"no\") }";
+                         "ከሆነ (5 > 3) { ውጤት.o(\"yes\") } ያለበለዚያ { ውጤት.o(\"no\") }";
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
 
@@ -518,7 +518,7 @@ TEST_CASE("Spanish loop keyword", "[lexer][i18n]")
 TEST_CASE("Spanish class keywords", "[lexer][i18n]")
 {
     std::string source = "#alphabet<es>\n"
-                         "clase MiClase { publico metodo 5 sumar() { retornar 1 } }";
+                         "clase MiClase { público método 5 sumar() { retornar 1 } }";
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
 
@@ -551,7 +551,7 @@ TEST_CASE("French loop keyword", "[lexer][i18n]")
 TEST_CASE("French class keywords", "[lexer][i18n]")
 {
     std::string source = "#alphabet<fr>\n"
-                         "classe MaClasse { public methode 5 additionner() { retour 1 } }";
+                         "classe MaClasse { public méthode 5 additionner() { retour 1 } }";
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
 
@@ -584,7 +584,7 @@ TEST_CASE("German loop keyword", "[lexer][i18n]")
 TEST_CASE("German class keywords", "[lexer][i18n]")
 {
     std::string source = "#alphabet<de>\n"
-                         "klasse MeineKlasse { offentlich methode 5 addieren() { zuruck 1 } }";
+                         "klasse MeineKlasse { öffentlich methode 5 addieren() { zurück 1 } }";
     Lexer lexer(source);
     auto tokens = lexer.scan_tokens();
 

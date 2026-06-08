@@ -1,0 +1,26 @@
+#alphabet<en>
+x "../../stdlib/functional.abc"
+5 ok = 1
+t {
+  5 val = identity(42)
+  i (val != 42) { ok = 0 }
+  5 f = constantly(99)
+  i (f(1) != 99) { ok = 0 }
+  i (f("anything") != 99) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  5 is_pos = negate(m(5 x) { r x > 0 })
+  i (is_pos(-5) != 1) { ok = 0 }
+  i (is_pos(5) != 0) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  5 double = m(5 x) { r x * 2 }
+  5 add1 = m(5 x) { r x + 1 }
+  5 double_then_add1 = compose(add1, double)
+  i (double_then_add1(3) != 7) { ok = 0 }
+} h (0 e) { ok = 0 }
+i (ok) {
+  z.o("PASS: functional")
+} e {
+  z.o("FAIL: functional")
+}

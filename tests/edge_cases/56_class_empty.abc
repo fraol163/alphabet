@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 56: Empty class
+c Empty { }
+15 e = n Empty()
+z.o("PASS:class_56_empty")

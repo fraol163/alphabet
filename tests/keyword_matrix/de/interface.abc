@@ -1,0 +1,10 @@
+#alphabet<de>
+// === INTERFACE TESTS ===
+klasse Drawable { öffentlich methode 11 draw() { } }
+klasse Circle schnittstelle Drawable { öffentlich methode 11 draw() { r "circle" } }
+15 ci = n Circle()
+wenn (ci.draw() == "circle") { z.o("PASS:iface_s1") }
+klasse Formattable { öffentlich methode 12 fmt() { } öffentlich methode 11 validate() { } }
+klasse Email schnittstelle Formattable { öffentlich methode 12 fmt() { r "formatted" } öffentlich methode 11 validate() { r 1 } }
+15 em = n Email()
+wenn (em.fmt() == "formatted" && em.validate() == 1) { z.o("PASS:iface_s2") }

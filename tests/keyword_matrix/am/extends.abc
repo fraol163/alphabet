@@ -1,0 +1,30 @@
+#alphabet<am>
+// === EXTENDS TESTS ===
+ክፍል Animal { ግልጽ 12 aname = "" ግልጽ ዘዴ 12 speak() { r "..." } }
+// S1: inherit method + field
+ክፍል Dog ወራሽ Animal { ግልጽ ዘዴ 12 speak() { r "woof" } }
+15 d = n Dog()
+d.aname = "Rex"
+ከሆነ (d.speak() == "woof" && d.aname == "Rex") { z.o("PASS:ext_s1") }
+// S2: inherit field
+15 a = n Animal()
+a.aname = "Generic"
+ከሆነ (a.aname == "Generic") { z.o("PASS:ext_s2") }
+// S3: override method
+ክፍል Cat ወራሽ Animal { ግልጽ ዘዴ 12 speak() { r "meow" } }
+15 ct = n Cat()
+ከሆነ (ct.speak() == "meow") { z.o("PASS:ext_s3") }
+// S4: child adds method
+ክፍል Robot ወራሽ Animal { ግልጽ ዘዴ 11 beep() { r 42 } }
+15 rb = n Robot()
+ከሆነ (rb.beep() == 42 && rb.speak() == "...") { z.o("PASS:ext_s4") }
+// S5: child adds field
+ክፍል Pet ወራሽ Animal { ግልጽ 5 loyalty = 100 }
+15 pt = n Pet()
+ከሆነ (pt.loyalty == 100) { z.o("PASS:ext_s5") }
+// S6: 3-level chain
+ክፍል Base { ግልጽ ዘዴ 11 base_fn() { r 1 } }
+ክፍል Mid ወራሽ Base { ግልጽ ዘዴ 11 mid_fn() { r 2 } }
+ክፍል Top ወራሽ Mid { ግልጽ ዘዴ 11 top_fn() { r 3 } }
+15 tp = n Top()
+ከሆነ (tp.base_fn() == 1 && tp.mid_fn() == 2 && tp.top_fn() == 3) { z.o("PASS:ext_s6") }

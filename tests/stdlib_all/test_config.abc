@@ -1,0 +1,16 @@
+#alphabet<en>
+x "../../stdlib/config.abc"
+5 ok = 1
+t {
+  5 cfg = config_load("/nonexistent.json")
+  config_set(cfg, "name", "test")
+  config_set(cfg, "version", 1)
+  i (config_has(cfg, "name") != 1) { ok = 0 }
+  i (config_get(cfg, "name", "") != "test") { ok = 0 }
+  i (config_get(cfg, "missing", "default") != "default") { ok = 0 }
+} h (0 e) { ok = 0 }
+i (ok) {
+  z.o("PASS: config")
+} e {
+  z.o("FAIL: config")
+}

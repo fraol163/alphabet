@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 43: Null variable
+5 x = null
+i (x == null) { z.o("PASS:var_43_null") } e { z.o("FAIL:var_43_null") }

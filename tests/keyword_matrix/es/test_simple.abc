@@ -1,0 +1,5 @@
+#alphabet<es>
+/// Simple Spanish test
+z.o("Hola Mundo")
+5 x = 42
+z.o(z.tostr(x))

@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 50: Match/switch
+5 x = 2
+5 result = 0
+q (x) { 1: result = 10 2: result = 20 3: result = 30 }
+i (result == 20) { z.o("PASS:ctrl_50_match") } e { z.o("FAIL:ctrl_50_match") }

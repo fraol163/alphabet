@@ -1,0 +1,31 @@
+#alphabet<de>
+// === TRY / HANDLE TESTS ===
+// S1: try succeeds
+versuchen { z.o("PASS:try_s1") } fangen (error) { z.o("FAIL:try_s1") }
+// S2: try throws, handle catches
+versuchen { z.i("before") z.t("custom error") z.o("FAIL:try_s2") } fangen (error) { z.o("PASS:try_s2") }
+// S3: error var accessible
+versuchen { z.t("oops") } fangen (error) { z.o("PASS:try_s3") }
+// S4: nested try
+versuchen { versuchen { z.t("inner") } fangen (error) { z.o("PASS:try_s4") } } fangen (error) { }
+// S5: return in try
+methode 11 try_ret() { versuchen { r 1 } fangen (error) { r -1 } }
+wenn (try_ret() == 1) { z.o("PASS:try_s5") }
+// S6: function call throws
+methode 11 will_throw() { z.t("err") }
+versuchen { will_throw() } fangen (error) { z.o("PASS:try_s6") }
+// S7: top level try
+versuchen { 5 val_a = 10 } fangen (error) { }
+z.o("PASS:try_s7")
+// S8: in function
+methode 11 safe_op() { versuchen { r 42 } fangen (error) { r 0 } }
+wenn (safe_op() == 42) { z.o("PASS:try_s8") }
+// S9: in loop
+5 cnt = 0
+5 idx_a = 0
+schleife (idx_a < 3) { versuchen { cnt = cnt + 1 } fangen (error) { } idx_a = idx_a + 1 }
+wenn (cnt == 3) { z.o("PASS:try_s9") }
+// S10: in class method
+klasse TryCls { öffentlich methode 11 safe() { versuchen { r 100 } fangen (error) { r 0 } } }
+15 tc = n TryCls()
+wenn (tc.safe() == 100) { z.o("PASS:try_s10") }

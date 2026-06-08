@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 04: Modulo by zero returns null (non-fatal)
+5 result = 10 % 0
+i (result == null) { z.o("PASS:arith_04_modzero") } e { z.o("FAIL:arith_04_modzero") }

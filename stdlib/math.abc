@@ -1,41 +1,11 @@
 #alphabet<en>
+// Alphabet Standard Library: Math
 
-m 5 max(5 a, 5 bb) {
-  i (a > bb) { r a }
-  r bb
-}
-
-m 5 min(5 a, 5 bb) {
-  i (a < bb) { r a }
-  r bb
-}
-
-m 5 clamp(5 val, 5 lo, 5 hi) {
-  i (val < lo) { r lo }
-  i (val > hi) { r hi }
-  r val
-}
-
-m 5 sign(5 xx) {
-  i (xx > 0) { r 1 }
-  i (xx < 0) { r -1 }
-  r 0
-}
-
-m 5 is_even(5 num) {
-  r num % 2 == 0
-}
-
-m 5 is_odd(5 num) {
-  r num % 2 != 0
-}
-
-m 5 factorial(5 num) {
-  i (num < 0) { r 0 }
-  i (num <= 1) { r 1 }
+m 5 factorial(5 val) {
+  i (val <= 1) { r 1 }
   5 result = 1
   5 idx = 2
-  l (idx <= num) {
+  l (idx <= val) {
     result = result * idx
     idx = idx + 1
   }
@@ -53,4 +23,59 @@ m 5 gcd(5 aa, 5 bb) {
 
 m 5 lcm(5 aa, 5 bb) {
   r aa / gcd(aa, bb) * bb
+}
+
+m 5 is_even(5 val) {
+  r val % 2 == 0
+}
+
+m 5 sign(5 val) {
+  i (val > 0) { r 1 }
+  i (val < 0) { r -1 }
+  r 0
+}
+
+m 5 max_val(5 aa, 5 bb) {
+  i (aa > bb) { r aa }
+  r bb
+}
+
+m 5 min_val(5 aa, 5 bb) {
+  i (aa < bb) { r aa }
+  r bb
+}
+
+m 5 clamp(5 val, 5 lo, 5 hi) {
+  i (val < lo) { r lo }
+  i (val > hi) { r hi }
+  r val
+}
+
+m 5 fibonacci(5 cnt) {
+  i (cnt <= 0) { r 0 }
+  i (cnt == 1) { r 1 }
+  5 prev2 = 0
+  5 prev1 = 1
+  5 idx = 2
+  l (idx <= cnt) {
+    5 cur = prev1 + prev2
+    prev2 = prev1
+    prev1 = cur
+    idx = idx + 1
+  }
+  r prev1
+}
+
+m 5 is_prime(5 val) {
+  i (val <= 1) { r 0 }
+  i (val <= 3) { r 1 }
+  i (val % 2 == 0) { r 0 }
+  i (val % 3 == 0) { r 0 }
+  5 factor = 5
+  l (factor * factor <= val) {
+    i (val % factor == 0) { r 0 }
+    i (val % (factor + 2) == 0) { r 0 }
+    factor = factor + 6
+  }
+  r 1
 }

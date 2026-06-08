@@ -1,0 +1,30 @@
+#alphabet<en>
+// === EXTENDS TESTS ===
+c Animal { v 12 aname = "" v m 12 speak() { r "..." } }
+// S1: inherit method + field
+c Dog ^ Animal { v m 12 speak() { r "woof" } }
+15 d = n Dog()
+d.aname = "Rex"
+i (d.speak() == "woof" && d.aname == "Rex") { z.o("PASS:ext_s1") }
+// S2: inherit field
+15 a = n Animal()
+a.aname = "Generic"
+i (a.aname == "Generic") { z.o("PASS:ext_s2") }
+// S3: override method
+c Cat ^ Animal { v m 12 speak() { r "meow" } }
+15 ct = n Cat()
+i (ct.speak() == "meow") { z.o("PASS:ext_s3") }
+// S4: child adds method
+c Robot ^ Animal { v m 11 beep() { r 42 } }
+15 rb = n Robot()
+i (rb.beep() == 42 && rb.speak() == "...") { z.o("PASS:ext_s4") }
+// S5: child adds field
+c Pet ^ Animal { v 5 loyalty = 100 }
+15 pt = n Pet()
+i (pt.loyalty == 100) { z.o("PASS:ext_s5") }
+// S6: 3-level chain
+c Base { v m 11 base_fn() { r 1 } }
+c Mid ^ Base { v m 11 mid_fn() { r 2 } }
+c Top ^ Mid { v m 11 top_fn() { r 3 } }
+15 tp = n Top()
+i (tp.base_fn() == 1 && tp.mid_fn() == 2 && tp.top_fn() == 3) { z.o("PASS:ext_s6") }

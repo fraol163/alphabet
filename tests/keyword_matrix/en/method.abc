@@ -1,0 +1,41 @@
+#alphabet<en>
+// === METHOD TESTS ===
+// S1: no params
+m 11 get_five() { r 5 }
+i (get_five() == 5) { z.o("PASS:method_s1") }
+// S2: one param
+m 11 double_it(11 num_a) { r num_a * 2 }
+i (double_it(3) == 6) { z.o("PASS:method_s2") }
+// S3: multiple params
+m 11 add3(11 num_a, 11 num_b, 11 num_c) { r num_a + num_b + num_c }
+i (add3(1, 2, 3) == 6) { z.o("PASS:method_s3") }
+// S4: string param
+m 12 greet(12 name_a) { r "hello " + name_a }
+i (greet("world") == "hello world") { z.o("PASS:method_s4") }
+// S5: function calling function
+m 11 square(11 num_a) { r num_a * num_a }
+m 11 sum_sq(11 num_a, 11 num_b) { r square(num_a) + square(num_b) }
+i (sum_sq(3, 4) == 25) { z.o("PASS:method_s5") }
+// S6: recursive fibonacci
+m 11 fib(11 num_a) { i (num_a <= 1) { r num_a } r fib(num_a - 1) + fib(num_a - 2) }
+i (fib(10) == 55) { z.o("PASS:method_s6") }
+// S7: local vars
+m 11 with_locals() { 5 val_a = 10 5 val_b = 20 r val_a + val_b }
+i (with_locals() == 30) { z.o("PASS:method_s7") }
+// S8: with if/else
+m 11 max2(11 num_a, 11 num_b) { i (num_a > num_b) { r num_a } e { r num_b } }
+i (max2(5, 10) == 10 && max2(10, 5) == 10) { z.o("PASS:method_s8") }
+// S9: with loop
+m 11 sum_to(11 num_a) { 5 s = 0 5 idx_a = 0 l (idx_a < num_a) { s = s + idx_a idx_a = idx_a + 1 } r s }
+i (sum_to(5) == 10) { z.o("PASS:method_s9") }
+// S10: with try/handle
+m 11 safe_div(11 num_a, 11 num_b) { t { r num_a / num_b } h (error) { r 0 } }
+i (safe_div(10, 2) == 5) { z.o("PASS:method_s10") }
+// S11: no return
+m 11 no_ret() { 5 val_a = 10 }
+no_ret()
+z.o("PASS:method_s11")
+// S12: list ops in function
+m 13 make_list() { 13 lst = [] z.append(lst, 10) z.append(lst, 20) r lst }
+13 ml = make_list()
+i (z.len(ml) == 2) { z.o("PASS:method_s12") }

@@ -1,0 +1,30 @@
+#alphabet<en>
+@ config_load, config_save, config_get, config_set, config_has
+
+m 5 config_load(12 filename) {
+  i (z.exists(filename)) {
+    5 content = z.f(filename)
+    r z.json_parse(content)
+  }
+  r {}
+}
+
+m 0 config_save(5 config, 12 filename) {
+  5 json = z.json_stringify(config)
+  z.fw(filename, json)
+}
+
+m config_get(5 config, 12 key, default) {
+  i (z.is_null(config[key])) {
+    r default
+  }
+  r config[key]
+}
+
+m 0 config_set(5 config, 12 key, value) {
+  config[key] = value
+}
+
+m 11 config_has(5 config, 12 key) {
+  r !z.is_null(config[key])
+}

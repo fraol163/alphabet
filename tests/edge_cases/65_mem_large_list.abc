@@ -1,0 +1,9 @@
+#alphabet<en>
+// Edge Case 65: Large list allocation (1000 elements)
+13 lst = []
+5 i = 0
+l (i < 1000) { z.append(lst, i) i = i + 1 }
+5 sum = 0
+5 j = 0
+l (j < z.len(lst)) { sum = sum + lst[j] j = j + 1 }
+i (sum == 499500) { z.o("PASS:mem_65_large_list") } e { z.o("FAIL:mem_65_large_list sum=" + str(sum)) }

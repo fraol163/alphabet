@@ -1,0 +1,14 @@
+#alphabet<en>
+x "../../stdlib/system.abc"
+5 ok = 1
+t {
+  5 home = env_get("HOME")
+  i (home == null) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  i (env_has("HOME") != 1) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  i (env_has("NONEXISTENT_VAR_12345") != 0) { ok = 0 }
+} h (0 e) { ok = 0 }
+z.o(ok)

@@ -1,0 +1,37 @@
+#alphabet<en>
+/// Caesar cipher
+/// Demonstrates: strings, loops, character manipulation
+
+z.o("=== Caesar Cipher ===")
+
+m 12 caesar_encrypt(12 text, 5 shift) {
+  5 result = ""
+  l (5 i = 0 : i < z.len(text) : i = i + 1) {
+    5 ch = text[i]
+    i (ch >= "a" && ch <= "z") {
+      5 code = z.ord(ch) - z.ord("a")
+      code = (code + shift) % 26
+      result = result + z.chr(code + z.ord("a"))
+    } e i (ch >= "A" && ch <= "Z") {
+      5 code = z.ord(ch) - z.ord("A")
+      code = (code + shift) % 26
+      result = result + z.chr(code + z.ord("A"))
+    } e {
+      result = result + ch
+    }
+  }
+  r result
+}
+
+m 12 caesar_decrypt(12 text, 5 shift) {
+  r caesar_encrypt(text, 26 - shift)
+}
+
+12 message = "Hello World"
+5 shift = 3
+
+z.o("Original:  " + message)
+12 encrypted = caesar_encrypt(message, shift)
+z.o("Encrypted: " + encrypted)
+12 decrypted = caesar_decrypt(encrypted, shift)
+z.o("Decrypted: " + decrypted)

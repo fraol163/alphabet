@@ -1,0 +1,30 @@
+#alphabet<en>
+x "../../stdlib/data_structures.abc"
+5 ok = 1
+t {
+  5 s = stack_new()
+  stack_push(s, 100)
+  i (stack_pop(s) != 100) { ok = 0 }
+  i (stack_size(s) != 0) { ok = 0 }
+  i (stack_empty(s) != 1) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  5 q = queue_new()
+  queue_enqueue(q, "a")
+  queue_enqueue(q, "b")
+  i (queue_dequeue(q) != "a") { ok = 0 }
+  i (queue_size(q) != 1) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  5 d = deque_new()
+  deque_push_front(d, 1)
+  deque_push_back(d, 2)
+  i (deque_size(d) != 2) { ok = 0 }
+  i (deque_pop_front(d) != 1) { ok = 0 }
+  i (deque_pop_back(d) != 2) { ok = 0 }
+} h (0 e) { ok = 0 }
+i (ok) {
+  z.o("PASS: data_structures")
+} e {
+  z.o("FAIL: data_structures")
+}

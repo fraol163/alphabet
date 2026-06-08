@@ -1,0 +1,130 @@
+#alphabet<en>
+// === FINAL TEST: ENGLISH (30 scenarios) ===
+5 val_a = 42
+5 val_b = 10
+12 name = "Alphabet"
+8 pi = 3.14
+11 flag = true
+13 nums = [1, 2, 3, 4, 5]
+14 person = {"name": "Fraol", "age": 21}
+o("PASS:variables")
+5 sum = val_a + val_b
+5 diff = val_a - val_b
+5 prod = val_a * val_b
+5 quot = val_a / val_b
+5 mod = val_a % val_b
+i (sum == 52) { o("PASS:arithmetic") }
+12 upper = z.upper(name)
+12 lower = z.lower(name)
+5 slen = z.len(name)
+12 conc = "Hello" + " " + "World"
+i (z.len(upper) == slen) { o("PASS:strings") }
+13 lst = [10, 20, 30]
+z.append(lst, 40)
+5 lst_len = z.len(lst)
+5 first = lst[0]
+13 sorted_lst = z.sort([3, 1, 2])
+i (lst_len == 4 && first == 10) { o("PASS:lists") }
+14 m = {"a": 1, "b": 2}
+5 mv = m["a"]
+13 mk = z.keys(m)
+i (mv == 1 && z.len(mk) == 2) { o("PASS:maps") }
+5 x = 10
+i (x > 5) { o("PASS:if") } e { o("FAIL:if") }
+i (x < 5) { o("FAIL:else") } e { o("PASS:else") }
+i (x > 5 && x < 20) { o("PASS:if_and") }
+i (x == 5 || x == 10) { o("PASS:if_or") }
+i (!(x == 20)) { o("PASS:if_not") }
+5 loop_sum = 0
+5 idx = 0
+l (idx < 5) { loop_sum = loop_sum + idx idx = idx + 1 }
+i (loop_sum == 10) { o("PASS:loop") }
+5 brk = 0
+l (true) { brk = brk + 1 i (brk == 5) { b } }
+i (brk == 5) { o("PASS:break") }
+13 evens = []
+5 ci = 0
+l (ci < 10) { ci = ci + 1 i (ci % 2 != 0) { k } z.append(evens, ci) }
+i (z.len(evens) == 5) { o("PASS:continue") }
+5 for_sum = 0
+l (5 fi = 0 : fi < 5 : fi = fi + 1) { for_sum = for_sum + fi }
+i (for_sum == 10) { o("PASS:for_loop") }
+m 5 factorial(5 num) {
+  i (num <= 1) { r 1 }
+  r num * factorial(num - 1)
+}
+i (factorial(5) == 120) { o("PASS:function") }
+m 5 classify(5 num) {
+  i (num > 0) { r 1 }
+  i (num == 0) { r 0 }
+  r -1
+}
+i (classify(5) == 1 && classify(0) == 0 && classify(-5) == -1) { o("PASS:multi_return") }
+13 data = [3, 1, 4, 1, 5]
+13 sorted_data = z.sort(data)
+i (sorted_data[0] == 1) { o("PASS:lambda_sort") }
+13 numbers = [1, 2, 3, 4, 5]
+5 evens_count = z.len(z.filter(numbers, m(5 x) { r x % 2 == 0 }))
+5 doubled_sum = z.reduce(z.map(numbers, m(5 x) { r x * 2 }), 0, m(5 acc, 5 x) { r acc + x })
+i (evens_count == 2 && doubled_sum == 30) { o("PASS:map_filter_reduce") }
+c Calculator {
+  5 calc_val = 0
+  m set_val(5 v) { calc_val = v }
+  m get_val() { r calc_val }
+  m add(5 a, 5 b) { r a + b }
+}
+15 calc = n Calculator()
+calc.set_val(42)
+i (calc.get_val() == 42 && calc.add(2, 3) == 5) { o("PASS:class") }
+c Animal {
+  12 animal_name = ""
+  m speak() { r "..." }
+}
+c Dog ^ Animal {
+  m speak() { r "woof" }
+}
+15 dog = n Dog()
+dog.animal_name = "Rex"
+i (dog.speak() == "woof") { o("PASS:inheritance") }
+t { o("PASS:try_ok") } h (15 e) { o("FAIL:try") }
+t { 5 bad = 10 / 0 } h (15 e) { o("PASS:try_catch") }
+5 mx = 2
+q (mx) { 1: o("one") 2: o("PASS:match") 3: o("three") }
+13 rng = 1..5
+i (z.len(rng) == 5) { o("PASS:range") }
+5 age = 25
+12 greeting = f"Hello {name}, age {age}"
+i (z.len(greeting) > 5) { o("PASS:fstring") }
+5 tern = 10 > 5 ? 1 : 0
+i (tern == 1) { o("PASS:ternary") }
+i (z.type(val_a) == "number") { o("PASS:type_int") }
+i (z.type(name) == "string") { o("PASS:type_str") }
+i (z.type(nums) == "list") { o("PASS:type_list") }
+i (z.type(person) == "map") { o("PASS:type_map") }
+i (z.sqrt(144) == 12) { o("PASS:sqrt") }
+i (z.abs(-42) == 42) { o("PASS:abs") }
+i (z.pow(2, 10) == 1024) { o("PASS:pow") }
+i (z.floor(3.7) == 3) { o("PASS:floor") }
+i (z.ceil(3.2) == 4) { o("PASS:ceil") }
+i (z.min(3, 7) == 3) { o("PASS:min") }
+i (z.max(3, 7) == 7) { o("PASS:max") }
+13 reversed = z.reverse([1, 2, 3])
+i (reversed[0] == 3) { o("PASS:reverse") }
+i (z.contains([1, 2, 3], 2)) { o("PASS:contains") }
+13 range5 = z.range(5)
+i (z.len(range5) == 5) { o("PASS:range_fn") }
+x "stdlib/math.abc"
+i (true) { o("PASS:import") }
+5 nsum = 0
+5 ni = 0
+l (ni < 3) { 5 nj = 0 l (nj < 3) { nsum = nsum + 1 nj = nj + 1 } ni = ni + 1 }
+i (nsum == 9) { o("PASS:nested_loop") }
+m 5 fib(5 num) { i (num <= 1) { r num } r fib(num - 1) + fib(num - 2) }
+i (fib(10) == 55) { o("PASS:recursion") }
+m 5 make_adder(5 base) {
+  m 5 adder(5 val) { r base + val }
+  r adder
+}
+5 add10 = make_adder(10)
+i (add10(5) == 15) { o("PASS:closure") }
+o("FINAL_EN_COMPLETE")

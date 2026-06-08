@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 17: String concatenation chain
+12 s = "a" + "b" + "c" + "d" + "e"
+i (s == "abcde") { z.o("PASS:str_17_concat_chain") } e { z.o("FAIL:str_17_concat_chain") }

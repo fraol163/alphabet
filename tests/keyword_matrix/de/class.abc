@@ -1,0 +1,47 @@
+#alphabet<de>
+// === CLASS TESTS ===
+// S1: empty class
+klasse Empty { }
+z.o("PASS:class_s1")
+// S2: one method
+klasse Greeter { öffentlich methode 12 hello() { r "hello" } }
+15 g = n Greeter()
+wenn (g.hello() == "hello") { z.o("PASS:class_s2") }
+// S3: multiple methods
+klasse Calc { öffentlich methode 11 add(11 num_a, 11 num_b) { r num_a + num_b } öffentlich methode 11 mul(11 num_a, 11 num_b) { r num_a * num_b } }
+15 cc = n Calc()
+wenn (cc.add(2, 3) == 5 && cc.mul(2, 3) == 6) { z.o("PASS:class_s3") }
+// S4: public fields
+klasse Point { öffentlich 5 px = 0 öffentlich 5 py = 0 }
+15 pt = n Point()
+pt.px = 10
+pt.py = 20
+wenn (pt.px == 10 && pt.py == 20) { z.o("PASS:class_s4") }
+// S5: static method
+klasse MathUtil { öffentlich statisch 11 add(11 num_a, 11 num_b) { r num_a + num_b } }
+wenn (MathUtil.add(3, 4) == 7) { z.o("PASS:class_s5") }
+// S6: method calling method
+klasse Counter { öffentlich 5 cnt = 0 öffentlich methode 11 increment() { cnt = cnt + 1 } öffentlich methode 11 get_count() { r cnt } }
+15 cn = n Counter()
+cn.increment()
+cn.increment()
+cn.increment()
+wenn (cn.get_count() == 3) { z.o("PASS:class_s6") }
+// S7: field initialization
+klasse Config { öffentlich 12 cfg_name = "default" öffentlich 5 cfg_val = 42 }
+15 cfg = n Config()
+wenn (cfg.cfg_name == "default" && cfg.cfg_val == 42) { z.o("PASS:class_s7") }
+// S8: list field
+klasse Basket { öffentlich 13 items = [] öffentlich methode 11 add_item(11 item_a) { z.append(items, item_a) } öffentlich methode 11 count() { r z.len(items) } }
+15 bt = n Basket()
+bt.add_item(10)
+bt.add_item(20)
+wenn (bt.count() == 2) { z.o("PASS:class_s8") }
+// S9: map field
+klasse Store { öffentlich 14 store_data = {"key": "val"} }
+15 st = n Store()
+wenn (st.store_data["key"] == "val") { z.o("PASS:class_s9") }
+// S10: multiple instances
+15 a1 = n Greeter()
+15 a2 = n Greeter()
+wenn (a1.hello() == a2.hello()) { z.o("PASS:class_s10") }

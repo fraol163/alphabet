@@ -1,0 +1,3 @@
+#alphabet<es>
+/// Test imprimir (print) with .o method
+imprimir.o("hola desde español")

@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 39: Map with mixed value types
+14 m = {"num": 42, "str": "hello", "bool": true}
+i (m["num"] == 42 && m["str"] == "hello" && m["bool"] == true) { z.o("PASS:map_39_mixed") } e { z.o("FAIL:map_39_mixed") }

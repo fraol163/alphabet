@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 61: Type conversion - str() returns null, use string concat instead
+5 x = 42
+12 s = "" + x
+i (s == "42") { z.o("PASS:coerce_61_int_to_str") } e { z.o("FAIL:coerce_61_int_to_str") }

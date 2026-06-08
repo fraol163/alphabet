@@ -1,0 +1,67 @@
+#alphabet<am}
+// === COMPREHENSIVE KEYWORD TEST: AMHARIC ===
+
+// === VARIABLES ===
+5 ዋጋ = 42
+5 መጠን = 10
+12 ስም = "Alphabet"
+z.o("PASS:am_variables")
+
+// === ARITHMETIC ===
+5 ድምር = ዋጋ + መጠን
+i (ድምር == 52) { z.o("PASS:am_arithmetic") }
+
+// === IF/ELSE ===
+i (ዋጋ > 5) { z.o("PASS:am_if") } ያለበለዚያ { z.o("FAIL:am_if") }
+i (ዋጋ < 5) { z.o("FAIL:am_else") } ያለበለዚያ { z.o("PASS:am_else") }
+
+// === LOOP ===
+5 ሚሊ = 0
+5 ማድቀቂያ = 0
+ሉፕ (ማድቀቂያ < 5) { ሚሊ = ሚሊ + ማድቀቂያ ማድቀቂያ = ማድቀቂያ + 1 }
+i (ሚሊ == 10) { z.o("PASS:am_loop") }
+
+// === LOOP WITH BREAK ===
+5 ብሬክ = 0
+ሉፕ (true) { ብሬክ = ብሬክ + 1 i (ብሬክ == 5) { ስበር } }
+i (ብሬክ == 5) { z.o("PASS:am_break") }
+
+// === LOOP WITH CONTINUE ===
+13 ኪ箔 = []
+5 ኩንቲነር = 0
+ሉፕ (ኩንቲነር < 10) { ኩንቲነር = ኩንቲነር + 1 i (ኩንቲነር % 2 != 0) { ቀጥል } z.append(ኪ箔, ኩንቲነር) }
+i (z.len(ኪ箔) == 5) { z.o("PASS:am_continue") }
+
+// === FUNCTION ===
+ዘዴ 11 ፋክቶሪ얼(11 ቁ) {
+  i (ቁ <= 1) { ተመለስ 1 }
+  ተመለስ ቁ * ፋክቶሪ얼(ቁ - 1)
+}
+i (ፋክቶሪ얼(5) == 120) { z.o("PASS:am_function") }
+
+// === CLASS ===
+ክፍል ማስማሪያ {
+  ዘዴ 11 ጨመር(11 አ, 11 ብ) { ተመለስ አ + ብ }
+}
+15 ማ = አዲስ ማስማሪያ()
+i (ማ.ጨመር(3, 4) == 7) { z.o("PASS:am_class") }
+
+// === INHERITANCE ===
+ክፍል እንስሳ {
+  ዘዴ ስብע() { ተመለስ "..." }
+}
+ክፍል ውሻ ^ እንስሳ {
+  ዘዴ ስብע() { ተመለስ "woof" }
+}
+15 ው = አዲስ ውሻ()
+i (ው.ስብע() == "woof") { z.o("PASS:am_inheritance") }
+
+// === TRY/HANDLE ===
+ሞክር { z.o("PASS:am_try") } ያዟ (15 ስህተት) { z.o("FAIL:am_try") }
+
+// === MATCH ===
+5 መምርጭ = 2
+ምረጥ (መምርጭ) { 1: z.i("one") 2: z.o("PASS:am_match") 3: z.i("three") }
+
+// === ALL DONE ===
+z.o("COMPREHENSIVE_AM_COMPLETE")

@@ -1,0 +1,42 @@
+#alphabet<en>
+/// Number guessing game
+/// Demonstrates: random, loops, input, conditionals
+
+z.o("=== Number Guessing Game ===")
+z.o("I'm thinking of a number between 1 and 100.")
+z.o("")
+
+5 secret = z.randint(1, 100)
+5 attempts = 0
+5 max_attempts = 7
+5 won = 0
+
+z.o("You have " + z.tostr(max_attempts) + " attempts.")
+z.o("")
+
+l (attempts < max_attempts && !won) {
+  attempts = attempts + 1
+  z.o("Attempt " + z.tostr(attempts) + "/" + z.tostr(max_attempts))
+
+  5 guess = z.i("Enter your guess: ")
+  guess = z.tonum(guess)
+
+  q (1) {
+    guess == secret: {
+      z.o("🎉 Correct! You won in " + z.tostr(attempts) + " attempts!")
+      won = 1
+    }
+    guess < secret: {
+      z.o("Too low! Try higher.")
+    }
+    guess > secret: {
+      z.o("Too high! Try lower.")
+    }
+  }
+}
+
+i (!won) {
+  z.o("😞 Game over! The number was " + z.tostr(secret))
+}
+
+z.o("Thanks for playing!")

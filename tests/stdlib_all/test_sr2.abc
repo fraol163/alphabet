@@ -1,0 +1,7 @@
+#alphabet<en>
+5 s = "abc"
+z.o(s[2])
+5 r = "" + s[2]
+z.o(r)
+5 r2 = s[2] + ""
+z.o(r2)

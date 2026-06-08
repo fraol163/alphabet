@@ -1,0 +1,7 @@
+#alphabet<en>
+// Edge Case 33: Map with null values
+14 m = {"a": 1, "b": null}
+5 ok = 0
+i (m["a"] == 1) { ok = ok + 1 }
+i (m["b"] == null) { ok = ok + 1 }
+i (ok == 2) { z.o("PASS:map_33_null_val") } e { z.o("FAIL:map_33_null_val") }

@@ -1,0 +1,103 @@
+#alphabet<en>
+@ list_sum, list_avg, list_min, list_max, list_median, list_mode, list_flatten_deep, list_chunk, list_zip_with
+
+m 5 list_sum(5 lst) {
+  r z.sum(lst)
+}
+
+m 5 list_avg(5 lst) {
+  r z.avg(lst)
+}
+
+m list_min(5 lst) {
+  i (z.len(lst) == 0) { r null }
+  5 min_val = lst[0]
+  l (5 i = 1 : i < z.len(lst) : i = i + 1) {
+    i (lst[i] < min_val) {
+      min_val = lst[i]
+    }
+  }
+  r min_val
+}
+
+m list_max(5 lst) {
+  i (z.len(lst) == 0) { r null }
+  5 max_val = lst[0]
+  l (5 i = 1 : i < z.len(lst) : i = i + 1) {
+    i (lst[i] > max_val) {
+      max_val = lst[i]
+    }
+  }
+  r max_val
+}
+
+m 5 list_median(5 lst) {
+  5 sorted = z.sort(lst)
+  5 n = z.len(sorted)
+  i (n == 0) { r 0 }
+  i (n % 2 == 1) {
+    r sorted[n / 2]
+  }
+  r (sorted[n / 2 - 1] + sorted[n / 2]) / 2
+}
+
+m list_mode(5 lst) {
+  5 counts = {}
+  l (5 val : lst) {
+    i (z.is_null(counts[val])) {
+      counts[val] = 1
+    } e {
+      counts[val] = counts[val] + 1
+    }
+  }
+  5 max_count = 0
+  5 mode_val = null
+  l (5 k : z.keys(counts)) {
+    i (counts[k] > max_count) {
+      max_count = counts[k]
+      mode_val = k
+    }
+  }
+  r mode_val
+}
+
+m 13 list_flatten_deep(5 lst) {
+  5 result = []
+  l (5 item : lst) {
+    i (z.type(item) == "list") {
+      5 flat = list_flatten_deep(item)
+      l (5 sub : flat) {
+        append(result, sub)
+      }
+    } e {
+      append(result, item)
+    }
+  }
+  r result
+}
+
+m 13 list_chunk(5 lst, 5 size) {
+  5 result = []
+  5 chunk = []
+  l (5 i = 0 : i < z.len(lst) : i = i + 1) {
+    append(chunk, lst[i])
+    i (z.len(chunk) == size) {
+      append(result, chunk)
+      chunk = []
+    }
+  }
+  i (z.len(chunk) > 0) {
+    append(result, chunk)
+  }
+  r result
+}
+
+m 13 list_zip_with(5 lst1, 5 lst2, 5 fn) {
+  5 result = []
+  5 len = z.len(lst1)
+  i (z.len(lst2) < len) { len = z.len(lst2) }
+  l (5 i = 0 : i < len : i = i + 1) {
+    append(result, fn(lst1[i], lst2[i]))
+  }
+  r result
+}

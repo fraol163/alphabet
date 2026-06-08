@@ -1,0 +1,32 @@
+#alphabet<en>
+/// Calculator example
+/// Demonstrates: functions, input, arithmetic
+
+z.o("=== Simple Calculator ===")
+z.o("Operations: +, -, *, /")
+z.o("")
+
+m 5 calculate(5 a, 12 op, 5 b) {
+  q (op) {
+    "+": { r a + b }
+    "-": { r a - b }
+    "*": { r a * b }
+    "/": {
+      i (b == 0) {
+        z.o("Error: Division by zero")
+        r 0
+      }
+      r a / b
+    }
+    default: {
+      z.o("Unknown operator: " + op)
+      r 0
+    }
+  }
+}
+
+z.o("10 + 5 = " + z.tostr(calculate(10, "+", 5)))
+z.o("10 - 5 = " + z.tostr(calculate(10, "-", 5)))
+z.o("10 * 5 = " + z.tostr(calculate(10, "*", 5)))
+z.o("10 / 5 = " + z.tostr(calculate(10, "/", 5)))
+z.o("10 / 0 = " + z.tostr(calculate(10, "/", 0)))

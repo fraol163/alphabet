@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 69: Try/catch with different error types
+5 ok = 0
+t { 5 bad = 10 / 0 } h (15 e) { ok = ok + 1 }
+t { 13 lst = [1,2,3] 5 bad = lst[100] } h (15 e) { ok = ok + 1 }
+i (ok == 2) { z.o("PASS:error_69_try_catch") } e { z.o("FAIL:error_69_try_catch ok=" + str(ok)) }

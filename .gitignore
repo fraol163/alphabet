@@ -3,7 +3,7 @@ build/
 build_asan/
 build_debug/
 build_release/
-out/
+build-wasm/
 
 # CMake generated
 CMakeCache.txt
@@ -15,28 +15,10 @@ CPackConfig.cmake
 CPackSourceConfig.cmake
 
 # Compiled binaries
-alphabet-linux-amd64
-alphabet-*.tar.gz
-alphabet-*.zip
-*.a
-a.out
-
-# Object files
 *.o
 *.o.d
-
-# Node.js (pptxgenjs for deck generation)
-node_modules/
-package.json
-package-lock.json
-
-# Generated presentation artifacts
-*.pptx
-*.pdf
-presentation_assets/
-gen_deck.js
-slide-*.jpg
-slide_end-*.jpg
+*.a
+a.out
 
 # OS files
 .DS_Store
@@ -47,18 +29,40 @@ Thumbs.db
 .vscode/
 .cache/
 *.swp
-.ide-state.json
-.openclaude/
+*.swo
+*~
 
 # Logs
 *.log
-Testing/
 
-# One-off fix scripts
-fix.cpp
-fix.py
-fix_identifier.py
-vm_h_fix.py
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
 
-# Scratch test files
+# WASM build artifacts (keep playground files for users)
+build-wasm/
+
+# Presentation files
+*.pdf
+*.pptx
+slide-*.jpg
+slide_end-*.jpg
+presentation_assets/
+
+# Lock files
+~lock.*.pptx#
+
+# Test scratch files
+test.abc
+test_json.abc
+test_output.txt
 test_crlf.abc
+
+# Generated project dirs
+my_project/
+mytestproject/
+test_builtin_dir/
+
+# Temporary test files
+/tmp/t_*.abc

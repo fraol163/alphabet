@@ -1,0 +1,59 @@
+#alphabet<en>
+/// Benchmarking Example
+/// Demonstrates: timing, performance measurement
+
+z.o("=== Benchmarking ===")
+
+m 5 benchmark(12 name, 5 fn, 5 iterations) {
+  5 start = z.timestamp()
+  l (5 i = 0 : i < iterations : i = i + 1) {
+    fn()
+  }
+  5 elapsed = z.timestamp() - start
+  z.o(name + ": " + z.tostr(elapsed) + "ms (" + z.tostr(iterations) + " iterations)")
+  r elapsed
+}
+
+m 5 bench_fibonacci() {
+  m 5 fib(5 n) {
+    i (n <= 1) { r n }
+    r fib(n - 1) + fib(n - 2)
+  }
+  r fib(20)
+}
+
+m 5 bench_loop_sum() {
+  5 total = 0
+  l (5 i = 0 : i < 10000 : i = i + 1) {
+    total = total + i
+  }
+  r total
+}
+
+m 5 bench_string_concat() {
+  5 s = ""
+  l (5 i = 0 : i < 1000 : i = i + 1) {
+    s = s + "a"
+  }
+  r z.len(s)
+}
+
+m 5 bench_list_ops() {
+  5 lst = []
+  l (5 i = 0 : i < 1000 : i = i + 1) {
+    append(lst, i)
+  }
+  5 sum = z.sum(lst)
+  r sum
+}
+
+z.o("\n--- Benchmarks ---")
+benchmark("Fibonacci(20)", bench_fibonacci, 100)
+benchmark("Loop sum 10K", bench_loop_sum, 100)
+benchmark("String concat 1K", bench_string_concat, 100)
+benchmark("List ops 1K", bench_list_ops, 100)
+
+z.o("\n--- Comparison ---")
+5 fib_time = benchmark("Fibonacci", bench_fibonacci, 10)
+5 loop_time = benchmark("Loop", bench_loop_sum, 10)
+z.o("Fibonacci is " + z.tostr(fib_time / loop_time) + "x slower than loop")

@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 24: Very long list (500 elements)
+13 lst = []
+5 i = 0
+l (i < 500) { z.append(lst, i) i = i + 1 }
+i (z.len(lst) == 500) { z.o("PASS:list_24_long") } e { z.o("FAIL:list_24_long len=" + str(z.len(lst))) }

@@ -1,0 +1,40 @@
+#alphabet<en>
+// === BREAK TESTS ===
+// S1: exits loop
+5 val_a = 0
+l (true) { val_a = val_a + 1 i (val_a == 5) { b } }
+i (val_a == 5) { z.o("PASS:break_s1") }
+// S2: inside if in loop
+5 val_b = 0
+l (true) { val_b = val_b + 1 i (val_b == 3) { i (true) { b } } }
+i (val_b == 3) { z.o("PASS:break_s2") }
+// S3: inside nested loop
+5 inner = 0
+5 outer = 0
+l (outer < 5) { inner = 0 l (true) { inner = inner + 1 i (inner == 2) { b } } outer = outer + 1 }
+i (inner == 2 && outer == 5) { z.o("PASS:break_s3") }
+// S4: at end of body
+5 val_c = 0
+l (val_c < 10) { val_c = val_c + 1 b }
+i (val_c == 1) { z.o("PASS:break_s4") }
+// S5: conditional break
+13 nums = [1, 2, 3, 4, 5]
+5 idx_a = 0
+5 found_val = 0
+l (idx_a < z.len(nums)) { i (nums[idx_a] == 3) { found_val = nums[idx_a] b } idx_a = idx_a + 1 }
+i (found_val == 3) { z.o("PASS:break_s5") }
+// S6: break after some iterations
+5 cnt_a = 0
+5 acc = 0
+l (cnt_a < 10) { acc = acc + cnt_a cnt_a = cnt_a + 1 i (cnt_a == 4) { b } }
+i (cnt_a == 4 && acc == 6) { z.o("PASS:break_s6") }
+// S7: multiple break points
+5 mode = 1
+5 out = 0
+l (true) { i (mode == 1) { out = 10 b } i (mode == 2) { out = 20 b } out = 30 b }
+i (out == 10) { z.o("PASS:break_s7") }
+// S8: break with counter check
+5 idx_b = 0
+5 sum_a = 0
+l (idx_b < 5) { sum_a = sum_a + idx_b idx_b = idx_b + 1 i (idx_b == 3) { b } }
+i (sum_a == 3) { z.o("PASS:break_s8") }

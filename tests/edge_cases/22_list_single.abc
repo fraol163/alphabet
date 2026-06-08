@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 22: Single element list
+13 lst = [42]
+i (z.len(lst) == 1 && lst[0] == 42) { z.o("PASS:list_22_single") } e { z.o("FAIL:list_22_single") }

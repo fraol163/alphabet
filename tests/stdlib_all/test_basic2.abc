@@ -1,0 +1,10 @@
+#alphabet<en>
+5 x = 42
+z.o(x)
+z.o(x + 1)
+13 lst = [1, 2, 3]
+z.o(lst)
+5 a = lst[0]
+z.o(a)
+5 b = len(lst)
+z.o(b)

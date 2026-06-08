@@ -1,0 +1,50 @@
+#alphabet<de>
+@ fakultaet, ggt, kgv, maximum, minimum, clamp, vorzeichen, gerade, ungerade
+
+m 5 fakultaet(5 n) {
+  i (n <= 1) { r 1 }
+  r n * fakultaet(n - 1)
+}
+
+m 5 ggt(5 a, 5 b) {
+  l (b != 0) {
+    5 temp = b
+    b = a % b
+    a = temp
+  }
+  r a
+}
+
+m 5 kgv(5 a, 5 b) {
+  r (a * b) / ggt(a, b)
+}
+
+m 5 maximum(5 a, 5 b) {
+  i (a > b) { r a }
+  r b
+}
+
+m 5 minimum(5 a, 5 b) {
+  i (a < b) { r a }
+  r b
+}
+
+m 5 clamp(5 val, 5 lo, 5 hi) {
+  i (val < lo) { r lo }
+  i (val > hi) { r hi }
+  r val
+}
+
+m 5 vorzeichen(5 n) {
+  i (n > 0) { r 1 }
+  i (n < 0) { r -1 }
+  r 0
+}
+
+m 5 gerade(5 n) {
+  r n % 2 == 0
+}
+
+m 5 ungerade(5 n) {
+  r n % 2 != 0
+}

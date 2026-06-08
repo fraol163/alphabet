@@ -1,0 +1,189 @@
+#alphabet<en>
+// === COMPREHENSIVE KEYWORD TEST: ENGLISH ===
+
+// === VARIABLES ===
+5 val_a = 42
+5 val_b = 10
+12 name = "Alphabet"
+8 pi = 3.14
+11 flag = true
+13 nums = [1, 2, 3, 4, 5]
+14 person = {"name": "Fraol", "age": 21}
+z.o("PASS:variables")
+
+// === ARITHMETIC ===
+5 sum = val_a + val_b
+5 diff = val_a - val_b
+5 prod = val_a * val_b
+5 quot = val_a / val_b
+5 mod = val_a % val_b
+i (sum == 52) { z.o("PASS:arithmetic") }
+
+// === STRING OPS ===
+12 upper = z.upper(name)
+12 lower = z.lower(name)
+5 slen = z.len(name)
+12 conc = "Hello" + " " + "World"
+i (z.len(upper) == slen) { z.o("PASS:strings") }
+
+// === LIST OPS ===
+13 lst = [10, 20, 30]
+z.append(lst, 40)
+5 lst_len = z.len(lst)
+5 first = lst[0]
+13 sorted_lst = z.sort([3, 1, 2])
+i (lst_len == 4 && first == 10) { z.o("PASS:lists") }
+
+// === MAP OPS ===
+14 m = {"a": 1, "b": 2}
+5 mv = m["a"]
+13 mk = z.keys(m)
+i (mv == 1 && z.len(mk) == 2) { z.o("PASS:maps") }
+
+// === IF/ELSE ===
+5 x = 10
+i (x > 5) { z.o("PASS:if") } e { z.o("FAIL:if") }
+i (x < 5) { z.o("FAIL:else") } e { z.o("PASS:else") }
+i (x > 5 && x < 20) { z.o("PASS:if_and") }
+i (x == 5 || x == 10) { z.o("PASS:if_or") }
+i (!(x == 20)) { z.o("PASS:if_not") }
+
+// === LOOP ===
+5 loop_sum = 0
+5 idx = 0
+l (idx < 5) { loop_sum = loop_sum + idx idx = idx + 1 }
+i (loop_sum == 10) { z.o("PASS:loop") }
+
+// === LOOP WITH BREAK ===
+5 brk = 0
+l (true) { brk = brk + 1 i (brk == 5) { b } }
+i (brk == 5) { z.o("PASS:break") }
+
+// === LOOP WITH CONTINUE ===
+13 evens = []
+5 ci = 0
+l (ci < 10) { ci = ci + 1 i (ci % 2 != 0) { k } z.append(evens, ci) }
+i (z.len(evens) == 5) { z.o("PASS:continue") }
+
+// === FOR-EACH LOOP ===
+13 items = ["a", "b", "c"]
+5 cnt = 0
+l (5 item : items) { cnt = cnt + 1 }
+i (cnt == 3) { z.o("PASS:for_each") }
+
+// === FUNCTION ===
+m 11 factorial(11 num) {
+  i (num <= 1) { r 1 }
+  r num * factorial(num - 1)
+}
+i (factorial(5) == 120) { z.o("PASS:function") }
+
+// === FUNCTION WITH MULTIPLE RETURNS ===
+m 11 classify(11 num) {
+  i (num > 0) { r 1 }
+  i (num == 0) { r 0 }
+  r -1
+}
+i (classify(5) == 1 && classify(0) == 0 && classify(-5) == -1) { z.o("PASS:multi_return") }
+
+// === LAMBDA ===
+13 data = [3, 1, 4, 1, 5]
+13 sorted_data = z.sort(data)
+i (sorted_data[0] == 1) { z.o("PASS:lambda") }
+
+// === CLASS ===
+c Calculator {
+  5 calc_val = 0
+  v m set_val(11 v) { calc_val = v }
+  v m get_val() { r calc_val }
+  v m add(11 a, 11 b) { r a + b }
+}
+15 calc = n Calculator()
+calc.set_val(42)
+i (calc.get_val() == 42 && calc.add(2, 3) == 5) { z.o("PASS:class") }
+
+// === INHERITANCE ===
+c Animal {
+  12 animal_name = ""
+  v m speak() { r "..." }
+}
+c Dog ^ Animal {
+  v m speak() { r "woof" }
+}
+15 dog = n Dog()
+dog.animal_name = "Rex"
+i (dog.speak() == "woof") { z.o("PASS:inheritance") }
+
+// === STATIC METHOD ===
+c MathHelper {
+  v s 11 add(11 a, 11 b) { r a + b }
+}
+i (MathHelper.add(3, 4) == 7) { z.o("PASS:static") }
+
+// === TRY/HANDLE ===
+t { z.o("PASS:try_ok") } h (15 e) { z.o("FAIL:try") }
+
+// === TRY/HANDLE WITH ERROR ===
+t { 5 bad = 10 / 0 } h (15 e) { z.o("PASS:try_catch") }
+
+// === MATCH ===
+5 mx = 2
+q (mx) { 1: z.i("one") 2: z.o("PASS:match") 3: z.i("three") }
+
+// === RANGE ===
+13 rng = 1..5
+i (z.len(rng) == 5) { z.o("PASS:range") }
+
+// === STRING INTERPOLATION ===
+5 age = 25
+12 greeting = f"Hello {name}, age {age}"
+i (z.len(greeting) > 5) { z.o("PASS:fstring") }
+
+// === TERNARY ===
+5 tern = 10 > 5 ? 1 : 0
+i (tern == 1) { z.o("PASS:ternary") }
+
+// === TYPE CHECK ===
+i (z.type(val_a) == "number") { z.o("PASS:type_int") }
+i (z.type(name) == "string") { z.o("PASS:type_str") }
+i (z.type(nums) == "list") { z.o("PASS:type_list") }
+i (z.type(person) == "map") { z.o("PASS:type_map") }
+
+// === BUILTINS ===
+i (z.sqrt(144) == 12) { z.o("PASS:sqrt") }
+i (z.abs(-42) == 42) { z.o("PASS:abs") }
+i (z.pow(2, 10) == 1024) { z.o("PASS:pow") }
+i (z.floor(3.7) == 3) { z.o("PASS:floor") }
+i (z.ceil(3.2) == 4) { z.o("PASS:ceil") }
+i (z.min(3, 7) == 3) { z.o("PASS:min") }
+i (z.max(3, 7) == 7) { z.o("PASS:max") }
+13 reversed = z.reverse([1, 2, 3])
+i (reversed[0] == 3) { z.o("PASS:reverse") }
+i (z.contains([1, 2, 3], 2)) { z.o("PASS:contains") }
+13 range5 = z.range(5)
+i (z.len(range5) == 5) { z.o("PASS:range_fn") }
+
+// === IMPORT STDLIB ===
+x "stdlib/math.abc"
+i (true) { z.o("PASS:import") }
+
+// === NESTED LOOPS ===
+5 nsum = 0
+5 ni = 0
+l (ni < 3) { 5 nj = 0 l (nj < 3) { nsum = nsum + 1 nj = nj + 1 } ni = ni + 1 }
+i (nsum == 9) { z.o("PASS:nested_loop") }
+
+// === RECURSION ===
+m 11 fib(11 n) { i (n <= 1) { r n } r fib(n - 1) + fib(n - 2) }
+i (fib(10) == 55) { z.o("PASS:recursion") }
+
+// === CLOSURE ===
+m 11 make_adder(11 base) {
+  m 11 adder(11 x) { r base + x }
+  r adder
+}
+11 add10 = make_adder(10)
+i (add10(5) == 15) { z.o("PASS:closure") }
+
+// === ALL DONE ===
+z.o("COMPREHENSIVE_EN_COMPLETE")

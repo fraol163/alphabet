@@ -1,0 +1,5 @@
+#alphabet<am>
+// === INPUT TESTS ===
+// S1: input keyword recognized
+12 prompt_a = "enter value"
+z.o("PASS:input_s1 (input keyword recognized)")

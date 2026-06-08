@@ -1,0 +1,10 @@
+#alphabet<es>
+// === INTERFACE TESTS ===
+clase Drawable { público método 11 draw() { } }
+clase Circle interfaz Drawable { público método 11 draw() { r "circle" } }
+15 ci = n Circle()
+si (ci.draw() == "circle") { z.o("PASS:iface_s1") }
+clase Formattable { público método 12 fmt() { } público método 11 validate() { } }
+clase Email interfaz Formattable { público método 12 fmt() { r "formatted" } público método 11 validate() { r 1 } }
+15 em = n Email()
+si (em.fmt() == "formatted" && em.validate() == 1) { z.o("PASS:iface_s2") }

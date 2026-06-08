@@ -1,6 +1,6 @@
 #alphabet<fr>
 classe Calculatrice {
-    public methode 5 additionner(5 a, 5 b) {
+    public méthode 5 additionner(5 a, 5 b) {
         retour a + b
     }
 }

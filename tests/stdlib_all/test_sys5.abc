@@ -1,0 +1,10 @@
+#alphabet<en>
+x "../../stdlib/system.abc"
+5 v = z.env("NONEXISTENT_VAR_12345")
+z.o(v)
+5 isnull = z.is_null(v)
+z.o(isnull)
+5 has = env_has("NONEXISTENT_VAR_12345")
+z.o(has)
+5 cmp = has != 0
+z.o(cmp)

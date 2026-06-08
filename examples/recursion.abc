@@ -1,0 +1,73 @@
+#alphabet<en>
+/// Recursive Algorithms
+/// Demonstrates: recursion, backtracking, divide and conquer
+
+z.o("=== Recursive Algorithms ===")
+
+z.o("\n--- Tower of Hanoi ---")
+m 0 hanoi(5 n, 12 from, 12 to, 12 aux) {
+  i (n == 1) {
+    z.o("Move disk 1 from " + from + " to " + to)
+    r
+  }
+  hanoi(n - 1, from, aux, to)
+  z.o("Move disk " + z.tostr(n) + " from " + from + " to " + to)
+  hanoi(n - 1, aux, to, from)
+}
+
+z.o("Tower of Hanoi (3 disks):")
+hanoi(3, "A", "C", "B")
+
+z.o("\n--- Binary Search ---")
+m 5 binary_search(5 lst, 5 target, 5 low, 5 high) {
+  i (low > high) { r -1 }
+  5 mid = (low + high) / 2
+  i (lst[mid] == target) { r mid }
+  i (lst[mid] > target) {
+    r binary_search(lst, target, low, mid - 1)
+  }
+  r binary_search(lst, target, mid + 1, high)
+}
+
+5 sorted = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91]
+5 idx = binary_search(sorted, 23, 0, z.len(sorted) - 1)
+z.o("Found 23 at index: " + z.tostr(idx))
+
+z.o("\n--- Merge Sort ---")
+m 13 merge_sort(5 lst) {
+  i (z.len(lst) <= 1) { r lst }
+  5 mid = z.len(lst) / 2
+  5 left = z.slice(lst, 0, mid)
+  5 right = z.slice(lst, mid, z.len(lst))
+  left = merge_sort(left)
+  right = merge_sort(right)
+  r merge(left, right)
+}
+
+m 13 merge(5 left, 5 right) {
+  5 result = []
+  5 i = 0
+  5 j = 0
+  l (i < z.len(left) && j < z.len(right)) {
+    i (left[i] <= right[j]) {
+      append(result, left[i])
+      i = i + 1
+    } e {
+      append(result, right[j])
+      j = j + 1
+    }
+  }
+  l (i < z.len(left)) {
+    append(result, left[i])
+    i = i + 1
+  }
+  l (j < z.len(right)) {
+    append(result, right[j])
+    j = j + 1
+  }
+  r result
+}
+
+5 unsorted = [38, 27, 43, 3, 9, 82, 10]
+z.o("Unsorted: " + z.tostr(unsorted))
+z.o("Sorted:   " + z.tostr(merge_sort(unsorted)))

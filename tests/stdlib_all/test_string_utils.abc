@@ -1,0 +1,30 @@
+#alphabet<en>
+x "../../stdlib/string_utils.abc"
+5 ok = 1
+t {
+  12 rep = str_repeat("ab", 3)
+  i (rep != "ababab") { ok = 0 }
+  12 rev = str_reverse("abc")
+  i (rev != "cba") { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  12 pl = str_pad_left("hi", 5, "0")
+  i (pl != "000hi") { ok = 0 }
+  12 pr = str_pad_right("hi", 5, "0")
+  i (pr != "hi000") { ok = 0 }
+  12 ns = str_pad_left("hello", 3, "0")
+  i (ns != "hello") { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  i (str_contains("hello world", "world") != 1) { ok = 0 }
+  i (str_contains("hello", "xyz") != 0) { ok = 0 }
+  12 tl = str_trim_left("  hi")
+  i (tl != "hi") { ok = 0 }
+  12 tr = str_trim_right("hi  ")
+  i (tr != "hi") { ok = 0 }
+} h (0 e) { ok = 0 }
+i (ok) {
+  z.o("PASS: string_utils")
+} e {
+  z.o("FAIL: string_utils")
+}

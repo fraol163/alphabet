@@ -1,0 +1,7 @@
+#alphabet<en>
+5 x = 42
+z.o(x)
+5 y = 10 + 5
+z.o(y)
+13 lst = [1, 2, 3]
+z.o(lst)

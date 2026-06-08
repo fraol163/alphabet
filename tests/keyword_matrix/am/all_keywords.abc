@@ -1,0 +1,305 @@
+#alphabet<am>
+// COMPLETE KEYWORD TEST: AM
+5 v1 = 10
+ከሆነ (v1 == 10) { o("P:if1") }
+ከሆነ (v1 == 20) { o("F") } ያለበለዚያ { o("P:if2") }
+ከሆነ (v1 > 5) { o("P:if3") }
+ከሆነ (v1 < 5) { o("F") } ያለበለዚያ { o("P:if4") }
+ከሆነ (v1 > 5 && v1 < 20) { o("P:if5") }
+ከሆነ (v1 == 5 || v1 == 10) { o("P:if6") }
+ከሆነ (!(v1 == 20)) { o("P:if7") }
+ከሆነ (v1 > 5) { ከሆነ (v1 > 8) { o("P:if8") } }
+12 nm = "hello"
+ከሆነ (nm == "hello") { o("P:if9") }
+13 lt = [1,2,3]
+ከሆነ (z.len(lt) == 3) { o("P:if10") }
+14 mp = {"k":100}
+ከሆነ (z.has(mp,"k")) { o("P:if11") }
+ዘዴ 5 ispos(5 num) { r num > 0 }
+ከሆነ (ispos(5)) { o("P:if12") }
+ከሆነ (v1 == 10) { o(f"P:if13 v={v1}") }
+ከሆነ (v1 == 10) o("P:if14")
+ዘዴ 5 testif() { ከሆነ (1==1) { r 1 } r 0 }
+ከሆነ (testif()==1) { o("P:if15") }
+
+ከሆነ (v1==10) { o("P:e1") } ያለበለዚያ { o("F") }
+ከሆነ (v1==20) { o("F") } ያለበለዚያ { o("P:e2") }
+5 d1 = 15
+ከሆነ (d1<10) { o("lo") } ያለበለዚያ ከሆነ (d1<20) { o("P:e3") } ያለበለዚያ { o("hi") }
+ከሆነ (v1==10) { ከሆነ (v1>5) { o("P:e4") } }
+ከሆነ (v1==20) { o("no") } ያለበለዚያ { ከሆነ (v1==10) { o("P:e5") } }
+ዘዴ 5 tret(5 num) { ከሆነ (num>0) { r 1 } ያለበለዚያ { r 0 } }
+ከሆነ (tret(5)==1 && tret(-1)==0) { o("P:e6") }
+5 res = 0
+ከሆነ (v1==10) { res=1 } ያለበለዚያ { res=2 }
+ከሆነ (res==1) { o("P:e7") }
+13 la = [1,2]
+z.append(la,5)
+ከሆነ (z.len(la)==3) { o("P:e8") }
+ክፍል ECls { ግልጽ ዘዴ 5 ck(5 num) { ከሆነ (num>0) { r 1 } ያለበለዚያ { r -1 } } }
+15 oc = num ECls()
+ከሆነ (oc.ck(5)==1 && oc.ck(-1)==-1) { o("P:e9") }
+ከሆነ (v1==10) { o(f"P:e10 v={v1}") } ያለበለዚያ { o("F") }
+
+5 s1=0 5 ix=0
+ሉፕ (ix<5) { s1=s1+ix ix=ix+1 }
+ከሆነ (s1==10) { o("P:l1") }
+5 g1=10
+ሉፕ (g1<5) { o("F") }
+o("P:l2")
+5 bv=0
+ሉፕ (true) { bv=bv+1 ከሆነ (bv==5) { ስበር } }
+ከሆነ (bv==5) { o("P:l3") }
+13 ev=[] 5 ci=0
+ሉፕ (ci<10) { ci=ci+1 ከሆነ (ci%2!=0) { ቀጥል } z.append(ev,ci) }
+ከሆነ (z.len(ev)==5) { o("P:l4") }
+13 rx=[] 5 ri=0
+ሉፕ (ri<10) { ri=ri+1 ከሆነ (ri==3) { ቀጥል } ከሆነ (ri==8) { ስበር } z.append(rx,ri) }
+ከሆነ (z.len(rx)==6) { o("P:l5") }
+5 ps=0 5 pi=0
+ሉፕ (pi<3) { 5 pj=0 ሉፕ (pj<3) { ps=ps+1 pj=pj+1 } pi=pi+1 }
+ከሆነ (ps==9) { o("P:l6") }
+5 c3=0 5 p1=0
+ሉፕ (p1<2) { 5 p2=0 ሉፕ (p2<2) { 5 p3=0 ሉፕ (p3<2) { c3=c3+1 p3=p3+1 } p2=p2+1 } p1=p1+1 }
+ከሆነ (c3==8) { o("P:l7") }
+ዘዴ 5 ff() { 5 fi=0 ሉፕ (fi<10) { ከሆነ (fi==5) { r fi } fi=fi+1 } r -1 }
+ከሆነ (ff()==5) { o("P:l8") }
+5 od=0 5 oi=0
+ሉፕ (oi<10) { ከሆነ (oi%2==1) { od=od+1 } oi=oi+1 }
+ከሆነ (od==5) { o("P:l9") }
+5 ext=0
+ሉፕ (ext<5) { ext=ext+1 }
+ከሆነ (ext==5) { o("P:l10") }
+12 rs="" 5 si=0
+ሉፕ (si<3) { rs=rs+z.tostr(si) si=si+1 }
+ከሆነ (rs=="012") { o("P:l11") }
+13 bd=[] 5 bi=0
+ሉፕ (bi<5) { z.append(bd,bi*2) bi=bi+1 }
+ከሆነ (z.len(bd)==5) { o("P:l12") }
+5 cn=0
+ዘዴ 5 sgo() { r cn<3 }
+ሉፕ (sgo()) { cn=cn+1 }
+ከሆነ (cn==3) { o("P:l13") }
+5 inf=0
+ሉፕ (true) { inf=inf+1 ከሆነ (inf>=100) { ስበር } }
+ከሆነ (inf==100) { o("P:l14") }
+5 tp=0
+ሉፕ (tp<1) { o(f"P:l15 tp={tp}") tp=tp+1 }
+
+5 bv2=0
+ሉፕ (true) { bv2=bv2+1 ከሆነ (bv2==5) { ስበር } }
+ከሆነ (bv2==5) { o("P:b1") }
+5 bv3=0
+ሉፕ (true) { bv3=bv3+1 ከሆነ (bv3==3) { ከሆነ (true) { ስበር } } }
+ከሆነ (bv3==3) { o("P:b2") }
+5 inn=0 5 ot=0
+ሉፕ (ot<5) { inn=0 ሉፕ (true) { inn=inn+1 ከሆነ (inn==2) { ስበር } } ot=ot+1 }
+ከሆነ (inn==2 && ot==5) { o("P:b3") }
+5 bv4=0
+ሉፕ (bv4<10) { bv4=bv4+1 ስበር }
+ከሆነ (bv4==1) { o("P:b4") }
+13 nm2=[1,2,3,4,5] 5 ix2=0 5 fv=0
+ሉፕ (ix2<z.len(nm2)) { ከሆነ (nm2[ix2]==3) { fv=nm2[ix2] ስበር } ix2=ix2+1 }
+ከሆነ (fv==3) { o("P:b5") }
+5 bc=0 5 ba=0
+ሉፕ (bc<10) { ba=ba+bc bc=bc+1 ከሆነ (bc==4) { ስበር } }
+ከሆነ (bc==4 && ba==6) { o("P:b6") }
+5 md=1 5 bo=0
+ሉፕ (true) { ከሆነ (md==1) { bo=10 ስበር } ከሆነ (md==2) { bo=20 ስበር } bo=30 ስበር }
+ከሆነ (bo==10) { o("P:b7") }
+5 bk=0 5 bs=0
+ሉፕ (bk<5) { bs=bs+bk bk=bk+1 ከሆነ (bk==3) { ስበር } }
+ከሆነ (bs==3) { o("P:b8") }
+
+13 kp=[] 5 ci2=0
+ሉፕ (ci2<5) { ci2=ci2+1 ከሆነ (ci2==3) { ቀጥል } z.append(kp,ci2) }
+ከሆነ (z.len(kp)==4) { o("P:k1") }
+13 kr=[] 5 cj=0
+ሉፕ (cj<5) { cj=cj+1 ከሆነ (cj==3) { ከሆነ (true) { ቀጥል } } z.append(kr,cj) }
+ከሆነ (z.len(kr)==4) { o("P:k2") }
+5 ic=0 5 ck=0
+ሉፕ (ck<3) { ic=0 5 cl=0 ሉፕ (cl<3) { cl=cl+1 ከሆነ (cl==2) { ቀጥል } ic=ic+1 } ck=ck+1 }
+ከሆነ (ic==2) { o("P:k3") }
+13 ce=[] 5 cv=0
+ሉፕ (cv<6) { cv=cv+1 ከሆነ (cv%2!=0) { ቀጥል } z.append(ce,cv) }
+ከሆነ (z.len(ce)==3) { o("P:k4") }
+13 cq=[] 5 cw=0
+ሉፕ (cw<8) { cw=cw+1 ከሆነ (cw%3==0) { ቀጥል } z.append(cq,cw) }
+ከሆነ (z.len(cq)==5) { o("P:k5") }
+13 cm=[] 5 cx=0
+ሉፕ (cx<10) { cx=cx+1 ከሆነ (cx==3) { ቀጥል } ከሆነ (cx==8) { ስበር } z.append(cm,cx) }
+ከሆነ (z.len(cm)==6) { o("P:k6") }
+ዘዴ 5 cnz() { 13 dt=[0,1,0,2,0,3] 5 ct=0 5 di=0 ሉፕ (di<z.len(dt)) { ከሆነ (dt[di]==0) { di=di+1 ቀጥል } ct=ct+1 di=di+1 } r ct }
+ከሆነ (cnz()==3) { o("P:k7") }
+
+ዘዴ 5 ri1() { ተመለስ 42 }
+ከሆነ (ri1()==42) { o("P:r1") }
+ዘዴ 12 rs1() { ተመለስ "hello" }
+ከሆነ (rs1()=="hello") { o("P:r2") }
+ዘዴ 8 rf1() { ተመለስ 3.14 }
+ከሆነ (z.type(rf1())=="number") { o("P:r3") }
+ዘዴ 5 rl1() { ተመለስ [1,2,3] }
+13 rlv=rl1()
+ከሆነ (z.len(rlv)==3) { o("P:r4") }
+ዘዴ 5 abs1(5 num) { ከሆነ (num>=0) { ተመለስ num } ያለበለዚያ { ተመለስ 0-num } }
+ከሆነ (abs1(5)==5 && abs1(-5)==5) { o("P:r5") }
+ዘዴ 5 flp(5 tgt) { 5 fi=0 ሉፕ (fi<10) { ከሆነ (fi==tgt) { ተመለስ fi } fi=fi+1 } ተመለስ -1 }
+ከሆነ (flp(7)==7) { o("P:r6") }
+ዘዴ 5 fact(5 num) { ከሆነ (num<=1) { ተመለስ 1 } ተመለስ num*fact(num-1) }
+ከሆነ (fact(5)==120) { o("P:r7") }
+ዘዴ 5 mret(5 num) { ከሆነ (num>0) { ተመለስ 1 } ከሆነ (num==0) { ተመለስ 0 } ተመለስ -1 }
+ከሆነ (mret(5)==1 && mret(0)==0 && mret(-5)==-1) { o("P:r8") }
+ዘዴ 5 clc(5 a, 5 b) { ተመለስ a*b+a-b }
+ከሆነ (clc(3,2)==7) { o("P:r9") }
+ዘዴ 5 dbl2(5 num) { ተመለስ num*2 }
+ዘዴ 5 trp(5 num) { ተመለስ dbl2(num)+num }
+ከሆነ (trp(5)==15) { o("P:r10") }
+ክፍል RCls { ግልጽ ዘዴ 5 gv() { ተመለስ 99 } }
+15 rco = num RCls()
+ከሆነ (rco.gv()==99) { o("P:r11") }
+ዘዴ 5 trt() { ሞክር { ተመለስ 1 } ያዟ (15 err) { ተመለስ -1 } }
+ከሆነ (trt()==1) { o("P:r12") }
+
+ዘዴ 5 gf() { ተመለስ 5 }
+ከሆነ (gf()==5) { o("P:m1") }
+ዘዴ 5 dbl3(5 num) { ተመለስ num*2 }
+ከሆነ (dbl3(3)==6) { o("P:m2") }
+ዘዴ 5 add3(5 a, 5 b, 5 c2) { ተመለስ a+b+c2 }
+ከሆነ (add3(1,2,3)==6) { o("P:m3") }
+ዘዴ 12 grt(12 nm) { ተመለስ "hello "+nm }
+ከሆነ (grt("world")=="hello world") { o("P:m4") }
+ዘዴ 5 sq2(5 num) { ተመለስ num*num }
+ዘዴ 5 ssq(5 a, 5 b) { ተመለስ sq2(a)+sq2(b) }
+ከሆነ (ssq(3,4)==25) { o("P:m5") }
+ዘዴ 5 fib2(5 num) { ከሆነ (num<=1) { ተመለስ num } ተመለስ fib2(num-1)+fib2(num-2) }
+ከሆነ (fib2(10)==55) { o("P:m6") }
+ዘዴ 5 wl() { 5 la2=10 5 lb2=20 ተመለስ la2+lb2 }
+ከሆነ (wl()==30) { o("P:m7") }
+ዘዴ 5 mx2(5 a, 5 b) { ከሆነ (a>b) { ተመለስ a } ያለበለዚያ { ተመለስ b } }
+ከሆነ (mx2(5,10)==10 && mx2(10,5)==10) { o("P:m8") }
+ዘዴ 5 stn(5 num) { 5 ss2=0 5 si2=0 ሉፕ (si2<num) { ss2=ss2+si2 si2=si2+1 } ተመለስ ss2 }
+ከሆነ (stn(5)==10) { o("P:m9") }
+ዘዴ 5 nr() { 5 xv=10 }
+nr()
+o("P:m10")
+
+ክፍል Empty { }
+o("P:c1")
+ክፍል Greeter { ግልጽ ዘዴ 12 hello() { ተመለስ "hello" } }
+15 gg = num Greeter()
+ከሆነ (gg.hello()=="hello") { o("P:c2") }
+ክፍል Calc { ግልጽ ዘዴ 5 add(5 a, 5 b) { ተመለስ a+b } ግልጽ ዘዴ 5 mul(5 a, 5 b) { ተመለስ a*b } }
+15 ccc = num Calc()
+ከሆነ (ccc.add(2,3)==5 && ccc.mul(2,3)==6) { o("P:c3") }
+ክፍል Pt { ግልጽ 5 px=0 ግልጽ 5 py=0 }
+15 ptt = num Pt()
+ptt.px=10 ptt.py=20
+ከሆነ (ptt.px==10 && ptt.py==20) { o("P:c4") }
+ክፍል Cntr { ግልጽ 5 cv=0 ግልጽ ዘዴ 5 inc() { cv=cv+1 } ግልጽ ዘዴ 5 get() { ተመለስ cv } }
+15 ccc2 = num Cntr()
+ccc2.inc() ccc2.inc() ccc2.inc()
+ከሆነ (ccc2.get()==3) { o("P:c5") }
+ክፍል Cfg { ግልጽ 12 cn="default" ግልጽ 5 cv2=42 }
+15 cfgg = num Cfg()
+ከሆነ (cfgg.cn=="default" && cfgg.cv2==42) { o("P:c6") }
+ክፍል Bsk { ግልጽ 13 items=[] ግልጽ ዘዴ 5 add(5 it) { z.append(items,it) } ግልጽ ዘዴ 5 cnt() { ተመለስ z.len(items) } }
+15 bsk = num Bsk()
+bsk.add(10) bsk.add(20)
+ከሆነ (bsk.cnt()==2) { o("P:c7") }
+ክፍል Str { ግልጽ 14 sd={"k":"v"} }
+15 stt = num Str()
+ከሆነ (stt.sd["k"]=="v") { o("P:c8") }
+15 a1=num Greeter() 15 a2=num Greeter()
+ከሆነ (a1.hello()==a2.hello()) { o("P:c9") }
+ክፍል C2 { ግልጽ 5 cv3=0 ግልጽ ዘዴ 5 i2() { cv3=cv3+1 } ግልጽ ዘዴ 5 g2() { ተመለስ cv3 } }
+15 cc3 = num C2()
+cc3.i2() cc3.i2()
+ከሆነ (cc3.g2()==2) { o("P:c10") }
+
+ክፍል Mo { ግልጽ 5 ov=0 }
+15 o1=num Mo()
+o("P:n1")
+o1.ov=42
+ከሆነ (o1.ov==42) { o("P:n2") }
+15 o2=num Mo()
+o2.ov=99
+ከሆነ (o2.ov==99) { o("P:n3") }
+ዘዴ 5 gov(15 ob) { ተመለስ ob.ov }
+ከሆነ (gov(o1)==42) { o("P:n4") }
+ዘዴ 15 mkob() { 15 ob3=num Mo() ob3.ov=77 ተመለስ ob3 }
+15 o3=mkob()
+ከሆነ (o3.ov==77) { o("P:n5") }
+15 oa=num Mo() 15 ob4=num Mo()
+oa.ov=1 ob4.ov=2
+ከሆነ (oa.ov==1 && ob4.ov==2) { o("P:n6") }
+13 nl2=[10,20,30]
+ከሆነ (z.len(nl2)==3) { o("P:n7") }
+14 nm4={"a":1,"b":2}
+ከሆነ (z.len(nm4)==2) { o("P:n8") }
+
+ሞክር { o("P:t1") } ያዟ (15 err) { o("F") }
+ሞክር { z.t("x") } ያዟ (15 err) { o("P:t2") }
+ሞክር { z.t("oops") } ያዟ (15 err) { o("P:t3") }
+ሞክር { ሞክር { z.t("i") } ያዟ (15 err) { o("P:t4") } } ያዟ (15 err) { }
+ዘዴ 5 trt2() { ሞክር { ተመለስ 1 } ያዟ (15 err) { ተመለስ -1 } }
+ከሆነ (trt2()==1) { o("P:t5") }
+ዘዴ 5 wt() { z.t("e") }
+ሞክር { wt() } ያዟ (15 err) { o("P:t6") }
+ዘዴ 5 sop() { ሞክር { ተመለስ 42 } ያዟ (15 err) { ተመለስ 0 } }
+ከሆነ (sop()==42) { o("P:t7") }
+ክፍል TC { ግልጽ ዘዴ 5 sf() { ሞክር { ተመለስ 100 } ያዟ (15 err) { ተመለስ 0 } } }
+15 tcc = num TC()
+ከሆነ (tcc.sf()==100) { o("P:t8") }
+
+5 mx2=2
+ምረጥ (mx2) { 1: o("one") 2: o("P:q1") 3: o("three") }
+5 my2=99
+ምረጥ (my2) { 1: o("no") e: o("P:q2") }
+5 mz2=3 5 mf2=0
+ምረጥ (mz2) { 1: mf2=10 2: mf2=20 3: mf2=30 e: mf2=0 }
+ከሆነ (mf2==30) { o("P:q3") }
+ዘዴ 5 gmv(5 num) { ምረጥ (num) { 1: ተመለስ 10 2: ተመለስ 20 e: ተመለስ 0 } }
+ከሆነ (gmv(1)==10 && gmv(2)==20) { o("P:q4") }
+ዘዴ 5 mrt(5 num) { ምረጥ (num) { 1: ተመለስ 1 2: ተመለስ 2 e: ተመለስ 0 } }
+ከሆነ (mrt(1)==1) { o("P:q5") }
+5 mm2=2 5 mr2=0
+ምረጥ (mm2) { 1: mr2=1 2: mr2=22 e: mr2=0 }
+ከሆነ (mr2==22) { o("P:q6") }
+5 ms2=0 5 mv3=0
+ምረጥ (mv3) { 0: ሉፕ (ms2<5) { ms2=ms2+1 } e: ms2=-1 }
+ከሆነ (ms2==5) { o("P:q7") }
+
+ክፍል Animal { ግልጽ 12 an="" ግልጽ ዘዴ 12 sp() { ተመለስ "..." } }
+ክፍል Dog ^ Animal { ግልጽ ዘዴ 12 sp() { ተመለስ "woof" } }
+15 dog=num Dog() dog.an="Rex"
+ከሆነ (dog.sp()=="woof" && dog.an=="Rex") { o("P:x1") }
+15 an2=num Animal() an2.an="Gen"
+ከሆነ (an2.an=="Gen") { o("P:x2") }
+ክፍል Cat ^ Animal { ግልጽ ዘዴ 12 sp() { ተመለስ "meow" } }
+15 cat=num Cat()
+ከሆነ (cat.sp()=="meow") { o("P:x3") }
+ክፍል Rob ^ Animal { ግልጽ ዘዴ 5 bp() { ተመለስ 42 } }
+15 rb=num Rob()
+ከሆነ (rb.bp()==42 && rb.sp()=="...") { o("P:x4") }
+ክፍል Pet ^ Animal { ግልጽ 5 loy=100 }
+15 pet=num Pet()
+ከሆነ (pet.loy==100) { o("P:x5") }
+ክፍል Bas { ግልጽ ዘዴ 5 bf() { ተመለስ 1 } }
+ክፍል Mid2 ^ Bas { ግልጽ ዘዴ 5 mf3() { ተመለስ 2 } }
+ክፍል Top2 ^ Mid2 { ግልጽ ዘዴ 5 tf() { ተመለስ 3 } }
+15 t2=num Top2()
+ከሆነ (t2.bf()==1 && t2.mf3()==2 && t2.tf()==3) { o("P:x6") }
+
+ላክ efn
+ዘዴ 5 efn() { ተመለስ 42 }
+ከሆነ (efn()==42) { o("P:@1") }
+ላክ EV
+5 EV=99
+ከሆነ (EV==99) { o("P:@2") }
+o("P:@3")
+
+12 pr="enter"
+o("P:z.i1")
+o("P:z.i2")
+
+o("DONE_am_121")

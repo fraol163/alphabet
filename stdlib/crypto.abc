@@ -1,0 +1,47 @@
+#alphabet<en>
+@ hash_simple, hash_djb2, hash_fnv1a, checksum, hash_to_hex
+
+m 5 hash_simple(12 s) {
+  5 hash = 0
+  l (5 i = 0 : i < z.len(s) : i = i + 1) {
+    hash = hash * 31 + z.ord(s[i])
+  }
+  r hash
+}
+
+m 5 hash_djb2(12 s) {
+  5 hash = 5381
+  l (5 i = 0 : i < z.len(s) : i = i + 1) {
+    hash = hash * 33 + z.ord(s[i])
+  }
+  r hash
+}
+
+m 5 hash_fnv1a(12 s) {
+  5 hash = 2166136261
+  l (5 i = 0 : i < z.len(s) : i = i + 1) {
+    hash = hash ^ z.ord(s[i])
+    hash = hash * 16777619
+  }
+  r hash
+}
+
+m 5 checksum(12 s) {
+  5 sum = 0
+  l (5 i = 0 : i < z.len(s) : i = i + 1) {
+    sum = sum + z.ord(s[i])
+  }
+  r sum % 256
+}
+
+m 12 hash_to_hex(5 hash) {
+  5 hex = ""
+  5 digits = "0123456789abcdef"
+  l (hash > 0) {
+    5 digit = hash % 16
+    hex = digits[digit] + hex
+    hash = hash / 16
+  }
+  i (z.len(hex) == 0) { r "0" }
+  r hex
+}

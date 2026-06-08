@@ -1,0 +1,40 @@
+#alphabet<am>
+// === BREAK TESTS ===
+// S1: exits loop
+5 val_a = 0
+ሉፕ (true) { val_a = val_a + 1 ከሆነ (val_a == 5) { ስበር } }
+ከሆነ (val_a == 5) { z.o("PASS:break_s1") }
+// S2: inside if in loop
+5 val_b = 0
+ሉፕ (true) { val_b = val_b + 1 ከሆነ (val_b == 3) { ከሆነ (true) { ስበር } } }
+ከሆነ (val_b == 3) { z.o("PASS:break_s2") }
+// S3: inside nested loop
+5 inner = 0
+5 outer = 0
+ሉፕ (outer < 5) { inner = 0 ሉፕ (true) { inner = inner + 1 ከሆነ (inner == 2) { ስበር } } outer = outer + 1 }
+ከሆነ (inner == 2 && outer == 5) { z.o("PASS:break_s3") }
+// S4: at end of body
+5 val_c = 0
+ሉፕ (val_c < 10) { val_c = val_c + 1 ስበር }
+ከሆነ (val_c == 1) { z.o("PASS:break_s4") }
+// S5: conditional break
+13 nums = [1, 2, 3, 4, 5]
+5 idx_a = 0
+5 found_val = 0
+ሉፕ (idx_a < z.len(nums)) { ከሆነ (nums[idx_a] == 3) { found_val = nums[idx_a] ስበር } idx_a = idx_a + 1 }
+ከሆነ (found_val == 3) { z.o("PASS:break_s5") }
+// S6: break after some iterations
+5 cnt_a = 0
+5 acc = 0
+ሉፕ (cnt_a < 10) { acc = acc + cnt_a cnt_a = cnt_a + 1 ከሆነ (cnt_a == 4) { ስበር } }
+ከሆነ (cnt_a == 4 && acc == 6) { z.o("PASS:break_s6") }
+// S7: multiple break points
+5 mode = 1
+5 out = 0
+ሉፕ (true) { ከሆነ (mode == 1) { out = 10 ስበር } ከሆነ (mode == 2) { out = 20 ስበር } out = 30 ስበር }
+ከሆነ (out == 10) { z.o("PASS:break_s7") }
+// S8: break with counter check
+5 idx_b = 0
+5 sum_a = 0
+ሉፕ (idx_b < 5) { sum_a = sum_a + idx_b idx_b = idx_b + 1 ከሆነ (idx_b == 3) { ስበር } }
+ከሆነ (sum_a == 3) { z.o("PASS:break_s8") }

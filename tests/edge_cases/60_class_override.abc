@@ -1,0 +1,8 @@
+#alphabet<en>
+// Edge Case 60: Method override
+c Animal { v m 12 speak() { r "..." } }
+c Dog ^ Animal { v m 12 speak() { r "woof" } }
+c Cat ^ Animal { v m 12 speak() { r "meow" } }
+15 d = n Dog()
+15 c2 = n Cat()
+i (d.speak() == "woof" && c2.speak() == "meow") { z.o("PASS:class_60_override") } e { z.o("FAIL:class_60_override") }

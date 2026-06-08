@@ -1,14 +1,14 @@
 #include "lsp.h"
 #include "lexer.h"
 #include "parser.h"
+#include "version.h"
 #include <algorithm>
 #include <cctype>
 
 namespace alphabet {
 namespace lsp {
 
-static std::string escape_json(const std::string &s)
-{
+static std::string escape_json(const std::string& s) {
     std::string out;
     for (char c : s) {
         switch (c) {
@@ -35,8 +35,7 @@ static std::string escape_json(const std::string &s)
     return out;
 }
 
-std::string JsonValue::dump() const
-{
+std::string JsonValue::dump() const {
     switch (type) {
     case NULL_T:
         return "null";
@@ -58,7 +57,7 @@ std::string JsonValue::dump() const
     case OBJECT_T: {
         std::string out = "{";
         bool first = true;
-        for (const auto &[k, v] : obj_val) {
+        for (const auto& [k, v] : obj_val) {
             if (!first)
                 out += ",";
             out += "\"" + escape_json(k) + "\":" + v.dump();
@@ -70,17 +69,15 @@ std::string JsonValue::dump() const
     return "null";
 }
 
-static size_t skip_ws(const std::string &s, size_t pos)
-{
+static size_t skip_ws(const std::string& s, size_t pos) {
     while (pos < s.size() && std::isspace(s[pos]))
         ++pos;
     return pos;
 }
 
-static JsonValue parse_value(const std::string &s, size_t &pos);
+static JsonValue parse_value(const std::string& s, size_t& pos);
 
-static std::string parse_string(const std::string &s, size_t &pos)
-{
+static std::string parse_string(const std::string& s, size_t& pos) {
     if (s[pos] != '"')
         return "";
     ++pos;
@@ -107,8 +104,7 @@ static std::string parse_string(const std::string &s, size_t &pos)
                     break;
                 }
             }
-        }
-        else {
+        } else {
             out += s[pos];
         }
         ++pos;
@@ -118,8 +114,7 @@ static std::string parse_string(const std::string &s, size_t &pos)
     return out;
 }
 
-static JsonValue parse_value(const std::string &s, size_t &pos)
-{
+static JsonValue parse_value(const std::string& s, size_t& pos) {
     pos = skip_ws(s, pos);
     if (pos >= s.size())
         return JsonValue::null();
@@ -182,22 +177,19 @@ static JsonValue parse_value(const std::string &s, size_t &pos)
     return JsonValue::null();
 }
 
-JsonValue JsonValue::parse(const std::string &json)
-{
+JsonValue JsonValue::parse(const std::string& json) {
     size_t pos = 0;
     return parse_value(json, pos);
 }
 
 LanguageServer::LanguageServer() {}
 
-void LanguageServer::send_message(const std::string &body)
-{
+void LanguageServer::send_message(const std::string& body) {
     std::cout << "Content-Length: " << body.size() << "\r\n\r\n" << body;
     std::cout.flush();
 }
 
-void LanguageServer::send_response(int id, const JsonValue &result)
-{
+void LanguageServer::send_response(int id, const JsonValue& result) {
     JsonValue msg = JsonValue::object();
     msg.set("jsonrpc", JsonValue::string("2.0"));
     msg.set("id", JsonValue::integer(id));
@@ -205,8 +197,7 @@ void LanguageServer::send_response(int id, const JsonValue &result)
     send_message(msg.dump());
 }
 
-void LanguageServer::send_error(int id, int code, const std::string &message)
-{
+void LanguageServer::send_error(int id, int code, const std::string& message) {
     JsonValue err = JsonValue::object();
     err.set("code", JsonValue::integer(code));
     err.set("message", JsonValue::string(message));
@@ -217,8 +208,7 @@ void LanguageServer::send_error(int id, int code, const std::string &message)
     send_message(msg.dump());
 }
 
-void LanguageServer::send_notification(const std::string &method, const JsonValue &params)
-{
+void LanguageServer::send_notification(const std::string& method, const JsonValue& params) {
     JsonValue msg = JsonValue::object();
     msg.set("jsonrpc", JsonValue::string("2.0"));
     msg.set("method", JsonValue::string(method));
@@ -226,15 +216,16 @@ void LanguageServer::send_notification(const std::string &method, const JsonValu
     send_message(msg.dump());
 }
 
-void LanguageServer::run()
-{
+void LanguageServer::run() {
+    std::cerr << "Alphabet LSP Server v" << ALPHABET_VERSION << " started\n";
+    std::cerr << "Waiting for editor connection...\n";
+    std::cerr << "Capabilities: hover, completion, definition, symbols\n\n";
     std::string line;
     while (std::getline(std::cin, line)) {
         int content_length = 0;
         if (line.find("Content-Length:") == 0) {
             content_length = std::stoi(line.substr(15));
-        }
-        else {
+        } else {
             continue;
         }
 
@@ -249,41 +240,30 @@ void LanguageServer::run()
 
         if (method == "initialize") {
             send_response(id, handle_initialize(id, msg.get("params")));
-        }
-        else if (method == "initialized" || method == "$/setTrace") {
-        }
-        else if (method == "textDocument/didOpen") {
+        } else if (method == "initialized" || method == "$/setTrace") {
+        } else if (method == "textDocument/didOpen") {
             handle_did_open(msg.get("params"));
-        }
-        else if (method == "textDocument/didChange") {
+        } else if (method == "textDocument/didChange") {
             handle_did_change(msg.get("params"));
-        }
-        else if (method == "textDocument/completion") {
+        } else if (method == "textDocument/completion") {
             send_response(id, handle_completion(id, msg.get("params")));
-        }
-        else if (method == "textDocument/hover") {
+        } else if (method == "textDocument/hover") {
             send_response(id, handle_hover(id, msg.get("params")));
-        }
-        else if (method == "textDocument/documentSymbol") {
+        } else if (method == "textDocument/documentSymbol") {
             send_response(id, handle_document_symbol(id, msg.get("params")));
-        }
-        else if (method == "textDocument/definition") {
+        } else if (method == "textDocument/definition") {
             send_response(id, handle_definition(id, msg.get("params")));
-        }
-        else if (method == "shutdown") {
+        } else if (method == "shutdown") {
             send_response(id, JsonValue::null());
-        }
-        else if (method == "exit") {
+        } else if (method == "exit") {
             break;
-        }
-        else if (id >= 0) {
+        } else if (id >= 0) {
             send_error(id, -32601, "Method not found: " + method);
         }
     }
 }
 
-JsonValue LanguageServer::handle_initialize(int, const JsonValue &)
-{
+JsonValue LanguageServer::handle_initialize(int, const JsonValue&) {
     JsonValue caps = JsonValue::object();
 
     JsonValue sync = JsonValue::object();
@@ -309,24 +289,22 @@ JsonValue LanguageServer::handle_initialize(int, const JsonValue &)
 
     JsonValue server_info = JsonValue::object();
     server_info.set("name", JsonValue::string("alphabet-lsp"));
-    server_info.set("version", JsonValue::string("2.3.4"));
+    server_info.set("version", JsonValue::string("2.3.5"));
     result.set("serverInfo", server_info);
 
     return result;
 }
 
-void LanguageServer::handle_did_open(const JsonValue &params)
-{
+void LanguageServer::handle_did_open(const JsonValue& params) {
     std::string uri = params.get("textDocument").get_str("uri");
     std::string content = params.get("textDocument").get_str("text");
     documents_[uri] = content;
     publish_diagnostics(uri, content);
 }
 
-void LanguageServer::handle_did_change(const JsonValue &params)
-{
+void LanguageServer::handle_did_change(const JsonValue& params) {
     std::string uri = params.get("textDocument").get_str("uri");
-    const JsonValue &changes = params.get("contentChanges");
+    const JsonValue& changes = params.get("contentChanges");
     if (changes.type == JsonValue::ARRAY_T && !changes.arr_val.empty()) {
         std::string content = changes.arr_val[0].get_str("text");
         documents_[uri] = content;
@@ -334,8 +312,7 @@ void LanguageServer::handle_did_change(const JsonValue &params)
     }
 }
 
-void LanguageServer::publish_diagnostics(const std::string &uri, const std::string &content)
-{
+void LanguageServer::publish_diagnostics(const std::string& uri, const std::string& content) {
     JsonValue diags = JsonValue::array();
 
     if (content.find("#alphabet<") == std::string::npos) {
@@ -353,9 +330,7 @@ void LanguageServer::publish_diagnostics(const std::string &uri, const std::stri
         d.set("severity", JsonValue::integer(1));
         d.set("message", JsonValue::string("Missing required header '#alphabet<lang>' on line 1"));
         diags.push(d);
-    }
-    else {
-
+    } else {
         try {
             Lexer lexer(content);
             auto tokens = lexer.scan_tokens();
@@ -363,7 +338,6 @@ void LanguageServer::publish_diagnostics(const std::string &uri, const std::stri
             parser.parse();
 
             if (parser.had_errors() && !parser.first_error().empty()) {
-
                 std::string err = parser.first_error();
                 int err_line = 0, err_col = 0;
                 size_t lp = err.find("line ");
@@ -389,13 +363,11 @@ void LanguageServer::publish_diagnostics(const std::string &uri, const std::stri
                 d.set("severity", JsonValue::integer(1));
 
                 size_t newline = err.find('\n');
-                std::string clean_msg =
-                    (newline != std::string::npos) ? err.substr(0, newline) : err;
+                std::string clean_msg = (newline != std::string::npos) ? err.substr(0, newline) : err;
                 d.set("message", JsonValue::string(clean_msg));
                 diags.push(d);
             }
-        }
-        catch (const std::exception &) {
+        } catch (const std::exception&) {
         }
     }
 
@@ -405,15 +377,13 @@ void LanguageServer::publish_diagnostics(const std::string &uri, const std::stri
     send_notification("textDocument/publishDiagnostics", params_out);
 }
 
-JsonValue LanguageServer::handle_completion(int, const JsonValue &)
-{
+JsonValue LanguageServer::handle_completion(int, const JsonValue&) {
     JsonValue items = JsonValue::array();
 
-    struct
-    {
-        const char *label;
-        const char *detail;
-        const char *doc;
+    struct {
+        const char* label;
+        const char* detail;
+        const char* doc;
     } keywords[] = {
         {"i", "if", "Conditional: i (cond) { ... }"},
         {"e", "else", "Alternative branch"},
@@ -436,7 +406,7 @@ JsonValue LanguageServer::handle_completion(int, const JsonValue &)
         {"false", "false", "Boolean false (0.0)"},
         {"const", "const", "Constant declaration: const name = value"},
     };
-    for (auto &kw : keywords) {
+    for (auto& kw : keywords) {
         JsonValue item = JsonValue::object();
         item.set("label", JsonValue::string(kw.label));
         item.set("kind", JsonValue::integer(14));
@@ -445,16 +415,14 @@ JsonValue LanguageServer::handle_completion(int, const JsonValue &)
         items.push(item);
     }
 
-    struct
-    {
-        const char *label;
-        const char *detail;
+    struct {
+        const char* label;
+        const char* detail;
     } types[] = {
-        {"0", "void"}, {"1", "i8"},    {"2", "i16"},  {"3", "i32"},   {"4", "i64"},
-        {"5", "int"},  {"6", "f32"},   {"7", "f64"},  {"8", "float"}, {"11", "bool"},
-        {"12", "str"}, {"13", "list"}, {"14", "map"},
+        {"0", "void"}, {"1", "i8"},    {"2", "i16"},   {"3", "i32"},  {"4", "i64"},   {"5", "int"},  {"6", "f32"},
+        {"7", "f64"},  {"8", "float"}, {"11", "bool"}, {"12", "str"}, {"13", "list"}, {"14", "map"},
     };
-    for (auto &tp : types) {
+    for (auto& tp : types) {
         JsonValue item = JsonValue::object();
         item.set("label", JsonValue::string(tp.label));
         item.set("kind", JsonValue::integer(25));
@@ -462,11 +430,10 @@ JsonValue LanguageServer::handle_completion(int, const JsonValue &)
         items.push(item);
     }
 
-    struct
-    {
-        const char *label;
-        const char *detail;
-        const char *doc;
+    struct {
+        const char* label;
+        const char* detail;
+        const char* doc;
     } builtins[] = {
         {"z.o", "print", "Print value: z.o(value)"},
         {"z.i", "input", "Read from stdin"},
@@ -492,7 +459,7 @@ JsonValue LanguageServer::handle_completion(int, const JsonValue &)
         {"z.lower", "lower", "Lowercase: z.lower(str)"},
         {"z.dyn", "FFI", "Call C function: z.dyn(\"lib.so\", \"func\", args...)"},
     };
-    for (auto &bi : builtins) {
+    for (auto& bi : builtins) {
         JsonValue item = JsonValue::object();
         item.set("label", JsonValue::string(bi.label));
         item.set("kind", JsonValue::integer(3));
@@ -507,13 +474,11 @@ JsonValue LanguageServer::handle_completion(int, const JsonValue &)
     return result;
 }
 
-std::string LanguageServer::get_hover_doc(const std::string &word)
-{
+std::string LanguageServer::get_hover_doc(const std::string& word) {
     static const std::unordered_map<std::string, std::string> docs = {
         {"i", "if - Conditional statement\nSyntax: i (condition) { body }"},
         {"e", "else - Alternative branch\nSyntax: e { body }"},
-        {"l",
-         "loop - While/for loop\nSyntax: l (cond) { body } or l (init : cond : incr) { body }"},
+        {"l", "loop - While/for loop\nSyntax: l (cond) { body } or l (init : cond : incr) { body }"},
         {"b", "break - Exit current loop"},
         {"k", "continue - Skip to next loop iteration"},
         {"r", "return - Return from function\nSyntax: r value"},
@@ -562,10 +527,9 @@ std::string LanguageServer::get_hover_doc(const std::string &word)
     return it != docs.end() ? it->second : "";
 }
 
-JsonValue LanguageServer::handle_hover(int, const JsonValue &params)
-{
+JsonValue LanguageServer::handle_hover(int, const JsonValue& params) {
     std::string uri = params.get("textDocument").get_str("uri");
-    const JsonValue &pos = params.get("position");
+    const JsonValue& pos = params.get("position");
     int line = pos.get_int("line");
     int character = pos.get_int("character");
 
@@ -586,11 +550,11 @@ JsonValue LanguageServer::handle_hover(int, const JsonValue &params)
         return JsonValue::null();
 
     int start = character, end = character;
-    while (start > 0 && (std::isalnum(current_line[start - 1]) || current_line[start - 1] == '_' ||
-                         current_line[start - 1] == '.'))
+    while (start > 0 &&
+           (std::isalnum(current_line[start - 1]) || current_line[start - 1] == '_' || current_line[start - 1] == '.'))
         --start;
-    while (end < (int)current_line.size() && (std::isalnum(current_line[end]) ||
-                                              current_line[end] == '_' || current_line[end] == '.'))
+    while (end < (int)current_line.size() &&
+           (std::isalnum(current_line[end]) || current_line[end] == '_' || current_line[end] == '.'))
         ++end;
     if (start == end)
         return JsonValue::null();
@@ -609,23 +573,18 @@ JsonValue LanguageServer::handle_hover(int, const JsonValue &params)
     return result;
 }
 
-static std::string word_at(const std::string &line, int character)
-{
+static std::string word_at(const std::string& line, int character) {
     if (character < 0 || character >= (int)line.size())
         return "";
     int start = character, end = character;
-    while (start > 0 &&
-           (std::isalnum(line[start - 1]) || line[start - 1] == '_' || line[start - 1] == '.'))
+    while (start > 0 && (std::isalnum(line[start - 1]) || line[start - 1] == '_' || line[start - 1] == '.'))
         --start;
-    while (end < (int)line.size() &&
-           (std::isalnum(line[end]) || line[end] == '_' || line[end] == '.'))
+    while (end < (int)line.size() && (std::isalnum(line[end]) || line[end] == '_' || line[end] == '.'))
         ++end;
     return line.substr(start, end - start);
 }
 
-static bool is_type_prefix(const std::string &line, size_t pos)
-{
-
+static bool is_type_prefix(const std::string& line, size_t pos) {
     size_t i = pos;
     if (i >= line.size() || !std::isdigit(line[i]))
         return false;
@@ -647,14 +606,13 @@ static const int SK_VARIABLE = 13;
 static const int SK_CONSTANT = 14;
 static const int SK_FIELD = 8;
 
-JsonValue LanguageServer::handle_document_symbol(int, const JsonValue &params)
-{
+JsonValue LanguageServer::handle_document_symbol(int, const JsonValue& params) {
     std::string uri = params.get("textDocument").get_str("uri");
     auto it = documents_.find(uri);
     if (it == documents_.end())
         return JsonValue::array();
 
-    const std::string &content = it->second;
+    const std::string& content = it->second;
     JsonValue symbols = JsonValue::array();
 
     std::istringstream stream(content);
@@ -666,7 +624,6 @@ JsonValue LanguageServer::handle_document_symbol(int, const JsonValue &params)
     std::vector<size_t> class_indices;
 
     while (std::getline(stream, line)) {
-
         size_t first_nonspace = line.find_first_not_of(" \t");
         if (first_nonspace == std::string::npos) {
             ++line_num;
@@ -683,8 +640,7 @@ JsonValue LanguageServer::handle_document_symbol(int, const JsonValue &params)
             while (name_start < line.size() && line[name_start] == ' ')
                 ++name_start;
             size_t name_end = name_start;
-            while (name_end < line.size() &&
-                   (std::isalnum(line[name_end]) || line[name_end] == '_'))
+            while (name_end < line.size() && (std::isalnum(line[name_end]) || line[name_end] == '_'))
                 ++name_end;
             if (name_end > name_start) {
                 std::string name = line.substr(name_start, name_end - name_start);
@@ -712,13 +668,10 @@ JsonValue LanguageServer::handle_document_symbol(int, const JsonValue &params)
         }
 
         else if (line.find("m ") != std::string::npos) {
-
             size_t m_pos = line.find("m ");
 
             bool is_method = false;
-            if (m_pos == first_nonspace ||
-                (m_pos > 0 && (line[m_pos - 1] == ' ' || line[m_pos - 1] == '\t'))) {
-
+            if (m_pos == first_nonspace || (m_pos > 0 && (line[m_pos - 1] == ' ' || line[m_pos - 1] == '\t'))) {
                 size_t after_m = m_pos + 2;
                 while (after_m < line.size() && line[after_m] == ' ')
                     ++after_m;
@@ -728,7 +681,6 @@ JsonValue LanguageServer::handle_document_symbol(int, const JsonValue &params)
                 }
             }
             if (is_method) {
-
                 size_t pos = m_pos + 2;
                 while (pos < line.size() && line[pos] == ' ')
                     ++pos;
@@ -743,13 +695,11 @@ JsonValue LanguageServer::handle_document_symbol(int, const JsonValue &params)
                     ++pos;
                 if (pos > name_start) {
                     std::string name = line.substr(name_start, pos - name_start);
-                    bool is_static =
-                        (line.find("s ") != std::string::npos && line.find("s ") < m_pos);
+                    bool is_static = (line.find("s ") != std::string::npos && line.find("s ") < m_pos);
 
                     JsonValue sym = JsonValue::object();
                     sym.set("name", JsonValue::string(name));
-                    sym.set("kind",
-                            JsonValue::integer(current_class.empty() ? SK_FUNCTION : SK_METHOD));
+                    sym.set("kind", JsonValue::integer(current_class.empty() ? SK_FUNCTION : SK_METHOD));
                     JsonValue range = JsonValue::object();
                     JsonValue start_p = JsonValue::object();
                     start_p.set("line", JsonValue::integer(line_num));
@@ -773,8 +723,7 @@ JsonValue LanguageServer::handle_document_symbol(int, const JsonValue &params)
             while (name_start < line.size() && line[name_start] == ' ')
                 ++name_start;
             size_t name_end = name_start;
-            while (name_end < line.size() &&
-                   (std::isalnum(line[name_end]) || line[name_end] == '_'))
+            while (name_end < line.size() && (std::isalnum(line[name_end]) || line[name_end] == '_'))
                 ++name_end;
             if (name_end > name_start) {
                 std::string name = line.substr(name_start, name_end - name_start);
@@ -833,15 +782,13 @@ JsonValue LanguageServer::handle_document_symbol(int, const JsonValue &params)
             while (pos < line.size() && (std::isalnum(line[pos]) || line[pos] == '_'))
                 ++pos;
             if (pos > name_start) {
-
                 size_t after_name = pos;
                 while (after_name < line.size() && line[after_name] == ' ')
                     ++after_name;
                 if (after_name < line.size() && line[after_name] == '=') {
                     std::string name = line.substr(name_start, pos - name_start);
 
-                    std::string type_str =
-                        line.substr(first_nonspace, name_start - first_nonspace - 1);
+                    std::string type_str = line.substr(first_nonspace, name_start - first_nonspace - 1);
 
                     int kind = current_class.empty() ? SK_VARIABLE : SK_FIELD;
                     std::string detail = "type " + type_str;
@@ -873,10 +820,9 @@ JsonValue LanguageServer::handle_document_symbol(int, const JsonValue &params)
     return symbols;
 }
 
-JsonValue LanguageServer::handle_definition(int, const JsonValue &params)
-{
+JsonValue LanguageServer::handle_definition(int, const JsonValue& params) {
     std::string uri = params.get("textDocument").get_str("uri");
-    const JsonValue &pos = params.get("position");
+    const JsonValue& pos = params.get("position");
     int line = pos.get_int("line");
     int character = pos.get_int("character");
 
@@ -884,7 +830,7 @@ JsonValue LanguageServer::handle_definition(int, const JsonValue &params)
     if (doc_it == documents_.end())
         return JsonValue::null();
 
-    const std::string &content = doc_it->second;
+    const std::string& content = doc_it->second;
 
     std::istringstream stream(content);
     std::string current_line;
@@ -902,7 +848,6 @@ JsonValue LanguageServer::handle_definition(int, const JsonValue &params)
     std::string search_name = word;
     size_t dot_pos = word.find('.');
     if (dot_pos != std::string::npos) {
-
         if (word.substr(0, 2) == "z.")
             return JsonValue::null();
         search_name = word.substr(dot_pos + 1);
@@ -924,8 +869,7 @@ JsonValue LanguageServer::handle_definition(int, const JsonValue &params)
             continue;
         }
 
-        if (fc == 'c' && first_nonspace + 1 < def_line.size() &&
-            def_line[first_nonspace + 1] == ' ') {
+        if (fc == 'c' && first_nonspace + 1 < def_line.size() && def_line[first_nonspace + 1] == ' ') {
             size_t ns = first_nonspace + 2;
             while (ns < def_line.size() && def_line[ns] == ' ')
                 ++ns;
@@ -949,8 +893,7 @@ JsonValue LanguageServer::handle_definition(int, const JsonValue &params)
             }
         }
 
-        if (fc == 'j' && first_nonspace + 1 < def_line.size() &&
-            def_line[first_nonspace + 1] == ' ') {
+        if (fc == 'j' && first_nonspace + 1 < def_line.size() && def_line[first_nonspace + 1] == ' ') {
             size_t ns = first_nonspace + 2;
             while (ns < def_line.size() && def_line[ns] == ' ')
                 ++ns;
@@ -977,8 +920,7 @@ JsonValue LanguageServer::handle_definition(int, const JsonValue &params)
         if (def_line.find("m ") != std::string::npos) {
             size_t m_pos = def_line.find("m ");
             bool is_method = false;
-            if (m_pos == first_nonspace ||
-                (m_pos > 0 && (def_line[m_pos - 1] == ' ' || def_line[m_pos - 1] == '\t'))) {
+            if (m_pos == first_nonspace || (m_pos > 0 && (def_line[m_pos - 1] == ' ' || def_line[m_pos - 1] == '\t'))) {
                 size_t after_m = m_pos + 2;
                 while (after_m < def_line.size() && def_line[after_m] == ' ')
                     ++after_m;
@@ -994,11 +936,9 @@ JsonValue LanguageServer::handle_definition(int, const JsonValue &params)
                 while (pos2 < def_line.size() && def_line[pos2] == ' ')
                     ++pos2;
                 size_t name_start = pos2;
-                while (pos2 < def_line.size() &&
-                       (std::isalnum(def_line[pos2]) || def_line[pos2] == '_'))
+                while (pos2 < def_line.size() && (std::isalnum(def_line[pos2]) || def_line[pos2] == '_'))
                     ++pos2;
-                if (pos2 > name_start &&
-                    def_line.substr(name_start, pos2 - name_start) == search_name) {
+                if (pos2 > name_start && def_line.substr(name_start, pos2 - name_start) == search_name) {
                     JsonValue loc = JsonValue::object();
                     loc.set("uri", JsonValue::string(uri));
                     JsonValue range = JsonValue::object();
@@ -1022,11 +962,9 @@ JsonValue LanguageServer::handle_definition(int, const JsonValue &params)
             while (pos2 < def_line.size() && def_line[pos2] == ' ')
                 ++pos2;
             size_t name_start = pos2;
-            while (pos2 < def_line.size() &&
-                   (std::isalnum(def_line[pos2]) || def_line[pos2] == '_'))
+            while (pos2 < def_line.size() && (std::isalnum(def_line[pos2]) || def_line[pos2] == '_'))
                 ++pos2;
-            if (pos2 > name_start &&
-                def_line.substr(name_start, pos2 - name_start) == search_name) {
+            if (pos2 > name_start && def_line.substr(name_start, pos2 - name_start) == search_name) {
                 JsonValue loc = JsonValue::object();
                 loc.set("uri", JsonValue::string(uri));
                 JsonValue range = JsonValue::object();
@@ -1050,8 +988,7 @@ JsonValue LanguageServer::handle_definition(int, const JsonValue &params)
             while (pos2 < def_line.size() && def_line[pos2] == ' ')
                 ++pos2;
             size_t name_start = pos2;
-            while (pos2 < def_line.size() &&
-                   (std::isalnum(def_line[pos2]) || def_line[pos2] == '_'))
+            while (pos2 < def_line.size() && (std::isalnum(def_line[pos2]) || def_line[pos2] == '_'))
                 ++pos2;
             if (pos2 > name_start) {
                 size_t after_name = pos2;

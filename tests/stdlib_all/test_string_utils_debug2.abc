@@ -1,0 +1,12 @@
+#alphabet<en>
+x "../../stdlib/string_utils.abc"
+z.o("len of abc: " + str(z.len("abc")))
+z.o("substr test: " + z.substr("hello", 1))
+z.o("s[0] test: " + "hello"[0])
+12 s = "hello"
+z.o("manual reverse:")
+5 result = ""
+5 len = z.len(s)
+z.o("len=" + str(len))
+5 i = len - 1
+z.o("starting i=" + str(i))

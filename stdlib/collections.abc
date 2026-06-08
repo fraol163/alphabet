@@ -1,0 +1,81 @@
+#alphabet<en>
+// Alphabet Standard Library: Collections
+// Collection helper functions
+
+// flatten(lst) - flatten a nested list one level deep (wraps z.flatten builtin)
+m 13 flatten(13 lst) {
+    r z.flatten(lst)
+}
+
+// chunk(lst, size) - split lst into chunks of given size
+m 13 chunk(13 lst, 11 size) {
+    m 13 result = []
+    m 11 idx = 0
+    m 11 len = z.len(lst)
+    l (idx < len) {
+        m 13 chunk_list = []
+        m 11 inner = 0
+        l (inner < size && idx + inner < len) {
+            z.append(chunk_list, lst[idx + inner])
+            inner = inner + 1
+        }
+        z.append(result, chunk_list)
+        idx = idx + size
+    }
+    r result
+}
+
+// zip_with(lst1, lst2) - combine two lists into pairs (wraps z.zip builtin)
+m 13 zip_with(13 lst1, 13 lst2) {
+    r z.zip(lst1, lst2)
+}
+
+// unique(lst) - remove duplicate elements from a list (wraps z.unique builtin)
+m 13 unique(13 lst) {
+    r z.unique(lst)
+}
+
+// group_by(lst) - group elements into a map by value
+m 14 group_by(13 lst) {
+    m 14 result = {}
+    m 11 idx = 0
+    m 11 len = z.len(lst)
+    l (idx < len) {
+        m 11 val = lst[idx]
+        m 12 key = z.tostr(val)
+        i (z.has(result, key)) {
+            z.append(result[key], val)
+        } e {
+            result[key] = [val]
+        }
+        idx = idx + 1
+    }
+    r result
+}
+
+// take(lst, count) - take the first count elements from lst
+m 13 take(13 lst, 11 count) {
+    m 13 result = []
+    m 11 idx = 0
+    m 11 len = z.len(lst)
+    l (idx < count && idx < len) {
+        z.append(result, lst[idx])
+        idx = idx + 1
+    }
+    r result
+}
+
+// drop(lst, count) - drop the first count elements from lst
+m 13 drop(13 lst, 11 count) {
+    m 13 result = []
+    m 11 idx = count
+    m 11 len = z.len(lst)
+    l (idx < len) {
+        z.append(result, lst[idx])
+        idx = idx + 1
+    }
+    r result
+}
+
+// Export all functions
+@ flatten, chunk, zip_with, unique, group_by, take, drop

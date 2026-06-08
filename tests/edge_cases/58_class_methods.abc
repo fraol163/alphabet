@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 58: Class with only methods
+c Greeter { v m 12 hello() { r "hello" } v m 12 goodbye() { r "goodbye" } }
+15 g = n Greeter()
+i (g.hello() == "hello" && g.goodbye() == "goodbye") { z.o("PASS:class_58_methods") } e { z.o("FAIL:class_58_methods") }

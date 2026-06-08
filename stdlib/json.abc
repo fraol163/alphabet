@@ -1,0 +1,16 @@
+#alphabet<en>
+// Alphabet Standard Library: JSON
+// JSON parsing and stringifying utilities
+
+// json_parse(str) - parse a JSON string into an Alphabet value
+m 11 json_parse(12 str) {
+    r z.json_parse(str)
+}
+
+// json_stringify(val) - convert an Alphabet value to a JSON string
+m 12 json_stringify(11 val) {
+    r z.json_stringify(val)
+}
+
+// Export all functions
+@ json_parse, json_stringify

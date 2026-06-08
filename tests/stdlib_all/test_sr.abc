@@ -1,0 +1,11 @@
+#alphabet<en>
+5 s = "abc"
+5 len = z.len(s)
+z.o(len)
+5 i = len - 1
+z.o(i)
+5 result = ""
+l (5 j = len - 1 : j >= 0 : j = j - 1) {
+  result = result + s[j]
+}
+z.o(result)

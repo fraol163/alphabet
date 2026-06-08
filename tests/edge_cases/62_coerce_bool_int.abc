@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 62: bool + int
+11 t_val = 1
+11 f_val = 0
+i (t_val == 1 && f_val == 0) { z.o("PASS:coerce_62_bool_int") } e { z.o("FAIL:coerce_62_bool_int") }

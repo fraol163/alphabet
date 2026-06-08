@@ -1,0 +1,56 @@
+#alphabet<en>
+/// Networking Utilities
+/// Demonstrates: HTTP, JSON, error handling
+
+z.o("=== Networking Utilities ===")
+
+m 12 http_get_json(12 url) {
+  5 response = z.http_get(url)
+  i (response != "") {
+    r z.json_parse(response)
+  }
+  r null
+}
+
+m 12 http_post_json(12 url, 5 data) {
+  5 json = z.json_stringify(data)
+  5 response = z.http_post(url, json)
+  i (response != "") {
+    r z.json_parse(response)
+  }
+  r null
+}
+
+m 11 is_online() {
+  5 response = z.http_get("https://httpbin.org/get")
+  r response != ""
+}
+
+m 12 fetch_text(12 url) {
+  r z.http_get(url)
+}
+
+z.o("\n--- HTTP GET ---")
+5 data = http_get_json("https://httpbin.org/get")
+i (!z.is_null(data)) {
+  z.o("URL: " + data["url"])
+  z.o("Origin: " + data["origin"])
+} e {
+  z.o("Request failed (offline)")
+}
+
+z.o("\n--- HTTP POST ---")
+5 payload = {"name": "Alphabet", "version": "2.3.5"}
+5 post_data = http_post_json("https://httpbin.org/post", payload)
+i (!z.is_null(post_data)) {
+  z.o("Status: OK")
+} e {
+  z.o("POST failed (offline)")
+}
+
+z.o("\n--- Online Check ---")
+i (is_online()) {
+  z.o("Status: Online")
+} e {
+  z.o("Status: Offline")
+}

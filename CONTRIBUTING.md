@@ -1,249 +1,116 @@
-# Contributing to Alphabet
-
-**Thank you for your interest in contributing!** This guide will help you get started.
-
----
-
-## Quick Links
-
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Setup](#development-setup)
-- [Making Changes](#making-changes)
-- [Pull Request Guidelines](#pull-request-guidelines)
-
----
-
-## Code of Conduct
-
-### Our Pledge
-
-We pledge to make participation in our community a harassment-free experience for everyone.
-
-### Expected Behavior
-
-- Be respectful and inclusive
-- Accept constructive criticism
-- Focus on what's best for the community
-
-### Unacceptable Behavior
-
-- Harassment or discrimination
-- Trolling or insulting comments
-- Publishing others' private information
-
-### Enforcement
-
-Report abusive behavior to fraolteshome444@gmail.com
-
----
+# Contributing to Alphabet Language
 
 ## Getting Started
 
-### 1. Fork the Repository
-
-Visit https://github.com/fraol163/alphabet and click "Fork"
-
-### 2. Clone Your Fork
-
 ```bash
-git clone https://github.com/YOUR_USERNAME/alphabet.git
-cd alphabet
-```
-
-### 3. Set Upstream Remote
-
-```bash
-git remote add upstream https://github.com/fraol163/alphabet.git
-git fetch upstream
-```
-
----
-
-## Development Setup
-
-### Prerequisites
-
-- CMake 3.16+
-- C++17 compiler (GCC 9+, Clang 10+, or MSVC 2019+)
-- Git
-
-### Build from Source
-
-```bash
-# Clone repository
 git clone https://github.com/fraol163/alphabet.git
 cd alphabet
-
-# Create build directory
-mkdir build && cd build
-
-# Configure
-cmake -DCMAKE_BUILD_TYPE=Debug ..
-
-# Build
-make -j$(nproc)
-
-# Run tests
-ctest --output-on-failure
+cmake -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build -j$(nproc)
+cd build && ctest --output-on-failure
 ```
 
----
-
-## Making Changes
-
-### 1. Find an Issue
-
-- Browse [existing issues](https://github.com/fraol163/alphabet/issues)
-- Look for labels: `good first issue`, `help wanted`, `bug`
-
-### 2. Create Branch
-
-```bash
-git checkout -b feature/your-feature-name
-```
-
-### 3. Make Your Changes
-
-```bash
-# Edit files
-# ...
-
-# Stage changes
-git add src/lexer.cpp
-
-# Commit
-git commit -m "fix: Resolve memory leak in lexer"
-```
-
-### 4. Test Your Changes
-
-```bash
-# Run all tests
-cd build
-ctest --output-on-failure
-
-# Run specific test
-./test_lexer
-```
-
----
-
-## Pull Request Guidelines
-
-### Before Submitting
-
-- [ ] Tests pass (`ctest --output-on-failure`)
-- [ ] Code is formatted
-- [ ] Documentation updated
-- [ ] Commit message follows conventions
-
-### PR Title Format
+## Project Structure
 
 ```
-type: Brief description
+src/
+  lexer.cpp          — Tokenizer (source → tokens)
+  parser.cpp         — Parser (tokens → AST)
+  compiler.cpp       — Compiler (AST → bytecode)
+  vm.cpp             — Virtual machine (bytecode → results)
+  vm_builtins.cpp    — 70+ built-in functions
+  main.cpp           — CLI, REPL, debugger, update
+  lsp.cpp            — Language Server Protocol for VS Code
+  ffi.cpp            — Foreign Function Interface
+  type_system.cpp    — Type checking
+src/include/
+  ast.h              — AST node definitions
+  bytecode.h         — Opcode definitions
+  *.h                — Headers for each module
+tests/
+  test_*.cpp         — Unit tests (Google Test)
+  golden/            — Golden file tests for all 5 languages
+stdlib/
+  *.abc              — Standard library modules
 ```
 
-**Types:**
-- `feat:` New feature
-- `fix:` Bug fix
-- `docs:` Documentation changes
-- `style:` Code style changes
-- `refactor:` Code refactoring
-- `test:` Test additions
-- `chore:` Build/config changes
+## Code Style
 
-### PR Description Template
+- C++17 standard
+- 4-space indentation
+- `snake_case` for functions and variables
+- `PascalCase` for types and classes
+- `UPPER_CASE` for constants and opcodes
+- No comments unless explaining non-obvious logic
 
-```markdown
-## Description
-Brief description of changes
+## Adding a Builtin Function
 
-## Related Issue
-Fixes #123
+1. Add handler in `vm_builtins.cpp`:
+```cpp
+Value my_func(VM &vm, const std::vector<Value> &args) {
+    // implementation
+    return result;
+}
+```
+
+2. Register in `register_builtins()`:
+```cpp
+builtins["my_func"] = my_func;
+```
+
+3. Add to `BUILTIN_NAMES` in `vm.cpp` for shorthand access.
+
+4. Add doc entry in `main.cpp` `alphabet doc` command.
+
+5. Add test in `tests/test_vm.cpp`.
+
+## Adding an Opcode
+
+1. Define in `bytecode.h`:
+```cpp
+MY_OP = 52,
+```
+
+2. Add handler in `vm.cpp`:
+```cpp
+case Opcode::MY_OP: {
+    // implementation
+    break;
+}
+```
+
+3. Add compiler emit in `compiler.cpp`.
+
+4. Add to disassembler in `vm.cpp` `disassemble()`.
 
 ## Testing
-- [ ] Tests pass
-- [ ] Added new tests if needed
-
-## Checklist
-- [ ] Code follows style guidelines
-- [ ] Documentation updated
-```
-
----
-
-## Coding Standards
-
-### C++ Style
-
-**Naming Conventions:**
-- Classes: `PascalCase` (e.g., `TokenType`)
-- Functions: `snake_case` (e.g., `scan_tokens`)
-- Variables: `snake_case` with `_` for members (e.g., `source_`)
-
-**Code Style:**
-```cpp
-// Use auto for clarity
-auto token = tokens_.back();
-
-// Use std::string_view for read-only strings
-void process(std::string_view input);
-
-// Use const correctness
-const std::string& get_name() const;
-```
-
----
-
-## Testing Guidelines
-
-### Running Tests
 
 ```bash
-# All tests
-ctest --output-on-failure
-
-# Specific test
-./test_lexer
-
-# With verbose output
-ctest -V
+cd build && ctest --output-on-failure
 ```
 
----
+All 91 tests must pass before submitting a PR.
 
-## Areas Needing Contribution
+## Pull Requests
 
-### High Priority
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Make changes
+4. Run tests (`ctest --output-on-failure`)
+5. Submit PR with description of changes
 
-- [ ] VS Code extension improvements
-- [ ] More real-world examples
-- [ ] Package manager support (Homebrew, apt)
-- [ ] More languages (Chinese, Japanese, Arabic, etc.)
+## Reporting Bugs
 
-### Medium Priority
+Open an issue with:
+- Alphabet version (`alphabet --version`)
+- Operating system
+- Minimal code that reproduces the bug
+- Expected vs actual output
 
-- [ ] Standard library expansion
-- [ ] FFI documentation
-- [ ] Translations
+## Language Design Principles
 
----
-
-## Questions?
-
-### Getting Help
-
-- **General questions:** [GitHub Discussions](https://github.com/fraol163/alphabet/discussions)
-- **Bug reports:** [GitHub Issues](https://github.com/fraol163/alphabet/issues)
-- **Email:** fraolteshome444@gmail.com
-
----
-
-## License
-
-By contributing, you agree that your contributions will be licensed under the MIT License.
-
----
-
-**Thank you for contributing to Alphabet! 🚀**
+1. **Multilingual first** — every keyword must be translatable
+2. **Simple syntax** — single-letter keywords for common constructs
+3. **Fast feedback** — compile errors should be immediate and clear
+4. **Safe by default** — sandbox mode, memory limits, stack overflow protection
+5. **Teaching language** — code should be readable by non-programmers

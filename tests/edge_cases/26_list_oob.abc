@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 26: List index out of bounds returns null
+13 lst = [1, 2, 3]
+5 val = lst[10]
+i (val == null) { z.o("PASS:list_26_oob") } e { z.o("FAIL:list_26_oob") }

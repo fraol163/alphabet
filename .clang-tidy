@@ -1,0 +1,14 @@
+Checks: >
+  -*,
+  bugprone-*,
+  performance-*,
+  modernize-use-nullptr,
+  modernize-use-override,
+  readability-redundant-member-init,
+  readability-inconsistent-declaration-parameter-name
+
+WarningsAsErrors: ''
+
+CheckOptions:
+  - key: bugprone-assert-side-effect.AssertMacros
+    value: 'assert'

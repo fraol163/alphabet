@@ -1,0 +1,7 @@
+#alphabet<en>
+// Edge Case 07: Large multiplication
+5 a = 99999
+5 b = 99999
+5 c = a * b
+z.o("99999 * 99999 = " + str(c))
+z.o("PASS:arith_07_large_mul")

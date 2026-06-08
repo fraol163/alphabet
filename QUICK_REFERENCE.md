@@ -282,5 +282,5 @@ Type mismatches in arithmetic throw RuntimeError with clear messages
 
 ---
 
-**Version:** 2.3.4 | **Implementation:** Native C++17 | **License:** MIT
+**Version:** 2.3.5 | **Implementation:** Native C++17 | **License:** MIT
 **GitHub:** https://github.com/fraol163/alphabet

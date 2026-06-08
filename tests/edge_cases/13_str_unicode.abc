@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 13: Unicode characters
+12 s = "Hello"
+i (z.len(s) == 5) { z.o("PASS:str_13_unicode") } e { z.o("FAIL:str_13_unicode") }

@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 52: Recursive fibonacci 30
+m 11 fib(11 n) { i (n <= 1) { r n } r fib(n - 1) + fib(n - 2) }
+5 result = fib(30)
+z.o("fib(30) = " + str(result))
+i (result == 832040) { z.o("PASS:func_52_fibonacci") } e { z.o("FAIL:func_52_fibonacci") }

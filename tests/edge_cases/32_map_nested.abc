@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 32: Nested maps
+14 inner = {"x": 1}
+14 outer = {"data": inner}
+i (z.len(outer) == 1) { z.o("PASS:map_32_nested") } e { z.o("FAIL:map_32_nested") }

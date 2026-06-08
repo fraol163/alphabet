@@ -1,0 +1,10 @@
+#alphabet<en>
+x "../../stdlib/system.abc"
+5 ok = 1
+5 home = env_get("HOME")
+z.o(home)
+i (home == null) {
+  z.o("home is null")
+  ok = 0
+}
+z.o("ok after home check: " + str(ok))

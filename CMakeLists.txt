@@ -64,6 +64,8 @@ set(ALPHABET_SOURCES
     src/type_system.cpp
     src/ffi.cpp
     src/lsp.cpp
+    src/linter.cpp
+    src/bytecode_io.cpp
 )
 
 # Library sources (excluding main.cpp for tests)
@@ -76,6 +78,12 @@ set(ALPHABET_LIB_SOURCES
     src/type_system.cpp
     src/ffi.cpp
     src/lsp.cpp
+    src/linter.cpp
+    src/bytecode_io.cpp
+    src/alphabet_embed.cpp
+    src/voice.cpp
+    src/nl_to_code.cpp
+    src/project.cpp
 )
 
 set(ALPHABET_HEADERS
@@ -88,7 +96,11 @@ set(ALPHABET_HEADERS
     src/include/type_system.h
     src/include/ffi.h
     src/include/lsp.h
+    src/include/linter.h
     src/include/keywords.h
+    src/include/voice.h
+    src/include/nl_to_code.h
+    src/include/project.h
 )
 
 # ============================================================================
@@ -293,6 +305,16 @@ if(CLANG_FORMAT)
         COMMAND ${CLANG_FORMAT} -i -style=file ${ALPHABET_SOURCES} ${ALPHABET_HEADERS}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Formatting source code..."
+    )
+endif()
+
+# Static analysis (requires clang-tidy)
+find_program(CLANG_TIDY clang-tidy)
+if(CLANG_TIDY)
+    add_custom_target(lint
+        COMMAND ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} ${ALPHABET_SOURCES}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Running clang-tidy static analysis..."
     )
 endif()
 

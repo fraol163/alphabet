@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 15: Escape sequences - tab
+12 s = "col1\tcol2"
+i (z.len(s) > 4) { z.o("PASS:str_15_escape_tab") } e { z.o("FAIL:str_15_escape_tab") }

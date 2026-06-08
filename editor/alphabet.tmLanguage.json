@@ -1,0 +1,56 @@
+{
+  "name": "alphabet",
+  "scopeName": "source.alphabet",
+  "patterns": [
+    {
+      "comment": "Language header",
+      "match": "#alphabet<[^>]+>",
+      "name": "keyword.control.alphabet"
+    },
+    {
+      "comment": "Single-letter keywords",
+      "match": "\\b(i|e|l|b|k|r|c|m|n|v|p|s|t|h|x|q|a|j)\\b",
+      "name": "keyword.control.alphabet"
+    },
+    {
+      "comment": "Named types",
+      "match": "\\b(int|str|bool|list|map|float|void|i8|i16|i32|i64|f32|f64|const)\\b",
+      "name": "storage.type.alphabet"
+    },
+    {
+      "comment": "Boolean literals",
+      "match": "\\b(true|false)\\b",
+      "name": "constant.language.alphabet"
+    },
+    {
+      "comment": "System calls",
+      "match": "z\\.[a-z_]+",
+      "name": "support.function.alphabet"
+    },
+    {
+      "comment": "Single-line comment",
+      "match": "//.*$",
+      "name": "comment.line.double-slash.alphabet"
+    },
+    {
+      "comment": "F-string",
+      "match": "f\"[^\"]*\"",
+      "name": "string.quoted.double.alphabet"
+    },
+    {
+      "comment": "Raw string",
+      "match": "r\"[^\"]*\"",
+      "name": "string.quoted.double.alphabet"
+    },
+    {
+      "comment": "String",
+      "match": "\"[^\"]*\"",
+      "name": "string.quoted.double.alphabet"
+    },
+    {
+      "comment": "Number",
+      "match": "\\b[0-9]+(\\.[0-9]+)?\\b",
+      "name": "constant.numeric.alphabet"
+    }
+  ]
+}

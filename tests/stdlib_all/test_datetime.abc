@@ -1,0 +1,18 @@
+#alphabet<en>
+x "../../stdlib/datetime.abc"
+5 ok = 1
+t {
+  5 t1 = timer_start()
+  sleep_seconds(0)
+  5 elapsed = timer_elapsed(t1)
+  i (elapsed < 0) { ok = 0 }
+  5 ts = timestamp()
+  i (ts == null) { ok = 0 }
+  5 cur = now()
+  i (cur == null) { ok = 0 }
+} h (0 e) { ok = 0 }
+i (ok) {
+  z.o("PASS: datetime")
+} e {
+  z.o("FAIL: datetime")
+}

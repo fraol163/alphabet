@@ -1,0 +1,24 @@
+#alphabet<de>
+5 wert = 42
+5 menge = 10
+12 name = "Alphabet"
+o("PASS:de_variables")
+i (wert + menge == 52) { o("PASS:de_arithmetic") }
+i (wert > 5) { o("PASS:de_if") } e { o("FAIL") }
+i (wert < 5) { o("FAIL") } e { o("PASS:de_else") }
+5 summe = 0
+5 index = 0
+schleife (index < 5) { summe = summe + index index = index + 1 }
+i (summe == 10) { o("PASS:de_loop") }
+methode 5 factorial(5 num) { i (num <= 1) { zurück 1 } zurück num * factorial(num - 1) }
+i (factorial(5) == 120) { o("PASS:de_function") }
+klasse Rechner { methode 5 addieren(5 a, 5 b) { zurück a + b } }
+15 rechner = neu Rechner()
+i (rechner.addieren(3, 4) == 7) { o("PASS:de_class") }
+klasse Tier { methode sprechen() { zurück "..." } }
+klasse Hund erweitert Tier { methode sprechen() { zurück "woof" } }
+15 hund = neu Hund()
+i (hund.sprechen() == "woof") { o("PASS:de_inheritance") }
+versuchen { o("PASS:de_try") } fangen (15 fehler) { o("FAIL") }
+übereinstimmen (2) { 1: o("one") 2: o("PASS:de_match") 3: o("three") }
+o("FINAL_DE_COMPLETE")

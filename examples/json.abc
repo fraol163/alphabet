@@ -1,0 +1,31 @@
+#alphabet<en>
+/// JSON parsing and generation
+/// Demonstrates: json_parse, json_stringify, maps, nested data
+
+z.o("=== JSON Demo ===")
+
+5 json_str = "{\"name\": \"Fraol\", \"age\": 21, \"skills\": [\"C++\", \"Python\", \"Rust\"]}"
+5 data = z.json_parse(json_str)
+
+z.o("Name: " + data["name"])
+z.o("Age: " + z.tostr(data["age"]))
+z.o("Skills: " + z.tostr(data["skills"]))
+
+5 new_data = {
+  "project": "Alphabet Language",
+  "version": "2.3.5",
+  "features": ["multilingual", "bytecode-vm", "type-safe"],
+  "stats": {
+    "opcodes": 42,
+    "languages": 5,
+    "tests": 34
+  }
+}
+
+5 output = z.json_stringify(new_data)
+z.o("\nGenerated JSON:")
+z.o(output)
+
+z.o("\nNested access:")
+z.o("Project: " + new_data["project"])
+z.o("Opcodes: " + z.tostr(new_data["stats"]["opcodes"]))

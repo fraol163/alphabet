@@ -1,0 +1,27 @@
+name: Docker Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t alphabet-lang/alphabet:${{ github.ref_name }} .
+
+      - name: Tag latest
+        run: docker tag alphabet-lang/alphabet:${{ github.ref_name }} alphabet-lang/alphabet:latest
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Push to Docker Hub
+        run: |
+          docker push alphabet-lang/alphabet:${{ github.ref_name }}
+          docker push alphabet-lang/alphabet:latest

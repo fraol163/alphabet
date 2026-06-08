@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 02: Integer underflow (very negative)
+5 a = -2147483647
+5 b = a - 1
+z.o("result: " + str(b))
+z.o("PASS:arith_02_underflow")

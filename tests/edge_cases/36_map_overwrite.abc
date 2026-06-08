@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 36: Map overwrite
+14 m = {"a": 1}
+m["a"] = 99
+i (m["a"] == 99) { z.o("PASS:map_36_overwrite") } e { z.o("FAIL:map_36_overwrite") }

@@ -1,7 +1,7 @@
 # Alphabet: Language Quick Reference
 **By Fraol Teshome**
 
-**Version:** 2.3.4
+**Version:** 2.3.5
 
 **Note:** For the complete tutorial, see [COMPLETE_GUIDE.md](COMPLETE_GUIDE.md). This file is a quick reference card.
 

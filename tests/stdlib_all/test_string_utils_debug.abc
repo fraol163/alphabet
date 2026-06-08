@@ -1,0 +1,39 @@
+#alphabet<en>
+x "../../stdlib/string_utils.abc"
+5 ok = 1
+12 rep = str_repeat("ab", 3)
+z.o("repeat: " + rep)
+i (rep != "ababab") {
+  z.o("FAIL repeat=" + rep)
+  ok = 0
+}
+12 rev = str_reverse("abc")
+z.o("reverse: " + rev)
+i (rev != "cba") {
+  z.o("FAIL reverse=" + rev)
+  ok = 0
+}
+12 pl = str_pad_left("hi", 5, "0")
+z.o("pad_left: " + pl)
+i (pl != "000hi") {
+  z.o("FAIL pad_left=" + pl)
+  ok = 0
+}
+12 pr = str_pad_right("hi", 5, "0")
+z.o("pad_right: " + pr)
+i (pr != "hi000") {
+  z.o("FAIL pad_right=" + pr)
+  ok = 0
+}
+12 tl = str_trim_left("  hi")
+z.o("trim_left: " + tl)
+i (tl != "hi") {
+  z.o("FAIL trim_left=" + tl)
+  ok = 0
+}
+12 tr = str_trim_right("hi  ")
+z.o("trim_right: " + tr)
+i (tr != "hi") {
+  z.o("FAIL trim_right=" + tr)
+  ok = 0
+}

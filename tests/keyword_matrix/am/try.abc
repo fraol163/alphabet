@@ -1,0 +1,31 @@
+#alphabet<am>
+// === TRY / HANDLE TESTS ===
+// S1: try succeeds
+ሞክር { z.o("PASS:try_s1") } ያዟ (error) { z.o("FAIL:try_s1") }
+// S2: try throws, handle catches
+ሞክር { z.i("before") z.t("custom error") z.o("FAIL:try_s2") } ያዟ (error) { z.o("PASS:try_s2") }
+// S3: error var accessible
+ሞክር { z.t("oops") } ያዟ (error) { z.o("PASS:try_s3") }
+// S4: nested try
+ሞክር { ሞክር { z.t("inner") } ያዟ (error) { z.o("PASS:try_s4") } } ያዟ (error) { }
+// S5: return in try
+ዘዴ 11 try_ret() { ሞክር { r 1 } ያዟ (error) { r -1 } }
+ከሆነ (try_ret() == 1) { z.o("PASS:try_s5") }
+// S6: function call throws
+ዘዴ 11 will_throw() { z.t("err") }
+ሞክር { will_throw() } ያዟ (error) { z.o("PASS:try_s6") }
+// S7: top level try
+ሞክር { 5 val_a = 10 } ያዟ (error) { }
+z.o("PASS:try_s7")
+// S8: in function
+ዘዴ 11 safe_op() { ሞክር { r 42 } ያዟ (error) { r 0 } }
+ከሆነ (safe_op() == 42) { z.o("PASS:try_s8") }
+// S9: in loop
+5 cnt = 0
+5 idx_a = 0
+ሉፕ (idx_a < 3) { ሞክር { cnt = cnt + 1 } ያዟ (error) { } idx_a = idx_a + 1 }
+ከሆነ (cnt == 3) { z.o("PASS:try_s9") }
+// S10: in class method
+ክፍል TryCls { ግልጽ ዘዴ 11 safe() { ሞክር { r 100 } ያዟ (error) { r 0 } } }
+15 tc = n TryCls()
+ከሆነ (tc.safe() == 100) { z.o("PASS:try_s10") }

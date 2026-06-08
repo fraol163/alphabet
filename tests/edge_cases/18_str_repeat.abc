@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 18: String * number (repetition)
+12 s = "ab" * 3
+i (s == "ababab") { z.o("PASS:str_18_repeat") } e { z.o("FAIL:str_18_repeat got=" + s) }

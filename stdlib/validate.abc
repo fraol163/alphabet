@@ -1,0 +1,42 @@
+#alphabet<en>
+@ is_number, is_string, is_list, is_map, is_bool, is_empty, is_email, is_url, in_range
+
+m 11 is_number(val) {
+  r z.type(val) == "number"
+}
+
+m 11 is_string(val) {
+  r z.type(val) == "string"
+}
+
+m 11 is_list(val) {
+  r z.type(val) == "list"
+}
+
+m 11 is_map(val) {
+  r z.type(val) == "map"
+}
+
+m 11 is_bool(val) {
+  r z.type(val) == "bool"
+}
+
+m 11 is_empty(val) {
+  i (z.is_null(val)) { r 1 }
+  i (z.type(val) == "string") { r z.len(val) == 0 }
+  i (z.type(val) == "list") { r z.len(val) == 0 }
+  i (z.type(val) == "map") { r z.len(val) == 0 }
+  r 0
+}
+
+m 11 is_email(12 s) {
+  r z.find(s, "@") > 0 && z.find(s, ".") > 0
+}
+
+m 11 is_url(12 s) {
+  r z.starts_with(s, "http://") || z.starts_with(s, "https://")
+}
+
+m 11 in_range(5 val, 5 min, 5 max) {
+  r val >= min && val <= max
+}

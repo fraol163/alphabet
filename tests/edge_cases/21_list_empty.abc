@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 21: Empty list
+13 lst = []
+i (z.len(lst) == 0) { z.o("PASS:list_21_empty") } e { z.o("FAIL:list_21_empty") }

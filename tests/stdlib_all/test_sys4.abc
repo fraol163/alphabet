@@ -1,0 +1,25 @@
+#alphabet<en>
+x "../../stdlib/system.abc"
+5 ok = 1
+t {
+  i (env_has("NONEXISTENT_VAR_12345") != 0) { ok = 0 }
+} h (0 e) { ok = 0 }
+z.o("ok after nonexistent: " + ok)
+t {
+  5 pa = platform_name()
+  z.o(pa)
+  i (pa == null) { ok = 0 }
+} h (0 e) { ok = 0 }
+z.o("ok after platform: " + ok)
+t {
+  5 ar = platform_arch()
+  z.o(ar)
+  i (ar == null) { ok = 0 }
+} h (0 e) { ok = 0 }
+z.o("ok after arch: " + ok)
+t {
+  5 all = env_all()
+  z.o(all)
+  i (all == null) { ok = 0 }
+} h (0 e) { ok = 0 }
+z.o("ok final: " + ok)

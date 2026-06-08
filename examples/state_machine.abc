@@ -1,0 +1,69 @@
+#alphabet<en>
+/// State Machine
+/// Demonstrates: maps, match/case, state transitions
+
+z.o("=== Traffic Light State Machine ===")
+
+5 current_state = "red"
+5 transitions = {
+  "red": "green",
+  "green": "yellow",
+  "yellow": "red"
+}
+
+5 descriptions = {
+  "red": "STOP",
+  "green": "GO",
+  "yellow": "CAUTION"
+}
+
+m 0 transition() {
+  current_state = transitions[current_state]
+}
+
+m 12 get_description() {
+  r descriptions[current_state]
+}
+
+z.o("Initial: " + current_state + " — " + get_description())
+
+l (5 i = 0 : i < 6 : i = i + 1) {
+  transition()
+  z.o("Step " + z.tostr(i + 1) + ": " + current_state + " — " + get_description())
+}
+
+z.o("\n=== Vending Machine ===")
+
+5 balance = 0
+5 items = {
+  "cola": 150,
+  "water": 100,
+  "juice": 200,
+  "coffee": 175
+}
+
+m 0 insert_coin(5 amount) {
+  balance = balance + amount
+  z.o("Balance: $" + z.tostr(balance / 100.0))
+}
+
+m 0 buy(12 item) {
+  i (z.is_null(items[item])) {
+    z.o("Unknown item: " + item)
+    r
+  }
+  5 price = items[item]
+  i (balance >= price) {
+    balance = balance - price
+    z.o("Dispensing " + item + " ($" + z.tostr(price / 100.0) + ")")
+    z.o("Remaining: $" + z.tostr(balance / 100.0))
+  } e {
+    z.o("Insufficient funds. Need $" + z.tostr(price / 100.0) + ", have $" + z.tostr(balance / 100.0))
+  }
+}
+
+insert_coin(200)
+buy("cola")
+buy("juice")
+insert_coin(100)
+buy("juice")

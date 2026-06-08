@@ -1,0 +1,24 @@
+#alphabet<am>
+// === CONST TESTS ===
+// S1: const int
+ቋሚ-እሴት 5 MAX = 100
+ከሆነ (MAX == 100) { z.o("PASS:const_s1") }
+// S2: const string
+ቋሚ-እሴት 12 CNAME = "Alphabet"
+ከሆነ (CNAME == "Alphabet") { z.o("PASS:const_s2") }
+// S3: const bool
+ቋሚ-እሴት 11 DEBUG = true
+ከሆነ (DEBUG) { z.o("PASS:const_s3") }
+// S4: const float
+ቋሚ-እሴት 8 CPI = 3.14
+ከሆነ (z.type(CPI) == "number") { z.o("PASS:const_s4") }
+// S5: const in expression
+ቋሚ-እሴት 5 CLIMIT = 10
+5 half = CLIMIT / 2
+ከሆነ (half == 5) { z.o("PASS:const_s5") }
+// S6: const passed to function
+ዘዴ 11 check_limit(11 num_a) { r num_a < 100 }
+ከሆነ (check_limit(MAX)) { z.o("PASS:const_s6") }
+// S7: const in function scope
+ዘዴ 11 use_const() { ቋሚ-እሴት 5 LOCAL = 50 r LOCAL }
+ከሆነ (use_const() == 50) { z.o("PASS:const_s7") }

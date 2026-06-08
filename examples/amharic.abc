@@ -1,0 +1,24 @@
+#alphabet<am>
+/// አማርኛ ምሳሌ — Amharic example
+/// Demonstrates: Amharic keywords and UTF-8 variable names
+
+z.o("=== አማርኛ ፕሮግራም ===")
+
+5 ስም = "ፍሮል"
+5 ዕድሜ = 21
+
+z.o("ስም: " + ስም)
+z.o("ዕድሜ: " + z.tostr(ዕድሜ))
+
+i (ዕድሜ >= 18) {
+  z.o(ስም + " ባልደረባ ነው")
+} e {
+  z.o(ስም + " ልጅ ነው")
+}
+
+5 ቁጥሮች = [1, 2, 3, 4, 5]
+5 ድምር = 0
+l (5 ክ : ቁጥሮች) {
+  ድምር = ድምር + ክ
+}
+z.o("ድምር: " + z.tostr(ድምር))

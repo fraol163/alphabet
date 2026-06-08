@@ -1,0 +1,24 @@
+#alphabet<es>
+5 valor = 42
+5 cantidad = 10
+12 nombre = "Alphabet"
+o("PASS:es_variables")
+i (valor + cantidad == 52) { o("PASS:es_arithmetic") }
+i (valor > 5) { o("PASS:es_if") } e { o("FAIL") }
+i (valor < 5) { o("FAIL") } e { o("PASS:es_else") }
+5 suma = 0
+5 indice = 0
+bucle (indice < 5) { suma = suma + indice indice = indice + 1 }
+i (suma == 10) { o("PASS:es_loop") }
+método 5 factorial(5 num) { i (num <= 1) { retornar 1 } retornar num * factorial(num - 1) }
+i (factorial(5) == 120) { o("PASS:es_function") }
+clase Calculadora { método 5 sumar(5 a, 5 b) { retornar a + b } }
+15 calc = nuevo Calculadora()
+i (calc.sumar(3, 4) == 7) { o("PASS:es_class") }
+clase Animal { método hablar() { retornar "..." } }
+clase Perro extiende Animal { método hablar() { retornar "woof" } }
+15 perro = nuevo Perro()
+i (perro.hablar() == "woof") { o("PASS:es_inheritance") }
+intentar { o("PASS:es_try") } capturar (15 error) { o("FAIL") }
+coincidir (2) { 1: o("one") 2: o("PASS:es_match") 3: o("three") }
+o("FINAL_ES_COMPLETE")

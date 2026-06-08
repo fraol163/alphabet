@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 49: Ternary operator
+5 x = 10
+5 result = x > 5 ? 1 : 0
+i (result == 1) { z.o("PASS:ctrl_49_ternary") } e { z.o("FAIL:ctrl_49_ternary") }

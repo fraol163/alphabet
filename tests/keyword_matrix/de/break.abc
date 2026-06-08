@@ -1,0 +1,40 @@
+#alphabet<de>
+// === BREAK TESTS ===
+// S1: exits loop
+5 val_a = 0
+schleife (true) { val_a = val_a + 1 wenn (val_a == 5) { brechen } }
+wenn (val_a == 5) { z.o("PASS:break_s1") }
+// S2: inside if in loop
+5 val_b = 0
+schleife (true) { val_b = val_b + 1 wenn (val_b == 3) { wenn (true) { brechen } } }
+wenn (val_b == 3) { z.o("PASS:break_s2") }
+// S3: inside nested loop
+5 inner = 0
+5 outer = 0
+schleife (outer < 5) { inner = 0 schleife (true) { inner = inner + 1 wenn (inner == 2) { brechen } } outer = outer + 1 }
+wenn (inner == 2 && outer == 5) { z.o("PASS:break_s3") }
+// S4: at end of body
+5 val_c = 0
+schleife (val_c < 10) { val_c = val_c + 1 brechen }
+wenn (val_c == 1) { z.o("PASS:break_s4") }
+// S5: conditional break
+13 nums = [1, 2, 3, 4, 5]
+5 idx_a = 0
+5 found_val = 0
+schleife (idx_a < z.len(nums)) { wenn (nums[idx_a] == 3) { found_val = nums[idx_a] brechen } idx_a = idx_a + 1 }
+wenn (found_val == 3) { z.o("PASS:break_s5") }
+// S6: break after some iterations
+5 cnt_a = 0
+5 acc = 0
+schleife (cnt_a < 10) { acc = acc + cnt_a cnt_a = cnt_a + 1 wenn (cnt_a == 4) { brechen } }
+wenn (cnt_a == 4 && acc == 6) { z.o("PASS:break_s6") }
+// S7: multiple break points
+5 mode = 1
+5 out = 0
+schleife (true) { wenn (mode == 1) { out = 10 brechen } wenn (mode == 2) { out = 20 brechen } out = 30 brechen }
+wenn (out == 10) { z.o("PASS:break_s7") }
+// S8: break with counter check
+5 idx_b = 0
+5 sum_a = 0
+schleife (idx_b < 5) { sum_a = sum_a + idx_b idx_b = idx_b + 1 wenn (idx_b == 3) { brechen } }
+wenn (sum_a == 3) { z.o("PASS:break_s8") }

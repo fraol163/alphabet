@@ -1,0 +1,8 @@
+#!/usr/bin/env alphabet
+#alphabet<en>
+/// Shebang support — make this file executable with:
+///   chmod +x hello.abc
+///   ./hello.abc
+
+z.o("Hello from Alphabet!")
+z.o("This file is executable via shebang.")

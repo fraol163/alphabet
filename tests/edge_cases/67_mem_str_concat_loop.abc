@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 67: String concatenation in loop
+12 s = ""
+5 i = 0
+l (i < 100) { s = s + "x" i = i + 1 }
+i (z.len(s) == 100) { z.o("PASS:mem_67_str_concat_loop") } e { z.o("FAIL:mem_67_str_concat_loop len=" + str(z.len(s))) }

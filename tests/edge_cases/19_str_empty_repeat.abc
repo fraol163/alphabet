@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 19: Empty string * number
+12 s = "" * 100
+i (z.len(s) == 0) { z.o("PASS:str_19_empty_repeat") } e { z.o("FAIL:str_19_empty_repeat") }

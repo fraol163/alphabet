@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 55: Mutual recursion
+m 11 is_even(11 n) { i (n == 0) { r 1 } r is_odd(n - 1) }
+m 11 is_odd(11 n) { i (n == 0) { r 0 } r is_even(n - 1) }
+i (is_even(10) == 1 && is_odd(7) == 1 && is_even(3) == 0) { z.o("PASS:func_55_mutual_rec") } e { z.o("FAIL:func_55_mutual_rec") }

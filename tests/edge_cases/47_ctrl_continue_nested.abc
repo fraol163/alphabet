@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 47: Continue from nested loop
+5 inner_sum = 0
+5 idx = 0
+l (idx < 3) { inner_sum = 0 5 j = 0 l (j < 5) { j = j + 1 i (j == 3) { k } inner_sum = inner_sum + 1 } idx = idx + 1 }
+i (inner_sum == 6) { z.o("PASS:ctrl_47_continue_nested") } e { z.o("FAIL:ctrl_47_continue_nested sum=" + str(inner_sum)) }

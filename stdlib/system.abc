@@ -1,0 +1,42 @@
+#alphabet<en>
+@ env_get, env_set, env_has, env_all, platform_name, platform_arch, is_linux, is_mac, is_windows
+
+m 12 env_get(12 name) {
+  r z.env(name)
+}
+
+m 0 env_set(12 name, 12 value) {
+  z.o("Note: env_set is read-only in Alphabet. Use shell to set environment variables.")
+}
+
+m 11 env_has(12 name) {
+  r !z.is_null(z.env(name))
+}
+
+m 13 env_all() {
+  r {"HOME": z.env("HOME"), "USER": z.env("USER"), "PATH": z.env("PATH"), "SHELL": z.env("SHELL")}
+}
+
+m 12 platform_name() {
+  5 os = z.env("OSTYPE")
+  i (z.find(os, "linux") >= 0) { r "linux" }
+  i (z.find(os, "darwin") >= 0) { r "macos" }
+  i (z.find(os, "win") >= 0) { r "windows" }
+  r "unknown"
+}
+
+m 12 platform_arch() {
+  r "x86_64"
+}
+
+m 11 is_linux() {
+  r platform_name() == "linux"
+}
+
+m 11 is_mac() {
+  r platform_name() == "macos"
+}
+
+m 11 is_windows() {
+  r platform_name() == "windows"
+}

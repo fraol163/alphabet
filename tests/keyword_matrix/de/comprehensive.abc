@@ -1,0 +1,67 @@
+#alphabet<de}
+// === COMPREHENSIVE KEYWORD TEST: GERMAN ===
+
+// === VARIABLES ===
+5 wert = 42
+5 menge = 10
+12 name = "Alphabet"
+z.o("PASS:de_variables")
+
+// === ARITHMETIC ===
+5 summe = wert + menge
+i (summe == 52) { z.o("PASS:de_arithmetic") }
+
+// === IF/ELSE ===
+i (wert > 5) { z.o("PASS:de_if") } sonst { z.o("FAIL:de_if") }
+i (wert < 5) { z.o("FAIL:de_else") } sonst { z.o("PASS:de_else") }
+
+// === LOOP ===
+5 summe_b = 0
+5 index = 0
+schleife (index < 5) { summe_b = summe_b + index index = index + 1 }
+i (summe_b == 10) { z.o("PASS:de_loop") }
+
+// === LOOP WITH BREAK ===
+5 ausgang = 0
+schleife (true) { ausgang = ausgang + 1 i (ausgang == 5) { brechen } }
+i (ausgang == 5) { z.o("PASS:de_break") }
+
+// === LOOP WITH CONTINUE ===
+13 gerade = []
+5 zaehler = 0
+schleife (zaehler < 10) { zaehler = zaehler + 1 i (zaehler % 2 != 0) { fortsetzen } z.append(gerade, zaehler) }
+i (z.len(gerade) == 5) { z.o("PASS:de_continue") }
+
+// === FUNCTION ===
+methode 11 factorial(11 num) {
+  i (num <= 1) { zurück 1 }
+  zurück num * factorial(num - 1)
+}
+i (factorial(5) == 120) { z.o("PASS:de_function") }
+
+// === CLASS ===
+klasse Rechner {
+  methode 11 addieren(11 a, 11 b) { zurück a + b }
+}
+15 rechner = neu Rechner()
+i (rechner.addieren(3, 4) == 7) { z.o("PASS:de_class") }
+
+// === INHERITANCE ===
+klasse Tier {
+  methode sprechen() { zurück "..." }
+}
+klasse Hund erweitert Tier {
+  methode sprechen() { zurück "woof" }
+}
+15 hund = neu Hund()
+i (hund.sprechen() == "woof") { z.o("PASS:de_inheritance") }
+
+// === TRY/HANDLE ===
+versuchen { z.o("PASS:de_try") } fangen (15 fehler) { z.o("FAIL:de_try") }
+
+// === MATCH ===
+5 waehlen = 2
+übereinstimmen (waehlen) { 1: z.i("one") 2: z.o("PASS:de_match") 3: z.i("three") }
+
+// === ALL DONE ===
+z.o("COMPREHENSIVE_DE_COMPLETE")

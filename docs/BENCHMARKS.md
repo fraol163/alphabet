@@ -10,13 +10,13 @@
 
 **Note:** Results depend on hardware. Run benchmarks on your machine for accurate numbers.
 
-Alphabet v2.3.4 uses a stack-based bytecode interpreter (no JIT). Performance characteristics:
+Alphabet v2.3.5 uses a stack-based bytecode interpreter (no JIT). Performance characteristics:
 
 - **Recursive workloads:** ~1.7x slower than Python (fibonacci)
 - **Tight loops:** ~1.1x comparable to Python (100K iteration loop)
 - **Startup:** Fast (native binary, no runtime boot)
 
-Integer-typed operations (v2.3.4 real int64_t support) significantly improved performance over the previous double-only implementation.
+Integer-typed operations (v2.3.5 real int64_t support) significantly improved performance over the previous double-only implementation.
 
 ---
 
@@ -62,7 +62,7 @@ The Alphabet VM is a straightforward stack interpreter:
 - Each instruction dispatched via switch/case
 - No bytecode optimization or JIT
 - Dynamic type checks on every operation
-- Real integer (int64_t) support since v2.3.4 avoids float overhead
+- Real integer (int64_t) support since v2.3.5 avoids float overhead
 
 Python's CPython interpreter is also a stack VM, but with decades of optimization (specialized opcodes, inline caches, etc.).
 

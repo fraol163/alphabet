@@ -1,0 +1,7 @@
+#alphabet<en>
+5 x = z.len("abc")
+z.o(x)
+5 y = len("abc")
+z.o(y)
+5 z2 = z.len([1, 2, 3])
+z.o(z2)

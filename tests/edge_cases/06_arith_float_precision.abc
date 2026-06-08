@@ -1,0 +1,7 @@
+#alphabet<en>
+// Edge Case 06: Float precision
+8 a = 0.1
+8 b = 0.2
+8 c = a + b
+z.o("0.1 + 0.2 = " + str(c))
+z.o("PASS:arith_06_float_precision")

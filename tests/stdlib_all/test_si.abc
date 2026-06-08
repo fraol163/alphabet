@@ -1,0 +1,6 @@
+#alphabet<en>
+5 s = "abc"
+5 c = s[0]
+z.o(c)
+5 c2 = z.substr(s, 0, 1)
+z.o(c2)

@@ -1,0 +1,24 @@
+#alphabet<fr>
+5 valeur = 42
+5 quantite = 10
+12 nom = "Alphabet"
+o("PASS:fr_variables")
+i (valeur + quantite == 52) { o("PASS:fr_arithmetic") }
+i (valeur > 5) { o("PASS:fr_if") } e { o("FAIL") }
+i (valeur < 5) { o("FAIL") } e { o("PASS:fr_else") }
+5 somme = 0
+5 indice = 0
+boucle (indice < 5) { somme = somme + indice indice = indice + 1 }
+i (somme == 10) { o("PASS:fr_loop") }
+méthode 5 factorial(5 num) { i (num <= 1) { retour 1 } retour num * factorial(num - 1) }
+i (factorial(5) == 120) { o("PASS:fr_function") }
+classe Calculatrice { méthode 5 additionner(5 a, 5 b) { retour a + b } }
+15 calc = nouveau Calculatrice()
+i (calc.additionner(3, 4) == 7) { o("PASS:fr_class") }
+classe Animal { méthode parler() { retour "..." } }
+classe Chien étend Animal { méthode parler() { retour "woof" } }
+15 chien = nouveau Chien()
+i (chien.parler() == "woof") { o("PASS:fr_inheritance") }
+essayer { o("PASS:fr_try") } attraper (15 erreur) { o("FAIL") }
+correspondre (2) { 1: o("one") 2: o("PASS:fr_match") 3: o("three") }
+o("FINAL_FR_COMPLETE")

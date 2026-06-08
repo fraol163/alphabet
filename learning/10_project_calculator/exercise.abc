@@ -1,0 +1,21 @@
+#alphabet<en>
+c Calculator {
+  int add(int a, int b) {
+    r a + b
+  }
+  int subtract(int a, int b) {
+    r ___
+  }
+  int multiply(int a, int b) {
+    r a * b
+  }
+  float divide(int a, int b) {
+    r a / b
+  }
+}
+
+Calculator calc = new Calculator()
+z.o(calc.add(10, 5))
+z.o(calc.subtract(10, 5))
+z.o(calc.multiply(10, 5))
+z.o(calc.divide(10, 5))

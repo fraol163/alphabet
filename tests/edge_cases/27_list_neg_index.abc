@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 27: Negative list index
+13 lst = [10, 20, 30]
+5 ok = 0
+t { 5 bad = lst[-1] } h (15 e) { ok = 1 }
+i (ok == 1) { z.o("PASS:list_27_neg_index") } e { z.o("PASS:list_27_neg_index_unhandled") }

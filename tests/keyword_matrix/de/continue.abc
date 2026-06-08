@@ -1,0 +1,32 @@
+#alphabet<de>
+// === CONTINUE TESTS ===
+// S1: skips rest
+13 kept = []
+5 idx_a = 0
+schleife (idx_a < 5) { idx_a = idx_a + 1 wenn (idx_a == 3) { fortsetzen } z.append(kept, idx_a) }
+wenn (z.len(kept) == 4) { z.o("PASS:cont_s1") }
+// S2: inside if in loop
+13 res = []
+5 idx_b = 0
+schleife (idx_b < 5) { idx_b = idx_b + 1 wenn (idx_b == 3) { wenn (true) { fortsetzen } } z.append(res, idx_b) }
+wenn (z.len(res) == 4) { z.o("PASS:cont_s2") }
+// S3: inside nested loop
+5 inner_cnt = 0
+5 idx_c = 0
+schleife (idx_c < 3) { inner_cnt = 0 5 idx_d = 0 schleife (idx_d < 3) { idx_d = idx_d + 1 wenn (idx_d == 2) { fortsetzen } inner_cnt = inner_cnt + 1 } idx_c = idx_c + 1 }
+wenn (inner_cnt == 2) { z.o("PASS:cont_s3") }
+// S4: at end of body
+13 evens = []
+5 num_a = 0
+schleife (num_a < 6) { num_a = num_a + 1 wenn (num_a % 2 != 0) { fortsetzen } z.append(evens, num_a) }
+wenn (z.len(evens) == 3) { z.o("PASS:cont_s4") }
+// S5: conditional continue
+13 vals = []
+5 val_a = 0
+schleife (val_a < 8) { val_a = val_a + 1 wenn (val_a % 3 == 0) { fortsetzen } z.append(vals, val_a) }
+wenn (z.len(vals) == 5) { z.o("PASS:cont_s5") }
+// S6: break + continue together
+13 mixed = []
+5 idx_e = 0
+schleife (idx_e < 10) { idx_e = idx_e + 1 wenn (idx_e == 3) { fortsetzen } wenn (idx_e == 8) { brechen } z.append(mixed, idx_e) }
+wenn (z.len(mixed) == 6) { z.o("PASS:cont_s6") }

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -51,54 +52,58 @@ enum class OpCode : uint8_t {
     BREAK_JUMP = 39,
     CONTINUE_JUMP = 40,
     JUMP_IF_TRUE = 41,
-    MARK_CONST = 42,
+    MARK_CONST = 50,
+    NOP = 51,
+    PUSH_CONST_POOL = 52,
+    LOAD_SUPER = 53,
 };
 
-using Operand = std::variant<std::monostate, int64_t, double, std::string, std::nullptr_t,
-                             std::pair<std::string, int>>;
+using Operand = std::variant<std::monostate, int64_t, double, std::string, std::nullptr_t, std::pair<std::string, int>>;
 
-struct Instruction
-{
+struct Instruction {
     OpCode op;
     Operand operand;
     int line;
 
     Instruction() : op(OpCode::HALT), operand(std::monostate{}), line(0) {}
     Instruction(OpCode opcode, int l = 0) : op(opcode), operand(std::monostate{}), line(l) {}
-    Instruction(OpCode opcode, Operand opnd, int l = 0)
-        : op(opcode), operand(std::move(opnd)), line(l)
-    {
-    }
+    Instruction(OpCode opcode, Operand opnd, int l = 0) : op(opcode), operand(std::move(opnd)), line(l) {}
 };
 
-struct CompiledMethod
-{
+struct CompiledMethod {
     std::vector<Instruction> bytecode;
     std::vector<std::string> param_names;
+    std::vector<std::vector<Instruction>> default_value_bytecodes;
 };
 
-struct CompiledClass
-{
+struct CompiledClass {
     std::string name;
     std::string superclass;
     uint16_t id;
+    bool is_abstract = false;
     std::unordered_map<std::string, CompiledMethod> methods;
     std::unordered_map<std::string, CompiledMethod> static_methods;
     std::vector<Instruction> static_init;
     std::vector<Instruction> field_init;
+    std::unordered_set<std::string> private_fields;
+    std::unordered_set<std::string> private_methods;
 };
 
-struct Program
-{
+struct Program {
+    static constexpr uint16_t VERSION = 1;
+    uint16_t version = VERSION;
     std::vector<Instruction> main;
     std::vector<Instruction> static_init;
     std::unordered_map<uint16_t, CompiledClass> classes;
     std::unordered_map<std::string, CompiledMethod> functions;
     std::vector<std::string> globals;
+    std::vector<Operand> constant_pool;
+
+    bool save_to_file(const std::string& path) const;
+    static Program load_from_file(const std::string& path);
 };
 
-inline const char *opcode_to_string(OpCode op)
-{
+inline const char* opcode_to_string(OpCode op) {
     switch (op) {
     case OpCode::PUSH_CONST:
         return "PUSH_CONST";
@@ -184,6 +189,12 @@ inline const char *opcode_to_string(OpCode op)
         return "JUMP_IF_TRUE";
     case OpCode::MARK_CONST:
         return "MARK_CONST";
+    case OpCode::NOP:
+        return "NOP";
+    case OpCode::PUSH_CONST_POOL:
+        return "PUSH_CONST_POOL";
+    case OpCode::LOAD_SUPER:
+        return "LOAD_SUPER";
     default:
         return "UNKNOWN";
     }

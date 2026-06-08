@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 16: Escape sequences - backslash
+12 s = "path\\to\\file"
+i (z.len(s) > 5) { z.o("PASS:str_16_escape_backslash") } e { z.o("FAIL:str_16_escape_backslash") }

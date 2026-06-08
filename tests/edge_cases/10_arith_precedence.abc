@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 10: Operator precedence
+5 a = 2 + 3 * 4
+5 b = (2 + 3) * 4
+i (a == 14 && b == 20) { z.o("PASS:arith_10_precedence") } e { z.o("FAIL:arith_10_precedence") }

@@ -2,58 +2,108 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+  schedule:
+    - cron: '0 3 * * *'  # Nightly at 3 AM UTC
 
 jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        compiler: [gcc, clang]
+        exclude:
+          - os: macos-latest
+            compiler: gcc
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+
+      - name: Install dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: brew install cmake
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build -j$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+
+      - name: Test
+        run: cd build && ctest --output-on-failure
+
   format-check:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Install clang-format
-      run: sudo apt-get update && sudo apt-get install -y clang-format
-    - name: Run format check
-      run: |
-        find src -name "*.cpp" -o -name "*.h" | xargs clang-format --dry-run --Werror
-
-  abc-lint:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Lint .abc files
-      run: |
-        chmod +x tools/abc_lint.sh
-        bash tools/abc_lint.sh stdlib/*.abc tests/golden_files/*.abc test.abc
-
-  build:
-    needs: [format-check, abc-lint]
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-    - uses: actions/checkout@v4
-    - name: Configure
-      run: cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON -S . -B build
-    - name: Build
-      run: cmake --build build --config Release
-    - name: Test
-      shell: bash
-      run: |
-        cd build
-        ctest -C Release --output-on-failure
+      - uses: actions/checkout@v4
+      - name: Install clang-format
+        run: sudo apt-get install -y clang-format
+      - name: Check formatting
+        run: find src include tests -name '*.cpp' -o -name '*.h' | xargs clang-format --dry-run --Werror
 
   asan:
-    needs: [format-check, abc-lint]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Configure with ASan
-      run: cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON -DBUILD_TESTS=ON -S . -B build
-    - name: Build
-      run: cmake --build build -j$(nproc)
-    - name: Test with ASan
-      run: |
-        cd build
-        ctest --output-on-failure
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake build-essential
+      - name: Configure with ASan
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON
+      - name: Build
+        run: cmake --build build -j$(nproc)
+      - name: Test with ASan
+        run: cd build && ctest --output-on-failure
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential lcov
+      - name: Configure with coverage
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="--coverage"
+      - name: Build
+        run: cmake --build build -j$(nproc)
+      - name: Run tests
+        run: cd build && ctest --output-on-failure
+      - name: Collect coverage
+        run: |
+          cd build
+          lcov --directory . --capture --output-file coverage.info
+          lcov --remove coverage.info '/usr/*' '*/test_*' '*/third_party/*' --output-file coverage.info
+          lcov --list coverage.info
+      - name: Upload coverage
+        if: github.event_name != 'schedule'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: build/coverage.info
+
+  nightly:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake build-essential
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build -j$(nproc)
+      - name: Full test suite
+        run: cd build && ctest --output-on-failure --verbose
+      - name: Run benchmarks
+        run: python3 benchmark.py
+      - name: Version check
+        run: ./build/alphabet --version

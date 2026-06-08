@@ -1,0 +1,11 @@
+#alphabet<en>
+x "../../stdlib/io.abc"
+print("hello")
+write_file("/tmp/alphabet_test_io.txt", "hello io")
+5 content = read_file("/tmp/alphabet_test_io.txt")
+z.o("read: " + content)
+i (content == "hello io") {
+  z.o("PASS")
+} e {
+  z.o("FAIL content=" + content)
+}

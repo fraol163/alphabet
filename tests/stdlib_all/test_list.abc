@@ -1,0 +1,33 @@
+#alphabet<en>
+x "../../stdlib/list.abc"
+5 ok = 1
+t {
+  13 r = range(5)
+  i (length(r) != 5) { ok = 0 }
+  push(r, 99)
+  i (pop(r) != 99) { ok = 0 }
+  i (contains(r, 2) != 1) { ok = 0 }
+  13 rev = reverse(r)
+  i (first(rev) != 4) { ok = 0 }
+  i (last(rev) != 0) { ok = 0 }
+  i (min(r) != 0) { ok = 0 }
+  i (max(r) != 4) { ok = 0 }
+  i (sum(r) != 10) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  13 u = unique([1, 2, 2, 3, 3])
+  i (length(u) != 3) { ok = 0 }
+  13 s = sort([3, 1, 2])
+  i (first(s) != 1) { ok = 0 }
+  i (last(s) != 3) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  13 sl = slice([10, 20, 30, 40, 50], 1, 3)
+  i (length(sl) != 3) { ok = 0 }
+  i (first(sl) != 20) { ok = 0 }
+} h (0 e) { ok = 0 }
+i (ok) {
+  z.o("PASS: list")
+} e {
+  z.o("FAIL: list")
+}

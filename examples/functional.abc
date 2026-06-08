@@ -1,0 +1,27 @@
+#alphabet<en>
+/// Functional programming patterns
+/// Demonstrates: lambdas, map/filter/reduce, closures
+
+z.o("=== Functional Programming ===")
+
+5 numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+5 evens = z.filter(numbers, m(5 x) { r x % 2 == 0 })
+z.o("Evens: " + z.tostr(evens))
+
+5 doubled = z.map(numbers, m(5 x) { r x * 2 })
+z.o("Doubled: " + z.tostr(doubled))
+
+5 sum = z.reduce(numbers, 0, m(5 acc, 5 x) { r acc + x })
+z.o("Sum: " + z.tostr(sum))
+
+5 squares = z.map(numbers, m(5 x) { r x * x })
+z.o("Squares: " + z.tostr(squares))
+
+z.o("\n=== String Processing ===")
+5 words = ["hello", "world", "alphabet", "language"]
+5 upper_words = z.map(words, m(5 w) { r z.upper(w) })
+z.o("Uppercase: " + z.tostr(upper_words))
+
+5 long_words = z.filter(words, m(5 w) { r z.len(w) > 5 })
+z.o("Long words: " + z.tostr(long_words))

@@ -1,0 +1,6 @@
+#alphabet<en>
+t {
+  z.t("oops!")
+} h (12 e) {
+  z.o("caught: " + ___)
+}

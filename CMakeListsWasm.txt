@@ -1,0 +1,57 @@
+cmake_minimum_required(VERSION 3.16)
+project(AlphabetWasm)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Include dirs
+include_directories(
+    src/include
+    ${CMAKE_SOURCE_DIR}/build/generated
+)
+
+# Library sources (same as main CMakeLists)
+set(LIB_SOURCES
+    src/compiler.cpp
+    src/lexer.cpp
+    src/parser.cpp
+    src/vm.cpp
+    src/vm_builtins.cpp
+    src/ffi.cpp
+    src/type_system.cpp
+    src/lsp.cpp
+    src/linter.cpp
+    src/bytecode_io.cpp
+    src/alphabet_embed.cpp
+    src/nl_to_code.cpp
+    src/project.cpp
+)
+
+# Build as static library
+add_library(alphabet_wasm STATIC ${LIB_SOURCES})
+
+# WASM-specific flags
+target_compile_options(alphabet_wasm PRIVATE
+    -DFOR_WASM=1
+    -s USE_PTHREADS=0
+)
+
+# Export functions for JavaScript
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} \
+    -s EXPORTED_FUNCTIONS=['_alphabet_run','_alphabet_eval','_alphabet_version','_malloc','_free'] \
+    -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap','UTF8ToString','stringToUTF8','lengthBytesUTF8'] \
+    -s ALLOW_MEMORY_GROWTH=1 \
+    -s MAXIMUM_MEMORY=2gb \
+    -s MODULARIZE=1 \
+    -s EXPORT_NAME='AlphabetModule' \
+    -s WASM=1 \
+    -s NO_EXIT_RUNTIME=1 \
+    -s ENVIRONMENT='web' \
+    -s FILESYSTEM=0 \
+    -s SINGLE_FILE=0 \
+    -O2 \
+")
+
+# Main entry with exported functions
+add_executable(alphabet src/main.cpp)
+target_link_libraries(alphabet alphabet_wasm)

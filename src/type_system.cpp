@@ -3,8 +3,7 @@
 
 namespace alphabet {
 
-TypeManager::TypeManager()
-{
+TypeManager::TypeManager() {
     register_primitive(TYPE_VOID, "void");
     register_primitive(I8, "i8");
     register_primitive(I16, "i16");
@@ -22,26 +21,20 @@ TypeManager::TypeManager()
     register_primitive(MAP, "map");
 }
 
-void TypeManager::register_primitive(uint16_t id, const std::string &name)
-{
+void TypeManager::register_primitive(uint16_t id, const std::string& name) {
     types_.emplace_back(id, name, true);
     name_to_id_[name] = id;
 }
 
-const TypeInfo *TypeManager::get_type(uint16_t id) const
-{
-    auto it =
-        std::find_if(types_.begin(), types_.end(), [id](const TypeInfo &t) { return t.id == id; });
+const TypeInfo* TypeManager::get_type(uint16_t id) const {
+    auto it = std::find_if(types_.begin(), types_.end(), [id](const TypeInfo& t) { return t.id == id; });
     return it != types_.end() ? &*it : nullptr;
 }
 
-uint16_t TypeManager::register_type(const std::string &name,
-                                    const std::vector<uint16_t> &interfaces)
-{
+uint16_t TypeManager::register_type(const std::string& name, const std::vector<uint16_t>& interfaces) {
     auto it = name_to_id_.find(name);
     if (it != name_to_id_.end()) {
-        throw TypeError("Type '" + name + "' already registered with ID " +
-                        std::to_string(it->second));
+        throw TypeError("Type '" + name + "' already registered with ID " + std::to_string(it->second));
     }
 
     uint16_t id = next_custom_id_++;
@@ -52,13 +45,12 @@ uint16_t TypeManager::register_type(const std::string &name,
     return id;
 }
 
-bool TypeManager::is_compatible(uint16_t source_type, uint16_t target_type) const
-{
+bool TypeManager::is_compatible(uint16_t source_type, uint16_t target_type) const {
     if (source_type == target_type)
         return true;
 
-    const TypeInfo *source = get_type(source_type);
-    const TypeInfo *target = get_type(target_type);
+    const TypeInfo* source = get_type(source_type);
+    const TypeInfo* target = get_type(target_type);
 
     if (!source || !target)
         return false;
@@ -67,8 +59,7 @@ bool TypeManager::is_compatible(uint16_t source_type, uint16_t target_type) cons
         if (source_type <= I64 && target_type <= I64) {
             return source_type <= target_type;
         }
-        if ((source_type == F32 || source_type == FLOAT) &&
-            (target_type == F64 || target_type == FLOAT)) {
+        if ((source_type == F32 || source_type == FLOAT) && (target_type == F64 || target_type == FLOAT)) {
             return true;
         }
         return false;
@@ -81,9 +72,8 @@ bool TypeManager::is_compatible(uint16_t source_type, uint16_t target_type) cons
     return false;
 }
 
-bool TypeManager::implements_interface(uint16_t type_id, uint16_t interface_id) const
-{
-    const TypeInfo *type = get_type(type_id);
+bool TypeManager::implements_interface(uint16_t type_id, uint16_t interface_id) const {
+    const TypeInfo* type = get_type(type_id);
     if (!type)
         return false;
 

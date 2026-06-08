@@ -1,0 +1,5 @@
+#alphabet<en>
+int age = 20
+str name = "Alice"
+z.o(name)
+z.o(age)

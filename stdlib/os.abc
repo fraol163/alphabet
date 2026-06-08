@@ -1,0 +1,34 @@
+#alphabet<en>
+@ env, cwd, sleep_ms, timestamp_ms, platform, arch
+
+m env(5 name) {
+  r z.env(name)
+}
+
+m sleep_ms(5 ms) {
+  z.sleep(ms)
+}
+
+m timestamp_ms() {
+  r z.timestamp()
+}
+
+m platform() {
+  5 os = z.env("OS")
+  i (os != null && len(os) > 0) {
+    r "windows"
+  }
+  5 uname = z.exec("uname -s")
+  i (len(uname) > 0) {
+    r lower(trim(uname))
+  }
+  r "unknown"
+}
+
+m arch() {
+  5 machine = z.exec("uname -m")
+  i (len(machine) > 0) {
+    r lower(trim(machine))
+  }
+  r "unknown"
+}

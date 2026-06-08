@@ -1,0 +1,43 @@
+#alphabet<de>
+// === ELSE TESTS ===
+5 val_a = 10
+// S1: true path
+wenn (val_a == 10) { z.o("PASS:else_s1") } sonst { z.o("FAIL:else_s1") }
+// S2: false path
+wenn (val_a == 20) { z.o("FAIL:else_s2") } sonst { z.o("PASS:else_s2") }
+// S3: 3-branch
+5 val_b = 15
+wenn (val_b < 10) { z.i("low") } sonst wenn (val_b < 20) { z.o("PASS:else_s3") } sonst { z.i("high") }
+// S4: 4+ branch
+5 val_c = 25
+wenn (val_c < 10) { z.i("a") } sonst wenn (val_c < 20) { z.i("b") } sonst wenn (val_c < 30) { z.o("PASS:else_s4") } sonst { z.i("d") }
+// S5: nested if in if
+wenn (val_a == 10) { wenn (val_a > 5) { z.o("PASS:else_s5") } }
+// S6: nested if in else
+wenn (val_a == 20) { z.i("no") } sonst { wenn (val_a == 10) { z.o("PASS:else_s6") } }
+// S7: return in both
+methode 11 test_ret(11 num_a) { wenn (num_a > 0) { r 1 } sonst { r 0 } }
+wenn (test_ret(5) == 1 && test_ret(-1) == 0) { z.o("PASS:else_s7") }
+// S8: assignment in both
+5 result_a = 0
+wenn (val_a == 10) { result_a = 1 } sonst { result_a = 2 }
+wenn (result_a == 1) { z.o("PASS:else_s8") }
+// S9: in loop
+5 cnt_a = 0
+schleife (cnt_a < 3) { wenn (cnt_a == 1) { z.o("PASS:else_s9") } sonst { z.i("skip") } cnt_a = cnt_a + 1 }
+// S10: in class method
+klasse ElseCls { öffentlich methode 11 check(11 num_a) { wenn (num_a > 0) { r 1 } sonst { r -1 } } }
+15 obj_a = n ElseCls()
+wenn (obj_a.check(5) == 1 && obj_a.check(-5) == -1) { z.o("PASS:else_s10") }
+// S11: complex condition
+5 val_x = 5
+5 val_y = 10
+wenn (val_x > 3 && val_y < 15) { z.o("PASS:else_s11") } sonst { z.i("FAIL") }
+// S12: f-string in both
+wenn (val_a == 10) { z.i(f"PASS:else_s12a val={val_a}") } sonst { z.i("FAIL") }
+// S13: list ops
+13 lst_a = [1, 2]
+13 lst_b = [3, 4]
+z.append(lst_a, 5)
+z.append(lst_b, 6)
+wenn (z.len(lst_a) == 3) { z.o("PASS:else_s13") }

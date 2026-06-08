@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 64: string comparison with number
+12 s = "42"
+5 n = 42
+i (s != n) { z.o("PASS:coerce_64_str_vs_num") } e { z.o("PASS:coerce_64_str_vs_num_equal") }

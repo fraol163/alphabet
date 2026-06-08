@@ -102,7 +102,7 @@ alphabet --version
 
 **Expected:**
 ```
-Alphabet 2.3.4 (Native C++)
+Alphabet 2.3.5 (Native C++)
 Developer: Fraol Teshome (fraolteshome444@gmail.com)
 Compiled with C++17
 ```

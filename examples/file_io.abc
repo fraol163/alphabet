@@ -1,0 +1,31 @@
+#alphabet<en>
+/// File I/O example
+/// Demonstrates: file read/write, string processing
+
+z.o("=== File I/O Demo ===")
+
+5 filename = "test_output.txt"
+
+z.o("Writing to " + filename + "...")
+z.fw(filename, "Line 1: Hello from Alphabet!\nLine 2: This is a test file.\nLine 3: Written by Fraol.\n")
+z.o("File written successfully!")
+
+z.o("\nReading from " + filename + "...")
+5 content = z.f(filename)
+z.o("File contents:")
+z.o(content)
+
+z.o("\nAppending to file...")
+z.fa(filename, "Line 4: Appended text!\n")
+z.o("Appended successfully!")
+
+z.o("\nReading again...")
+5 content2 = z.f(filename)
+z.o("Updated contents:")
+z.o(content2)
+
+z.o("\nChecking if file exists...")
+z.o("File exists: " + z.tostr(z.exists(filename)))
+z.o("Missing file exists: " + z.tostr(z.exists("nonexistent.txt")))
+
+z.o("\nFile size: " + z.tostr(z.len(content2)) + " characters")

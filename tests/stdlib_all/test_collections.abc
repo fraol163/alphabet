@@ -1,0 +1,33 @@
+#alphabet<en>
+x "../../stdlib/collections.abc"
+5 ok = 1
+t {
+  5 s = stack_new()
+  stack_push(s, 10)
+  stack_push(s, 20)
+  i (stack_peek(s) != 20) { ok = 0 }
+  i (stack_pop(s) != 20) { ok = 0 }
+  i (stack_size(s) != 1) { ok = 0 }
+  i (stack_empty(s) != 0) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  5 q = queue_new()
+  queue_enqueue(q, 1)
+  queue_enqueue(q, 2)
+  i (queue_peek(q) != 1) { ok = 0 }
+  i (queue_dequeue(q) != 1) { ok = 0 }
+  i (queue_size(q) != 1) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  5 c = counter_new()
+  counter_inc(c, "a")
+  counter_inc(c, "a")
+  counter_inc(c, "b")
+  i (counter_get(c, "a") != 2) { ok = 0 }
+  i (counter_get(c, "b") != 1) { ok = 0 }
+} h (0 e) { ok = 0 }
+i (ok) {
+  z.o("PASS: collections")
+} e {
+  z.o("FAIL: collections")
+}

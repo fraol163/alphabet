@@ -1,0 +1,18 @@
+#alphabet<en>
+/// Calculator with match/case
+m 5 calculate(5 a, 12 op, 5 b) {
+  q (op) {
+    "+": { r a + b }
+    "-": { r a - b }
+    "*": { r a * b }
+    "/": {
+      i (b == 0) { z.o("Error: Division by zero"); r 0 }
+      r a / b
+    }
+  }
+}
+
+z.o("10 + 5 = " + z.tostr(calculate(10, "+", 5)))
+z.o("10 - 5 = " + z.tostr(calculate(10, "-", 5)))
+z.o("10 * 5 = " + z.tostr(calculate(10, "*", 5)))
+z.o("10 / 5 = " + z.tostr(calculate(10, "/", 5)))

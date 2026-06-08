@@ -1,6 +1,6 @@
 #alphabet<es>
 clase Calculadora {
-    publico metodo 5 sumar(5 a, 5 b) {
+    público método 5 sumar(5 a, 5 b) {
         retornar a + b
     }
 }

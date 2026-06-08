@@ -1,0 +1,37 @@
+#alphabet<en>
+# Abstract class — use 'a' keyword before 'c'
+a c Shape {
+  5 area = 0
+
+  v m 5 getArea() {
+    r area
+  }
+
+  v m 12 describe() {
+    r "A shape with area " + z.tostr(area)
+  }
+}
+
+# Concrete class extends abstract
+c Circle ^ Shape {
+  5 radius = 0
+
+  v m 0 init(5 r) {
+    radius = r
+    area = z.round(3.14159 * radius * radius)
+  }
+}
+
+c Square ^ Shape {
+  5 side = 0
+
+  v m 0 init(5 s) {
+    side = s
+    area = side * side
+  }
+}
+
+15 circle = n Circle(5)
+15 square = n Square(4)
+z.o(circle.describe())
+z.o(square.describe())

@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 08: Negative division
+5 a = -10 / 3
+z.o("-10 / 3 = " + str(a))
+z.o("PASS:arith_08_neg_div")

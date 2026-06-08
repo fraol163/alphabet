@@ -66,7 +66,7 @@ if (x > 3) { z.o("big") } e { z.o("small") }' "big"
 
 test_lang "Amharic-If" '#alphabet<am>
 5 x = 5
-ከሆነ (x > 3) { ውጤት.o("big") } አለበለዚህ { ውጤት.o("small") }' "big"
+ከሆነ (x > 3) { ውጤት.o("big") } ያለበለዚያ { ውጤት.o("small") }' "big"
 
 test_lang "Spanish-If" '#alphabet<es>
 5 x = 5
@@ -100,7 +100,7 @@ correspondre (x) { 1: afficher.o("one") 2: afficher.o("two") e: afficher.o("othe
 
 test_lang "German-Match" '#alphabet<de>
 5 x = 2
-ubereinstimmen (x) { 1: ausgeben.o("one") 2: ausgeben.o("two") e: ausgeben.o("other") }' "two"
+übereinstimmen (x) { 1: ausgeben.o("one") 2: ausgeben.o("two") e: ausgeben.o("other") }' "two"
 
 echo ""
 echo "=== LOOP TESTS ==="

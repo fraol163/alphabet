@@ -1,13 +1,13 @@
 # Alphabet Language - Test Results
 
-**Version:** 2.3.4
+**Version:** 2.3.5
 **Status:** All tests passing
 
 ---
 
 ## Test Summary
 
-**34/34 tests passing**
+**34/34 ctest + 257 test files**
 
 | Test Suite | Tests | Status |
 |------------|-------|--------|

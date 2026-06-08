@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 31: Empty map
+14 m = {}
+i (z.len(m) == 0) { z.o("PASS:map_31_empty") } e { z.o("FAIL:map_31_empty") }

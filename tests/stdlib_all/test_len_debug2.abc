@@ -1,0 +1,9 @@
+#alphabet<en>
+13 lst = [1, 2, 3]
+5 x = len(lst)
+z.o("len list: " + str(x))
+5 y = lst[0]
+z.o("list[0]: " + str(y))
+5 z2 = 1 + 2
+z.o("1+2: " + str(z2))
+z.o("hello" + " " + "world")

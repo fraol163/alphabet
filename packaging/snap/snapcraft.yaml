@@ -1,0 +1,33 @@
+name: alphabet
+version: '2.3.5'
+summary: Multilingual programming language
+description: |
+  Alphabet is a multilingual programming language that lets you code
+  in English, Amharic, Spanish, French, or German. Features include
+  70+ builtins, closures, functional programming, voice input, and more.
+
+grade: stable
+confinement: classic
+base: core22
+
+parts:
+  alphabet:
+    plugin: cmake
+    source: https://github.com/alphabet-lang/alphabet.git
+    source-tag: v2.3.5
+    cmake-parameters:
+      - -DCMAKE_BUILD_TYPE=Release
+    build-packages:
+      - g++
+      - cmake
+      - libnlohmann-json-dev
+    stage-packages:
+      - libstdc++6
+
+apps:
+  alphabet:
+    command: bin/alphabet
+    plugs:
+      - home
+      - network
+      - audio-record

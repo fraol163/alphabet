@@ -1,0 +1,18 @@
+#alphabet<en>
+x "../../stdlib/os.abc"
+5 ok = 1
+t {
+  5 ts = timestamp_ms()
+  i (ts == null || ts == 0) { ok = 0 }
+  5 p = platform()
+  i (p == null) { ok = 0 }
+  5 a = arch()
+  i (a == null) { ok = 0 }
+  5 home = env("HOME")
+  i (home == null) { ok = 0 }
+} h (0 e) { ok = 0 }
+i (ok) {
+  z.o("PASS: os")
+} e {
+  z.o("FAIL: os")
+}

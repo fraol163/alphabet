@@ -1,0 +1,29 @@
+#alphabet<am>
+// === MATCH TESTS ===
+// S1: int cases
+5 val_a = 2
+ምረጥ (val_a) { 1: z.i("one") 2: z.o("PASS:match_s1") 3: z.i("three") }
+// S2: default case
+5 val_b = 99
+ምረጥ (val_b) { 1: z.i("no") e: z.o("PASS:match_s2") }
+// S3: multiple cases
+5 val_c = 3
+5 found = 0
+ምረጥ (val_c) { 1: found = 10 2: found = 20 3: found = 30 e: found = 0 }
+ከሆነ (found == 30) { z.o("PASS:match_s3") }
+// S4: function call in body
+ዘዴ 11 get_match_val(11 num_a) { ምረጥ (num_a) { 1: r 10 2: r 20 e: r 0 } }
+ከሆነ (get_match_val(1) == 10 && get_match_val(2) == 20) { z.o("PASS:match_s4") }
+// S5: return in case
+ዘዴ 12 match_ret(11 num_a) { ምረጥ (num_a) { 1: r "one" 2: r "two" e: r "other" } }
+ከሆነ (match_ret(1) == "one") { z.o("PASS:match_s5") }
+// S6: if inside case body
+5 val_d = 2
+5 res = 0
+ምረጥ (val_d) { 1: res = 1 2: ከሆነ (true) { res = 22 } e: res = 0 }
+ከሆነ (res == 22) { z.o("PASS:match_s6") }
+// S7: loop inside case
+5 sum_a = 0
+5 val_e = 0
+ምረጥ (val_e) { 0: ሉፕ (sum_a < 5) { sum_a = sum_a + 1 } e: sum_a = -1 }
+ከሆነ (sum_a == 5) { z.o("PASS:match_s7") }

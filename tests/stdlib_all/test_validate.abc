@@ -1,0 +1,36 @@
+#alphabet<en>
+x "../../stdlib/validate.abc"
+5 ok = 1
+t {
+  i (is_number(42) != 1) { ok = 0 }
+  i (is_number("hello") != 0) { ok = 0 }
+  i (is_string("hello") != 1) { ok = 0 }
+  i (is_string(42) != 0) { ok = 0 }
+  i (is_list([1, 2]) != 1) { ok = 0 }
+  i (is_list("hello") != 0) { ok = 0 }
+  i (is_map({"a": 1}) != 1) { ok = 0 }
+  i (is_map("hello") != 0) { ok = 0 }
+  i (is_bool(1) != 0) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  i (is_empty(null) != 1) { ok = 0 }
+  i (is_empty("") != 1) { ok = 0 }
+  i (is_empty([]) != 1) { ok = 0 }
+  i (is_empty({}) != 1) { ok = 0 }
+  i (is_empty("hi") != 0) { ok = 0 }
+  i (is_empty([1]) != 0) { ok = 0 }
+} h (0 e) { ok = 0 }
+t {
+  i (is_email("user@example.com") != 1) { ok = 0 }
+  i (is_email("notanemail") != 0) { ok = 0 }
+  i (is_url("https://example.com") != 1) { ok = 0 }
+  i (is_url("not a url") != 0) { ok = 0 }
+  i (in_range(5, 1, 10) != 1) { ok = 0 }
+  i (in_range(0, 1, 10) != 0) { ok = 0 }
+  i (in_range(15, 1, 10) != 0) { ok = 0 }
+} h (0 e) { ok = 0 }
+i (ok) {
+  z.o("PASS: validate")
+} e {
+  z.o("FAIL: validate")
+}

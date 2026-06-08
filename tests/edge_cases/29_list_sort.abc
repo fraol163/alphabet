@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 29: List sort
+13 lst = [5, 3, 1, 4, 2]
+13 sorted_lst = z.sort(lst)
+i (sorted_lst[0] == 1 && sorted_lst[4] == 5) { z.o("PASS:list_29_sort") } e { z.o("FAIL:list_29_sort") }

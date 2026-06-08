@@ -1,0 +1,22 @@
+#alphabet<en>
+@ now, timestamp, sleep_seconds, timer_start, timer_elapsed
+
+m 5 now() {
+  r z.timestamp()
+}
+
+m 5 timestamp() {
+  r z.timestamp()
+}
+
+m 0 sleep_seconds(5 seconds) {
+  z.sleep(seconds * 1000)
+}
+
+m 5 timer_start() {
+  r z.timestamp()
+}
+
+m 5 timer_elapsed(5 start) {
+  r z.timestamp() - start
+}

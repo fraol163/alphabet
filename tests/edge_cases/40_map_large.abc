@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 40: Large map
+14 m = {}
+5 i = 0
+l (i < 100) { m["key" + str(i)] = i i = i + 1 }
+i (z.len(m) == 100) { z.o("PASS:map_40_large") } e { z.o("FAIL:map_40_large len=" + str(z.len(m))) }

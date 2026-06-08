@@ -1,0 +1,12 @@
+#alphabet<en>
+x "../../stdlib/io.abc"
+5 ok = 1
+t {
+  print("io test")
+  println("line test")
+} h (0 e) { ok = 0 }
+i (ok) {
+  z.o("PASS: io")
+} e {
+  z.o("FAIL: io")
+}

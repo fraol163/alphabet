@@ -1,0 +1,69 @@
+#alphabet<de>
+// === LOOP TESTS ===
+// S1: basic counter
+5 sum_a = 0
+5 idx_a = 0
+schleife (idx_a < 5) { sum_a = sum_a + idx_a idx_a = idx_a + 1 }
+wenn (sum_a == 10) { z.o("PASS:loop_s1") }
+// S2: never executes
+5 val_a = 10
+schleife (val_a < 5) { z.o("FAIL:loop_s2") }
+z.o("PASS:loop_s2")
+// S3: with break
+5 num_a = 0
+schleife (true) { wenn (num_a == 3) { brechen } num_a = num_a + 1 }
+wenn (num_a == 3) { z.o("PASS:loop_s3") }
+// S4: with continue
+13 evens = []
+5 idx_b = 0
+schleife (idx_b < 10) { idx_b = idx_b + 1 wenn (idx_b % 2 != 0) { fortsetzen } z.append(evens, idx_b) }
+wenn (z.len(evens) == 5) { z.o("PASS:loop_s4") }
+// S5: break and continue together
+13 res = []
+5 idx_c = 0
+schleife (idx_c < 10) { idx_c = idx_c + 1 wenn (idx_c == 3) { fortsetzen } wenn (idx_c == 8) { brechen } z.append(res, idx_c) }
+wenn (z.len(res) == 6) { z.o("PASS:loop_s5") }
+// S6: nested 2-level
+5 product = 0
+5 idx_d = 0
+schleife (idx_d < 3) { 5 idx_e = 0 schleife (idx_e < 3) { product = product + 1 idx_e = idx_e + 1 } idx_d = idx_d + 1 }
+wenn (product == 9) { z.o("PASS:loop_s6") }
+// S7: nested 3-level
+5 cnt3 = 0
+5 idx_f = 0
+schleife (idx_f < 2) { 5 idx_g = 0 schleife (idx_g < 2) { 5 idx_h = 0 schleife (idx_h < 2) { cnt3 = cnt3 + 1 idx_h = idx_h + 1 } idx_g = idx_g + 1 } idx_f = idx_f + 1 }
+wenn (cnt3 == 8) { z.o("PASS:loop_s7") }
+// S8: return inside
+methode 11 find_first() { 5 idx_i = 0 schleife (idx_i < 10) { wenn (idx_i == 5) { r idx_i } idx_i = idx_i + 1 } r -1 }
+wenn (find_first() == 5) { z.o("PASS:loop_s8") }
+// S9: with if inside
+5 odds = 0
+5 idx_j = 0
+schleife (idx_j < 10) { wenn (idx_j % 2 == 1) { odds = odds + 1 } idx_j = idx_j + 1 }
+wenn (odds == 5) { z.o("PASS:loop_s9") }
+// S10: modifying external
+5 ext = 0
+schleife (ext < 5) { ext = ext + 1 }
+wenn (ext == 5) { z.o("PASS:loop_s10") }
+// S11: string concat
+12 result = ""
+5 idx_k = 0
+schleife (idx_k < 3) { result = result + z.tostr(idx_k) idx_k = idx_k + 1 }
+wenn (result == "012") { z.o("PASS:loop_s11") }
+// S12: building list
+13 built = []
+5 idx_l = 0
+schleife (idx_l < 5) { z.append(built, idx_l * 2) idx_l = idx_l + 1 }
+wenn (z.len(built) == 5) { z.o("PASS:loop_s12") }
+// S13: function call condition
+5 counter = 0
+methode 11 should_go() { r counter < 3 }
+schleife (should_go()) { counter = counter + 1 }
+wenn (counter == 3) { z.o("PASS:loop_s13") }
+// S14: infinite with break
+5 inf = 0
+schleife (true) { inf = inf + 1 wenn (inf >= 100) { brechen } }
+wenn (inf == 100) { z.o("PASS:loop_s14") }
+// S15: top level with f-string
+5 tmp = 0
+schleife (tmp < 1) { z.i(f"PASS:loop_s15 tmp={tmp}") tmp = tmp + 1 }

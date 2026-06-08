@@ -443,7 +443,7 @@ TEST_CASE("parser map literal", "[parser]")
 
 TEST_CASE("parser index access", "[parser]")
 {
-    std::string source = "#alphabet<test>\na[0]";
+    std::string source = "#alphabet<test>\nmyvar[0]";
     auto statements = parse_source(source);
 
     auto *expr = dynamic_cast<ExpressionStmt *>(statements[0].get());

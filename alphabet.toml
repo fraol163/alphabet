@@ -1,0 +1,37 @@
+# Alphabet Language Project Configuration
+# Place this file in your project root
+
+[project]
+name = "my-project"
+version = "1.0.0"
+description = "An Alphabet Language project"
+author = ""
+license = "MIT"
+
+[build]
+# Source directory (default: current directory)
+source_dir = "."
+# Output directory for compiled bytecode
+output_dir = "build"
+# Entry point file
+entry = "main.abc"
+# Stdlib path (auto-detected if empty)
+stdlib_path = ""
+
+[dependencies]
+# Format: name = "path" or name = "git:url"
+# Example:
+# math_utils = "./libs/math_utils"
+# http = "git:https://github.com/user/alphabet-http"
+
+[lint]
+# Enable strict mode by default
+strict = false
+# Max line length (0 = no limit)
+max_line_length = 120
+
+[test]
+# Test directory
+test_dir = "tests"
+# Test file pattern
+test_pattern = "test_*.abc"

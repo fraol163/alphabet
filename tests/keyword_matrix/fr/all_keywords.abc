@@ -1,0 +1,305 @@
+#alphabet<fr>
+// COMPLETE KEYWORD TEST: FR
+5 v1 = 10
+si (v1 == 10) { o("P:if1") }
+si (v1 == 20) { o("F") } sinon { o("P:if2") }
+si (v1 > 5) { o("P:if3") }
+si (v1 < 5) { o("F") } sinon { o("P:if4") }
+si (v1 > 5 && v1 < 20) { o("P:if5") }
+si (v1 == 5 || v1 == 10) { o("P:if6") }
+si (!(v1 == 20)) { o("P:if7") }
+si (v1 > 5) { si (v1 > 8) { o("P:if8") } }
+12 nm = "hello"
+si (nm == "hello") { o("P:if9") }
+13 lt = [1,2,3]
+si (z.len(lt) == 3) { o("P:if10") }
+14 mp = {"k":100}
+si (z.has(mp,"k")) { o("P:if11") }
+méthode 5 ispos(5 num) { r num > 0 }
+si (ispos(5)) { o("P:if12") }
+si (v1 == 10) { o(f"P:if13 v={v1}") }
+si (v1 == 10) o("P:if14")
+méthode 5 testif() { si (1==1) { r 1 } r 0 }
+si (testif()==1) { o("P:if15") }
+
+si (v1==10) { o("P:e1") } sinon { o("F") }
+si (v1==20) { o("F") } sinon { o("P:e2") }
+5 d1 = 15
+si (d1<10) { o("lo") } sinon si (d1<20) { o("P:e3") } sinon { o("hi") }
+si (v1==10) { si (v1>5) { o("P:e4") } }
+si (v1==20) { o("no") } sinon { si (v1==10) { o("P:e5") } }
+méthode 5 tret(5 num) { si (num>0) { r 1 } sinon { r 0 } }
+si (tret(5)==1 && tret(-1)==0) { o("P:e6") }
+5 res = 0
+si (v1==10) { res=1 } sinon { res=2 }
+si (res==1) { o("P:e7") }
+13 la = [1,2]
+z.append(la,5)
+si (z.len(la)==3) { o("P:e8") }
+classe ECls { public méthode 5 ck(5 num) { si (num>0) { r 1 } sinon { r -1 } } }
+15 oc = num ECls()
+si (oc.ck(5)==1 && oc.ck(-1)==-1) { o("P:e9") }
+si (v1==10) { o(f"P:e10 v={v1}") } sinon { o("F") }
+
+5 s1=0 5 ix=0
+boucle (ix<5) { s1=s1+ix ix=ix+1 }
+si (s1==10) { o("P:l1") }
+5 g1=10
+boucle (g1<5) { o("F") }
+o("P:l2")
+5 bv=0
+boucle (true) { bv=bv+1 si (bv==5) { rompre } }
+si (bv==5) { o("P:l3") }
+13 ev=[] 5 ci=0
+boucle (ci<10) { ci=ci+1 si (ci%2!=0) { continuer } z.append(ev,ci) }
+si (z.len(ev)==5) { o("P:l4") }
+13 rx=[] 5 ri=0
+boucle (ri<10) { ri=ri+1 si (ri==3) { continuer } si (ri==8) { rompre } z.append(rx,ri) }
+si (z.len(rx)==6) { o("P:l5") }
+5 ps=0 5 pi=0
+boucle (pi<3) { 5 pj=0 boucle (pj<3) { ps=ps+1 pj=pj+1 } pi=pi+1 }
+si (ps==9) { o("P:l6") }
+5 c3=0 5 p1=0
+boucle (p1<2) { 5 p2=0 boucle (p2<2) { 5 p3=0 boucle (p3<2) { c3=c3+1 p3=p3+1 } p2=p2+1 } p1=p1+1 }
+si (c3==8) { o("P:l7") }
+méthode 5 ff() { 5 fi=0 boucle (fi<10) { si (fi==5) { r fi } fi=fi+1 } r -1 }
+si (ff()==5) { o("P:l8") }
+5 od=0 5 oi=0
+boucle (oi<10) { si (oi%2==1) { od=od+1 } oi=oi+1 }
+si (od==5) { o("P:l9") }
+5 ext=0
+boucle (ext<5) { ext=ext+1 }
+si (ext==5) { o("P:l10") }
+12 rs="" 5 si2=0
+boucle (si2<3) { rs=rs+z.tostr(si2) si2=si2+1 }
+si (rs=="012") { o("P:l11") }
+13 bd=[] 5 bi=0
+boucle (bi<5) { z.append(bd,bi*2) bi=bi+1 }
+si (z.len(bd)==5) { o("P:l12") }
+5 cn=0
+méthode 5 sgo() { r cn<3 }
+boucle (sgo()) { cn=cn+1 }
+si (cn==3) { o("P:l13") }
+5 inf=0
+boucle (true) { inf=inf+1 si (inf>=100) { rompre } }
+si (inf==100) { o("P:l14") }
+5 tp=0
+boucle (tp<1) { o(f"P:l15 tp={tp}") tp=tp+1 }
+
+5 bv2=0
+boucle (true) { bv2=bv2+1 si (bv2==5) { rompre } }
+si (bv2==5) { o("P:b1") }
+5 bv3=0
+boucle (true) { bv3=bv3+1 si (bv3==3) { si (true) { rompre } } }
+si (bv3==3) { o("P:b2") }
+5 inn=0 5 ot=0
+boucle (ot<5) { inn=0 boucle (true) { inn=inn+1 si (inn==2) { rompre } } ot=ot+1 }
+si (inn==2 && ot==5) { o("P:b3") }
+5 bv4=0
+boucle (bv4<10) { bv4=bv4+1 rompre }
+si (bv4==1) { o("P:b4") }
+13 nm2=[1,2,3,4,5] 5 ix2=0 5 fv=0
+boucle (ix2<z.len(nm2)) { si (nm2[ix2]==3) { fv=nm2[ix2] rompre } ix2=ix2+1 }
+si (fv==3) { o("P:b5") }
+5 bc=0 5 ba=0
+boucle (bc<10) { ba=ba+bc bc=bc+1 si (bc==4) { rompre } }
+si (bc==4 && ba==6) { o("P:b6") }
+5 md=1 5 bo=0
+boucle (true) { si (md==1) { bo=10 rompre } si (md==2) { bo=20 rompre } bo=30 rompre }
+si (bo==10) { o("P:b7") }
+5 bk=0 5 bs=0
+boucle (bk<5) { bs=bs+bk bk=bk+1 si (bk==3) { rompre } }
+si (bs==3) { o("P:b8") }
+
+13 kp=[] 5 ci2=0
+boucle (ci2<5) { ci2=ci2+1 si (ci2==3) { continuer } z.append(kp,ci2) }
+si (z.len(kp)==4) { o("P:k1") }
+13 kr=[] 5 cj=0
+boucle (cj<5) { cj=cj+1 si (cj==3) { si (true) { continuer } } z.append(kr,cj) }
+si (z.len(kr)==4) { o("P:k2") }
+5 ic=0 5 ck=0
+boucle (ck<3) { ic=0 5 cl=0 boucle (cl<3) { cl=cl+1 si (cl==2) { continuer } ic=ic+1 } ck=ck+1 }
+si (ic==2) { o("P:k3") }
+13 ce=[] 5 cv=0
+boucle (cv<6) { cv=cv+1 si (cv%2!=0) { continuer } z.append(ce,cv) }
+si (z.len(ce)==3) { o("P:k4") }
+13 cq=[] 5 cw=0
+boucle (cw<8) { cw=cw+1 si (cw%3==0) { continuer } z.append(cq,cw) }
+si (z.len(cq)==5) { o("P:k5") }
+13 cm=[] 5 cx=0
+boucle (cx<10) { cx=cx+1 si (cx==3) { continuer } si (cx==8) { rompre } z.append(cm,cx) }
+si (z.len(cm)==6) { o("P:k6") }
+méthode 5 cnz() { 13 dt=[0,1,0,2,0,3] 5 ct=0 5 di=0 boucle (di<z.len(dt)) { si (dt[di]==0) { di=di+1 continuer } ct=ct+1 di=di+1 } r ct }
+si (cnz()==3) { o("P:k7") }
+
+méthode 5 ri1() { retour 42 }
+si (ri1()==42) { o("P:r1") }
+méthode 12 rs1() { retour "hello" }
+si (rs1()=="hello") { o("P:r2") }
+méthode 8 rf1() { retour 3.14 }
+si (z.type(rf1())=="number") { o("P:r3") }
+méthode 5 rl1() { retour [1,2,3] }
+13 rlv=rl1()
+si (z.len(rlv)==3) { o("P:r4") }
+méthode 5 abs1(5 num) { si (num>=0) { retour num } sinon { retour 0-num } }
+si (abs1(5)==5 && abs1(-5)==5) { o("P:r5") }
+méthode 5 flp(5 tgt) { 5 fi=0 boucle (fi<10) { si (fi==tgt) { retour fi } fi=fi+1 } retour -1 }
+si (flp(7)==7) { o("P:r6") }
+méthode 5 fact(5 num) { si (num<=1) { retour 1 } retour num*fact(num-1) }
+si (fact(5)==120) { o("P:r7") }
+méthode 5 mret(5 num) { si (num>0) { retour 1 } si (num==0) { retour 0 } retour -1 }
+si (mret(5)==1 && mret(0)==0 && mret(-5)==-1) { o("P:r8") }
+méthode 5 clc(5 a, 5 b) { retour a*b+a-b }
+si (clc(3,2)==7) { o("P:r9") }
+méthode 5 dbl2(5 num) { retour num*2 }
+méthode 5 trp(5 num) { retour dbl2(num)+num }
+si (trp(5)==15) { o("P:r10") }
+classe RCls { public méthode 5 gv() { retour 99 } }
+15 rco = num RCls()
+si (rco.gv()==99) { o("P:r11") }
+méthode 5 trt() { essayer { retour 1 } attraper (15 err) { retour -1 } }
+si (trt()==1) { o("P:r12") }
+
+méthode 5 gf() { retour 5 }
+si (gf()==5) { o("P:m1") }
+méthode 5 dbl3(5 num) { retour num*2 }
+si (dbl3(3)==6) { o("P:m2") }
+méthode 5 add3(5 a, 5 b, 5 c2) { retour a+b+c2 }
+si (add3(1,2,3)==6) { o("P:m3") }
+méthode 12 grt(12 nm) { retour "hello "+nm }
+si (grt("world")=="hello world") { o("P:m4") }
+méthode 5 sq2(5 num) { retour num*num }
+méthode 5 ssq(5 a, 5 b) { retour sq2(a)+sq2(b) }
+si (ssq(3,4)==25) { o("P:m5") }
+méthode 5 fib2(5 num) { si (num<=1) { retour num } retour fib2(num-1)+fib2(num-2) }
+si (fib2(10)==55) { o("P:m6") }
+méthode 5 wl() { 5 la2=10 5 lb2=20 retour la2+lb2 }
+si (wl()==30) { o("P:m7") }
+méthode 5 mx2(5 a, 5 b) { si (a>b) { retour a } sinon { retour b } }
+si (mx2(5,10)==10 && mx2(10,5)==10) { o("P:m8") }
+méthode 5 stn(5 num) { 5 ss2=0 5 si2=0 boucle (si2<num) { ss2=ss2+si2 si2=si2+1 } retour ss2 }
+si (stn(5)==10) { o("P:m9") }
+méthode 5 nr() { 5 xv=10 }
+nr()
+o("P:m10")
+
+classe Empty { }
+o("P:c1")
+classe Greeter { public méthode 12 hello() { retour "hello" } }
+15 gg = num Greeter()
+si (gg.hello()=="hello") { o("P:c2") }
+classe Calc { public méthode 5 add(5 a, 5 b) { retour a+b } public méthode 5 mul(5 a, 5 b) { retour a*b } }
+15 ccc = num Calc()
+si (ccc.add(2,3)==5 && ccc.mul(2,3)==6) { o("P:c3") }
+classe Pt { public 5 px=0 public 5 py=0 }
+15 ptt = num Pt()
+ptt.px=10 ptt.py=20
+si (ptt.px==10 && ptt.py==20) { o("P:c4") }
+classe Cntr { public 5 cv=0 public méthode 5 inc() { cv=cv+1 } public méthode 5 get() { retour cv } }
+15 ccc2 = num Cntr()
+ccc2.inc() ccc2.inc() ccc2.inc()
+si (ccc2.get()==3) { o("P:c5") }
+classe Cfg { public 12 cn="default" public 5 cv2=42 }
+15 cfgg = num Cfg()
+si (cfgg.cn=="default" && cfgg.cv2==42) { o("P:c6") }
+classe Bsk { public 13 items=[] public méthode 5 add(5 it) { z.append(items,it) } public méthode 5 cnt() { retour z.len(items) } }
+15 bsk = num Bsk()
+bsk.add(10) bsk.add(20)
+si (bsk.cnt()==2) { o("P:c7") }
+classe Str { public 14 sd={"k":"v"} }
+15 stt = num Str()
+si (stt.sd["k"]=="v") { o("P:c8") }
+15 a1=num Greeter() 15 a2=num Greeter()
+si (a1.hello()==a2.hello()) { o("P:c9") }
+classe C2 { public 5 cv3=0 public méthode 5 i2() { cv3=cv3+1 } public méthode 5 g2() { retour cv3 } }
+15 cc3 = num C2()
+cc3.i2() cc3.i2()
+si (cc3.g2()==2) { o("P:c10") }
+
+classe Mo { public 5 ov=0 }
+15 o1=num Mo()
+o("P:n1")
+o1.ov=42
+si (o1.ov==42) { o("P:n2") }
+15 o2=num Mo()
+o2.ov=99
+si (o2.ov==99) { o("P:n3") }
+méthode 5 gov(15 ob) { retour ob.ov }
+si (gov(o1)==42) { o("P:n4") }
+méthode 15 mkob() { 15 ob3=num Mo() ob3.ov=77 retour ob3 }
+15 o3=mkob()
+si (o3.ov==77) { o("P:n5") }
+15 oa=num Mo() 15 ob4=num Mo()
+oa.ov=1 ob4.ov=2
+si (oa.ov==1 && ob4.ov==2) { o("P:n6") }
+13 nl2=[10,20,30]
+si (z.len(nl2)==3) { o("P:n7") }
+14 nm4={"a":1,"b":2}
+si (z.len(nm4)==2) { o("P:n8") }
+
+essayer { o("P:t1") } attraper (15 err) { o("F") }
+essayer { z.t("x") } attraper (15 err) { o("P:t2") }
+essayer { z.t("oops") } attraper (15 err) { o("P:t3") }
+essayer { essayer { z.t("i") } attraper (15 err) { o("P:t4") } } attraper (15 err) { }
+méthode 5 trt2() { essayer { retour 1 } attraper (15 err) { retour -1 } }
+si (trt2()==1) { o("P:t5") }
+méthode 5 wt() { z.t("e") }
+essayer { wt() } attraper (15 err) { o("P:t6") }
+méthode 5 sop() { essayer { retour 42 } attraper (15 err) { retour 0 } }
+si (sop()==42) { o("P:t7") }
+classe TC { public méthode 5 sf() { essayer { retour 100 } attraper (15 err) { retour 0 } } }
+15 tcc = num TC()
+si (tcc.sf()==100) { o("P:t8") }
+
+5 mx2=2
+correspondre (mx2) { 1: o("one") 2: o("P:q1") 3: o("three") }
+5 my2=99
+correspondre (my2) { 1: o("no") e: o("P:q2") }
+5 mz2=3 5 mf2=0
+correspondre (mz2) { 1: mf2=10 2: mf2=20 3: mf2=30 e: mf2=0 }
+si (mf2==30) { o("P:q3") }
+méthode 5 gmv(5 num) { correspondre (num) { 1: retour 10 2: retour 20 e: retour 0 } }
+si (gmv(1)==10 && gmv(2)==20) { o("P:q4") }
+méthode 5 mrt(5 num) { correspondre (num) { 1: retour 1 2: retour 2 e: retour 0 } }
+si (mrt(1)==1) { o("P:q5") }
+5 mm2=2 5 mr2=0
+correspondre (mm2) { 1: mr2=1 2: mr2=22 e: mr2=0 }
+si (mr2==22) { o("P:q6") }
+5 ms2=0 5 mv3=0
+correspondre (mv3) { 0: boucle (ms2<5) { ms2=ms2+1 } e: ms2=-1 }
+si (ms2==5) { o("P:q7") }
+
+classe Animal { public 12 an="" public méthode 12 sp() { retour "..." } }
+classe Dog ^ Animal { public méthode 12 sp() { retour "woof" } }
+15 dog=num Dog() dog.an="Rex"
+si (dog.sp()=="woof" && dog.an=="Rex") { o("P:x1") }
+15 an2=num Animal() an2.an="Gen"
+si (an2.an=="Gen") { o("P:x2") }
+classe Cat ^ Animal { public méthode 12 sp() { retour "meow" } }
+15 cat=num Cat()
+si (cat.sp()=="meow") { o("P:x3") }
+classe Rob ^ Animal { public méthode 5 bp() { retour 42 } }
+15 rb=num Rob()
+si (rb.bp()==42 && rb.sp()=="...") { o("P:x4") }
+classe Pet ^ Animal { public 5 loy=100 }
+15 pet=num Pet()
+si (pet.loy==100) { o("P:x5") }
+classe Bas { public méthode 5 bf() { retour 1 } }
+classe Mid2 ^ Bas { public méthode 5 mf3() { retour 2 } }
+classe Top2 ^ Mid2 { public méthode 5 tf() { retour 3 } }
+15 t2=num Top2()
+si (t2.bf()==1 && t2.mf3()==2 && t2.tf()==3) { o("P:x6") }
+
+exporter efn
+méthode 5 efn() { retour 42 }
+si (efn()==42) { o("P:@1") }
+exporter EV
+5 EV=99
+si (EV==99) { o("P:@2") }
+o("P:@3")
+
+12 pr="enter"
+o("P:z.i1")
+o("P:z.i2")
+
+o("DONE_fr_121")

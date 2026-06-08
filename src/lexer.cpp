@@ -4,8 +4,7 @@
 
 namespace alphabet {
 
-const char *token_type_to_string(TokenType type)
-{
+const char* token_type_to_string(TokenType type) {
     switch (type) {
     case TokenType::IF:
         return "IF";
@@ -103,6 +102,8 @@ const char *token_type_to_string(TokenType type)
         return "COMMA";
     case TokenType::COLON:
         return "COLON";
+    case TokenType::QUESTION_DOT:
+        return "QUESTION_DOT";
     case TokenType::EOF_TOKEN:
         return "EOF";
     default:
@@ -110,12 +111,9 @@ const char *token_type_to_string(TokenType type)
     }
 }
 
-Lexer::Lexer(std::string_view source, bool skip_header) : source_(source), skip_header_(skip_header)
-{
-}
+Lexer::Lexer(std::string_view source, bool skip_header) : source_(source), skip_header_(skip_header) {}
 
-std::vector<Token> Lexer::scan_tokens()
-{
+std::vector<Token> Lexer::scan_tokens() {
     if (source_.size() >= 2 && source_[0] == '#' && source_[1] == '!') {
         while (peek() != '\n' && !is_at_end()) {
             advance();
@@ -139,8 +137,7 @@ std::vector<Token> Lexer::scan_tokens()
     return tokens_;
 }
 
-void Lexer::validate_header()
-{
+void Lexer::validate_header() {
     std::string_view header_source = source_.substr(current_);
 
     if (header_source.size() < 12) {
@@ -160,6 +157,12 @@ void Lexer::validate_header()
     size_t lang_start = prefix.size();
     size_t lang_length = close_pos - lang_start;
     language_ = std::string(header_source.substr(lang_start, lang_length));
+    if (language_.find("strict") != std::string::npos) {
+        strict_mode_ = true;
+        auto pos = language_.find(" strict");
+        if (pos != std::string::npos)
+            language_ = language_.substr(0, pos);
+    }
 
     size_t newline_pos = header_source.find('\n', close_pos);
     if (newline_pos != std::string_view::npos) {
@@ -170,13 +173,11 @@ void Lexer::validate_header()
     }
 }
 
-bool Lexer::is_at_end() const
-{
+bool Lexer::is_at_end() const {
     return current_ >= source_.size();
 }
 
-void Lexer::scan_token()
-{
+void Lexer::scan_token() {
     char c = advance();
 
     switch (c) {
@@ -205,7 +206,11 @@ void Lexer::scan_token()
         add_token(TokenType::COLON);
         break;
     case '.':
-        add_token(TokenType::DOT);
+        if (match('.')) {
+            add_token(TokenType::DOTDOT);
+        } else {
+            add_token(TokenType::DOT);
+        }
         break;
     case '-':
         add_token(TokenType::MINUS);
@@ -223,7 +228,10 @@ void Lexer::scan_token()
         add_token(TokenType::EXTENDS);
         break;
     case '@':
-        add_token(TokenType::AT);
+        add_token(TokenType::EXPORT);
+        break;
+    case '?':
+        add_token(match('.') ? TokenType::QUESTION_DOT : TokenType::QUESTION);
         break;
 
     case '!':
@@ -244,12 +252,21 @@ void Lexer::scan_token()
 
     case '/':
         if (match('/')) {
-            while (peek() != '\n' && !is_at_end()) {
-                advance();
+            if (match('/')) {
+                // I21: Docstring (/// comment)
+                std::string doc;
+                while (peek() != '\n' && !is_at_end()) {
+                    doc += advance();
+                }
+                // Store as a special token
+                string_pool_.push_back(doc);
+                tokens_.emplace_back(TokenType::STRING, string_pool_.back(), 0, line_);
+            } else {
+                while (peek() != '\n' && !is_at_end()) {
+                    advance();
+                }
             }
-        }
-        else if (match('*')) {
-
+        } else if (match('*')) {
             while (!is_at_end()) {
                 if (peek() == '*' && peek_next() == '/') {
                     advance();
@@ -258,8 +275,7 @@ void Lexer::scan_token()
                 }
                 advance();
             }
-        }
-        else {
+        } else {
             add_token(TokenType::SLASH);
         }
         break;
@@ -287,8 +303,7 @@ void Lexer::scan_token()
     case '\"':
         if (peek() == '"' && peek_next() == '"') {
             multi_line_string();
-        }
-        else {
+        } else {
             string();
         }
         break;
@@ -296,15 +311,12 @@ void Lexer::scan_token()
     default:
         if (std::isdigit(static_cast<unsigned char>(c))) {
             number();
-        }
-        else if (std::isalpha(static_cast<unsigned char>(c)) ||
-                 static_cast<unsigned char>(c) > 127) {
-
+        } else if (std::isalpha(static_cast<unsigned char>(c)) || c == '_' || static_cast<unsigned char>(c) > 127) {
             if (c == 'f' && peek() == '"') {
                 fstring();
-            }
-            else {
-
+            } else if (c == 'r' && peek() == '\"') {
+                raw_string();
+            } else {
                 identifier();
             }
         }
@@ -312,35 +324,30 @@ void Lexer::scan_token()
     }
 }
 
-char Lexer::advance()
-{
+char Lexer::advance() {
     char c = source_[current_++];
     if (c == '\n') {
         ++line_;
         column_ = 0;
-    }
-    else {
+    } else {
         ++column_;
     }
     return c;
 }
 
-char Lexer::peek() const
-{
+char Lexer::peek() const {
     if (is_at_end())
         return '\0';
     return source_[current_];
 }
 
-char Lexer::peek_next() const
-{
+char Lexer::peek_next() const {
     if (current_ + 1 >= source_.size())
         return '\0';
     return source_[current_ + 1];
 }
 
-bool Lexer::match(char expected)
-{
+bool Lexer::match(char expected) {
     if (is_at_end())
         return false;
     if (source_[current_] != expected)
@@ -349,14 +356,12 @@ bool Lexer::match(char expected)
     return true;
 }
 
-void Lexer::add_token(TokenType type, double literal)
-{
+void Lexer::add_token(TokenType type, double literal) {
     std::string_view lexeme = source_.substr(start_, current_ - start_);
     tokens_.emplace_back(type, lexeme, literal, line_, start_column_);
 }
 
-void Lexer::string()
-{
+void Lexer::string() {
     std::string processed;
     bool has_escapes = false;
 
@@ -390,8 +395,7 @@ void Lexer::string()
                 processed += escaped;
                 break;
             }
-        }
-        else {
+        } else {
             processed += advance();
         }
     }
@@ -404,15 +408,13 @@ void Lexer::string()
     if (has_escapes) {
         string_pool_.push_back(std::move(processed));
         tokens_.emplace_back(TokenType::STRING, string_pool_.back(), 0, line_, start_column_);
-    }
-    else {
+    } else {
         std::string_view value = source_.substr(start_ + 1, current_ - start_ - 2);
         tokens_.emplace_back(TokenType::STRING, value, 0, line_, start_column_);
     }
 }
 
-void Lexer::fstring()
-{
+void Lexer::fstring() {
     advance(); // skip opening quote
 
     // Collect the entire f-string template as-is
@@ -430,8 +432,7 @@ void Lexer::fstring()
             }
             template_text += '{';
             brace_depth++;
-        }
-        else if (peek() == '}') {
+        } else if (peek() == '}') {
             advance();
             if (peek() == '}') {
                 advance();
@@ -440,16 +441,14 @@ void Lexer::fstring()
             }
             template_text += '}';
             brace_depth--;
-        }
-        else if (peek() == '\\') {
+        } else if (peek() == '\\') {
             advance();
             if (is_at_end())
                 break;
             char escaped = advance();
             template_text += '\\';
             template_text += escaped;
-        }
-        else {
+        } else {
             template_text += advance();
         }
     }
@@ -463,8 +462,24 @@ void Lexer::fstring()
     tokens_.emplace_back(TokenType::FSTRING, string_pool_.back(), 0, line_, start_column_);
 }
 
-void Lexer::multi_line_string()
-{
+void Lexer::raw_string() {
+    advance(); // skip opening quote
+
+    std::string raw;
+    while (peek() != '"' && !is_at_end()) {
+        raw += advance();
+    }
+
+    if (is_at_end())
+        return;
+
+    advance(); // skip closing quote
+
+    string_pool_.push_back(std::move(raw));
+    tokens_.emplace_back(TokenType::STRING, string_pool_.back(), 0, line_, start_column_);
+}
+
+void Lexer::multi_line_string() {
     advance();
     advance();
 
@@ -504,8 +519,7 @@ void Lexer::multi_line_string()
                 processed += escaped;
                 break;
             }
-        }
-        else {
+        } else {
             char c = advance();
             if (c == '\n')
                 ++line_;
@@ -517,8 +531,7 @@ void Lexer::multi_line_string()
     tokens_.emplace_back(TokenType::STRING, string_pool_.back(), 0, line_, start_column_);
 }
 
-void Lexer::number()
-{
+void Lexer::number() {
     while (std::isdigit(static_cast<unsigned char>(peek()))) {
         advance();
     }
@@ -534,15 +547,13 @@ void Lexer::number()
     double value = 0.0;
     try {
         value = std::stod(std::string(num_str));
-    }
-    catch (const std::exception &) {
+    } catch (const std::exception&) {
         value = 0.0;
     }
     tokens_.emplace_back(TokenType::NUMBER, num_str, value, line_);
 }
 
-void Lexer::identifier()
-{
+void Lexer::identifier() {
     while (std::isalnum(static_cast<unsigned char>(peek())) || peek() == '_' ||
            static_cast<unsigned char>(peek()) > 127) {
         advance();
@@ -565,9 +576,14 @@ void Lexer::identifier()
         std::string translated = translate_keyword(text_str, language_);
 
         if (translated != text_str) {
-
             if (translated == "\x80") {
                 add_token(TokenType::TOK_CONST);
+                return;
+            }
+            if (translated == "z.o") {
+                tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
+                tokens_.emplace_back(TokenType::DOT, std::string_view("."), 0, line_);
+                tokens_.emplace_back(TokenType::IDENTIFIER, std::string_view("o"), 0, line_);
                 return;
             }
             if (translated == "z") {
@@ -575,7 +591,6 @@ void Lexer::identifier()
                 return;
             }
             if (translated == "z.i") {
-
                 tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
                 return;
             }
@@ -596,9 +611,14 @@ void Lexer::identifier()
 
     std::string translated = translate_keyword(text_str, language_);
     if (translated != text_str) {
-
         if (translated == "\x80") {
             add_token(TokenType::TOK_CONST);
+            return;
+        }
+        if (translated == "z.o") {
+            tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
+            tokens_.emplace_back(TokenType::DOT, std::string_view("."), 0, line_);
+            tokens_.emplace_back(TokenType::IDENTIFIER, std::string_view("o"), 0, line_);
             return;
         }
         if (translated == "z") {
@@ -621,14 +641,12 @@ void Lexer::identifier()
 
     if (text.size() == 1 && is_keyword_char(text[0])) {
         add_token(keyword_type(text[0]));
-    }
-    else {
+    } else {
         add_token(TokenType::IDENTIFIER);
     }
 }
 
-bool Lexer::is_keyword_char(char c) const
-{
+bool Lexer::is_keyword_char(char c) const {
     switch (c) {
     case 'i':
     case 'e':
@@ -655,8 +673,7 @@ bool Lexer::is_keyword_char(char c) const
     }
 }
 
-TokenType Lexer::keyword_type(char c) const
-{
+TokenType Lexer::keyword_type(char c) const {
     switch (c) {
     case 'i':
         return TokenType::IF;
@@ -701,8 +718,7 @@ TokenType Lexer::keyword_type(char c) const
     }
 }
 
-TokenType Lexer::previous_token_type() const
-{
+TokenType Lexer::previous_token_type() const {
     if (tokens_.empty())
         return TokenType::EOF_TOKEN;
     return tokens_.back().type;

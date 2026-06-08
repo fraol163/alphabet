@@ -1,0 +1,49 @@
+#alphabet<es>
+// === RETURN TESTS ===
+// S1: int value
+método 11 ret_int() { r 42 }
+si (ret_int() == 42) { z.o("PASS:ret_s1") }
+// S2: string value
+método 12 ret_str() { r "hello" }
+si (ret_str() == "hello") { z.o("PASS:ret_s2") }
+// S3: float value
+método 8 ret_float() { r 3.14 }
+si (z.type(ret_float()) == "number") { z.o("PASS:ret_s3") }
+// S4: bool value
+método 11 ret_bool() { r true }
+si (ret_bool()) { z.o("PASS:ret_s4") }
+// S5: list
+13 ret_list() { r [1, 2, 3] }
+13 rl = ret_list()
+si (z.len(rl) == 3) { z.o("PASS:ret_s5") }
+// S6: map
+14 ret_map() { r {"a": 1} }
+14 rm = ret_map()
+si (z.has(rm, "a")) { z.o("PASS:ret_s6") }
+// S7: no value
+método 11 ret_null() { }
+ret_null()
+z.o("PASS:ret_s7")
+// S8: from if/else
+método 11 abs_val(11 num_a) { si (num_a >= 0) { r num_a } sino { r 0 - num_a } }
+si (abs_val(5) == 5 && abs_val(-5) == 5) { z.o("PASS:ret_s8") }
+// S9: from loop
+método 11 find_in_loop(11 target) { 5 idx_a = 0 bucle (idx_a < 10) { si (idx_a == target) { r idx_a } idx_a = idx_a + 1 } r -1 }
+si (find_in_loop(7) == 7) { z.o("PASS:ret_s9") }
+// S10: recursive factorial
+método 11 fact(11 num_a) { si (num_a <= 1) { r 1 } r num_a * fact(num_a - 1) }
+si (fact(5) == 120) { z.o("PASS:ret_s10") }
+// S11: multiple returns
+método 11 multi_ret(11 num_a) { si (num_a > 0) { r 1 } si (num_a == 0) { r 0 } r -1 }
+si (multi_ret(5) == 1 && multi_ret(0) == 0 && multi_ret(-5) == -1) { z.o("PASS:ret_s11") }
+// S12: return expression
+método 11 calc(11 num_a, 11 num_b) { r num_a * num_b + num_a - num_b }
+si (calc(3, 2) == 7) { z.o("PASS:ret_s12") }
+// S13: return function call
+método 11 double_it(11 num_a) { r num_a * 2 }
+método 11 triple_it(11 num_a) { r double_it(num_a) + num_a }
+si (triple_it(5) == 15) { z.o("PASS:ret_s13") }
+// S14: in class method
+clase RetCls { público método 11 get_val() { r 99 } }
+15 rc = n RetCls()
+si (rc.get_val() == 99) { z.o("PASS:ret_s14") }

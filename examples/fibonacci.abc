@@ -1,0 +1,13 @@
+#alphabet<en>
+/// Fibonacci sequence calculator
+/// Demonstrates: recursion, functions, loops
+
+m 5 fib(5 num) {
+  i (num <= 1) { r num }
+  r fib(num - 1) + fib(num - 2)
+}
+
+z.o("=== Fibonacci Sequence ===")
+l (5 i = 0 : i < 20 : i = i + 1) {
+  z.o("fib(" + z.tostr(i) + ") = " + z.tostr(fib(i)))
+}

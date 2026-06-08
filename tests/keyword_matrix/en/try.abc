@@ -1,0 +1,31 @@
+#alphabet<en>
+// === TRY / HANDLE TESTS ===
+// S1: try succeeds
+t { z.o("PASS:try_s1") } h (error) { z.o("FAIL:try_s1") }
+// S2: try throws, handle catches
+t { z.i("before") z.t("custom error") z.o("FAIL:try_s2") } h (error) { z.o("PASS:try_s2") }
+// S3: error var accessible
+t { z.t("oops") } h (error) { z.o("PASS:try_s3") }
+// S4: nested try
+t { t { z.t("inner") } h (error) { z.o("PASS:try_s4") } } h (error) { }
+// S5: return in try
+m 11 try_ret() { t { r 1 } h (error) { r -1 } }
+i (try_ret() == 1) { z.o("PASS:try_s5") }
+// S6: function call throws
+m 11 will_throw() { z.t("err") }
+t { will_throw() } h (error) { z.o("PASS:try_s6") }
+// S7: top level try
+t { 5 val_a = 10 } h (error) { }
+z.o("PASS:try_s7")
+// S8: in function
+m 11 safe_op() { t { r 42 } h (error) { r 0 } }
+i (safe_op() == 42) { z.o("PASS:try_s8") }
+// S9: in loop
+5 cnt = 0
+5 idx_a = 0
+l (idx_a < 3) { t { cnt = cnt + 1 } h (error) { } idx_a = idx_a + 1 }
+i (cnt == 3) { z.o("PASS:try_s9") }
+// S10: in class method
+c TryCls { v m 11 safe() { t { r 100 } h (error) { r 0 } } }
+15 tc = n TryCls()
+i (tc.safe() == 100) { z.o("PASS:try_s10") }

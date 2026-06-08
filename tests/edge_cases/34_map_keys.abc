@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 34: Map key types (strings only in Alphabet)
+14 m = {"key1": 10, "key2": 20, "key3": 30}
+5 sum = m["key1"] + m["key2"] + m["key3"]
+i (sum == 60) { z.o("PASS:map_34_keys") } e { z.o("FAIL:map_34_keys") }

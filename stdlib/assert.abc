@@ -1,0 +1,19 @@
+#alphabet<en>
+m 0 assert(11 cond, 12 msg) {
+  i (!cond) {
+    i (msg == "") {
+      t { r 1 / 0 } h (0 e) { }
+    } e {
+      t { r 1 / 0 } h (0 e) { z.o("Assertion failed: " + msg) }
+    }
+  }
+}
+m 0 assert_eq(5 a, 5 b, 12 msg) {
+  i (a != b) {
+    12 m = "Expected " + str(a) + " == " + str(b)
+    i (msg != "") {
+      m = m + ": " + msg
+    }
+    t { r 1 / 0 } h (0 e) { z.o(m) }
+  }
+}

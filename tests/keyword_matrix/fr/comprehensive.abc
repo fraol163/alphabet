@@ -1,0 +1,67 @@
+#alphabet<fr}
+// === COMPREHENSIVE KEYWORD TEST: FRENCH ===
+
+// === VARIABLES ===
+5 valeur = 42
+5 quantite = 10
+12 nom = "Alphabet"
+z.o("PASS:fr_variables")
+
+// === ARITHMETIC ===
+5 somme = valeur + quantite
+i (somme == 52) { z.o("PASS:fr_arithmetic") }
+
+// === IF/ELSE ===
+i (valeur > 5) { z.o("PASS:fr_if") } sinon { z.o("FAIL:fr_if") }
+i (valeur < 5) { z.o("FAIL:fr_else") } sinon { z.o("PASS:fr_else") }
+
+// === LOOP ===
+5 somme_b = 0
+5 indice = 0
+boucle (indice < 5) { somme_b = somme_b + indice indice = indice + 1 }
+i (somme_b == 10) { z.o("PASS:fr_loop") }
+
+// === LOOP WITH BREAK ===
+5 sortie = 0
+boucle (true) { sortie = sortie + 1 i (sortie == 5) { rompre } }
+i (sortie == 5) { z.o("PASS:fr_break") }
+
+// === LOOP WITH CONTINUE ===
+13 pairs = []
+5 compteur = 0
+boucle (compteur < 10) { compteur = compteur + 1 i (compteur % 2 != 0) { continuer } z.append(pairs, compteur) }
+i (z.len(pairs) == 5) { z.o("PASS:fr_continue") }
+
+// === FUNCTION ===
+méthode 11 factorial(11 num) {
+  i (num <= 1) { retour 1 }
+  retour num * factorial(num - 1)
+}
+i (factorial(5) == 120) { z.o("PASS:fr_function") }
+
+// === CLASS ===
+classe Calculatrice {
+  méthode 11 additionner(11 a, 11 b) { retour a + b }
+}
+15 calc = nouveau Calculatrice()
+i (calc.additionner(3, 4) == 7) { z.o("PASS:fr_class") }
+
+// === INHERITANCE ===
+classe Animal {
+  méthode parler() { retour "..." }
+}
+classe Chien étend Animal {
+  méthode parler() { retour "woof" }
+}
+15 chien = nouveau Chien()
+i (chien.parler() == "woof") { z.o("PASS:fr_inheritance") }
+
+// === TRY/HANDLE ===
+essayer { z.o("PASS:fr_try") } attraper (15 erreur) { z.o("FAIL:fr_try") }
+
+// === MATCH ===
+5 choisir = 2
+correspondre (choisir) { 1: z.i("one") 2: z.o("PASS:fr_match") 3: z.i("three") }
+
+// === ALL DONE ===
+z.o("COMPREHENSIVE_FR_COMPLETE")

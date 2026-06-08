@@ -1,7 +1,7 @@
 #alphabet<de>
 klasse Rechner {
-    offentlich methode 5 addieren(5 a, 5 b) {
-        zuruck a + b
+    öffentlich methode 5 addieren(5 a, 5 b) {
+        zurück a + b
     }
 }
 

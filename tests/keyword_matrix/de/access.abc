@@ -1,0 +1,25 @@
+#alphabet<de>
+// === ACCESS (public/private/static) TESTS ===
+// S1: public method callable
+öffentlich methode 11 pub_fn() { r 1 }
+wenn (pub_fn() == 1) { z.o("PASS:access_s1") }
+// S2: public field accessible
+öffentlich 5 pub_var = 42
+wenn (pub_var == 42) { z.o("PASS:access_s2") }
+// S3: class with public method
+klasse AccessCls { öffentlich methode 11 greet() { r "hi" } }
+15 ac = n AccessCls()
+wenn (ac.greet() == "hi") { z.o("PASS:access_s3") }
+// S4: class with public field
+klasse FieldCls { öffentlich 5 fld_x = 10 }
+15 fc = n FieldCls()
+wenn (fc.fld_x == 10) { z.o("PASS:access_s4") }
+// S5: static method on class
+klasse StatCls { öffentlich statisch 11 add(11 num_a, 11 num_b) { r num_a + num_b } }
+wenn (StatCls.add(3, 4) == 7) { z.o("PASS:access_s5") }
+// S6: static method on instance
+15 sc = n StatCls()
+wenn (sc.add(5, 6) == 11) { z.o("PASS:access_s6") }
+// S7: multiple static methods
+klasse MathOps { öffentlich statisch 11 add(11 num_a, 11 num_b) { r num_a + num_b } öffentlich statisch 11 mul(11 num_a, 11 num_b) { r num_a * num_b } }
+wenn (MathOps.add(2, 3) == 5 && MathOps.mul(2, 3) == 6) { z.o("PASS:access_s7") }

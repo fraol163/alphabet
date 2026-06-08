@@ -1,0 +1,6 @@
+#alphabet<en>
+// Edge Case 51: Recursive factorial 20
+m 11 factorial(11 n) { i (n <= 1) { r 1 } r n * factorial(n - 1) }
+5 result = factorial(20)
+z.o("factorial(20) = " + str(result))
+i (result > 0) { z.o("PASS:func_51_factorial") } e { z.o("FAIL:func_51_factorial") }

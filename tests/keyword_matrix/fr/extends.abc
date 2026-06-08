@@ -1,0 +1,30 @@
+#alphabet<fr>
+// === EXTENDS TESTS ===
+classe Animal { public 12 aname = "" public méthode 12 speak() { r "..." } }
+// S1: inherit method + field
+classe Dog étend Animal { public méthode 12 speak() { r "woof" } }
+15 d = n Dog()
+d.aname = "Rex"
+si (d.speak() == "woof" && d.aname == "Rex") { z.o("PASS:ext_s1") }
+// S2: inherit field
+15 a = n Animal()
+a.aname = "Generic"
+si (a.aname == "Generic") { z.o("PASS:ext_s2") }
+// S3: override method
+classe Cat étend Animal { public méthode 12 speak() { r "meow" } }
+15 ct = n Cat()
+si (ct.speak() == "meow") { z.o("PASS:ext_s3") }
+// S4: child adds method
+classe Robot étend Animal { public méthode 11 beep() { r 42 } }
+15 rb = n Robot()
+si (rb.beep() == 42 && rb.speak() == "...") { z.o("PASS:ext_s4") }
+// S5: child adds field
+classe Pet étend Animal { public 5 loyalty = 100 }
+15 pt = n Pet()
+si (pt.loyalty == 100) { z.o("PASS:ext_s5") }
+// S6: 3-level chain
+classe Base { public méthode 11 base_fn() { r 1 } }
+classe Mid étend Base { public méthode 11 mid_fn() { r 2 } }
+classe Top étend Mid { public méthode 11 top_fn() { r 3 } }
+15 tp = n Top()
+si (tp.base_fn() == 1 && tp.mid_fn() == 2 && tp.top_fn() == 3) { z.o("PASS:ext_s6") }

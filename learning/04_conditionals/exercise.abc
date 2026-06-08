@@ -1,0 +1,7 @@
+#alphabet<en>
+int x = -5
+i (x > 0) {
+  z.o("positive")
+} e {
+  z.o("___")
+}

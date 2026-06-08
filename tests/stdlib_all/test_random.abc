@@ -1,0 +1,18 @@
+#alphabet<en>
+x "../../stdlib/random.abc"
+5 ok = 1
+t {
+  seed(42)
+  5 r1 = random()
+  i (r1 < 0 || r1 >= 1) { ok = 0 }
+  5 r2 = random()
+  i (r2 < 0 || r2 >= 1) { ok = 0 }
+  i (r1 == r2) { ok = 0 }
+  5 ri = randint(1, 10)
+  i (ri < 1 || ri > 10) { ok = 0 }
+} h (0 e) { ok = 0 }
+i (ok) {
+  z.o("PASS: random")
+} e {
+  z.o("FAIL: random")
+}

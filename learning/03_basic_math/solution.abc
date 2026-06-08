@@ -1,0 +1,5 @@
+#alphabet<en>
+int width = 5
+int height = 3
+int area = width * height
+z.o(area)

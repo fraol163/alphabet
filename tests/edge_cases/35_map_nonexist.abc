@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 35: Map access nonexistent key returns null
+14 m = {"a": 1}
+5 val = m["nonexistent"]
+i (val == null) { z.o("PASS:map_35_nonexist") } e { z.o("FAIL:map_35_nonexist") }

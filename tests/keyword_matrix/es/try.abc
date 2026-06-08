@@ -1,0 +1,31 @@
+#alphabet<es>
+// === TRY / HANDLE TESTS ===
+// S1: try succeeds
+intentar { z.o("PASS:try_s1") } capturar (error) { z.o("FAIL:try_s1") }
+// S2: try throws, handle catches
+intentar { z.i("before") z.t("custom error") z.o("FAIL:try_s2") } capturar (error) { z.o("PASS:try_s2") }
+// S3: error var accessible
+intentar { z.t("oops") } capturar (error) { z.o("PASS:try_s3") }
+// S4: nested try
+intentar { intentar { z.t("inner") } capturar (error) { z.o("PASS:try_s4") } } capturar (error) { }
+// S5: return in try
+método 11 try_ret() { intentar { r 1 } capturar (error) { r -1 } }
+si (try_ret() == 1) { z.o("PASS:try_s5") }
+// S6: function call throws
+método 11 will_throw() { z.t("err") }
+intentar { will_throw() } capturar (error) { z.o("PASS:try_s6") }
+// S7: top level try
+intentar { 5 val_a = 10 } capturar (error) { }
+z.o("PASS:try_s7")
+// S8: in function
+método 11 safe_op() { intentar { r 42 } capturar (error) { r 0 } }
+si (safe_op() == 42) { z.o("PASS:try_s8") }
+// S9: in loop
+5 cnt = 0
+5 idx_a = 0
+bucle (idx_a < 3) { intentar { cnt = cnt + 1 } capturar (error) { } idx_a = idx_a + 1 }
+si (cnt == 3) { z.o("PASS:try_s9") }
+// S10: in class method
+clase TryCls { público método 11 safe() { intentar { r 100 } capturar (error) { r 0 } } }
+15 tc = n TryCls()
+si (tc.safe() == 100) { z.o("PASS:try_s10") }

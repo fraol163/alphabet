@@ -1,0 +1,48 @@
+#alphabet<en>
+/// Class-based OOP example
+/// Demonstrates: classes, inheritance, methods, this keyword
+
+c Animal {
+  string name
+  string sound
+
+  m Animal(string n, string s) {
+    this.name = n
+    this.sound = s
+  }
+
+  m speak() {
+    z.o(this.name + " says " + this.sound)
+  }
+}
+
+c Dog ^ Animal {
+  m Dog(string n) {
+    this.name = n
+    this.sound = "Woof!"
+  }
+
+  m fetch(string item) {
+    z.o(this.name + " fetches the " + item)
+  }
+}
+
+c Cat ^ Animal {
+  m Cat(string n) {
+    this.name = n
+    this.sound = "Meow!"
+  }
+
+  m purr() {
+    z.o(this.name + " purrs...")
+  }
+}
+
+z.o("=== OOP Demo ===")
+5 dog = n Dog("Buddy")
+5 cat = n Cat("Whiskers")
+
+dog.speak()
+cat.speak()
+dog.fetch("ball")
+cat.purr()

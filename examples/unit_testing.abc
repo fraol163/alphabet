@@ -1,0 +1,42 @@
+#alphabet<en>
+/// Unit Testing Example
+/// Demonstrates: testing framework, assertions
+
+x "test"
+
+z.o("=== Unit Testing Example ===")
+
+z.o("\n--- Math Tests ---")
+assert_eq(2 + 2, 4, "2 + 2 = 4")
+assert_eq(10 - 5, 5, "10 - 5 = 5")
+assert_eq(3 * 4, 12, "3 * 4 = 12")
+assert_eq(10 / 2, 5, "10 / 2 = 5")
+assert_eq(17 % 5, 2, "17 % 5 = 2")
+
+z.o("\n--- String Tests ---")
+assert_eq(z.len("hello"), 5, "length of 'hello' is 5")
+assert_eq(z.upper("hello"), "HELLO", "upper of 'hello' is 'HELLO'")
+assert_eq(z.lower("HELLO"), "hello", "lower of 'HELLO' is 'hello'")
+assert_true(z.find("hello world", "world") >= 0, "'world' found in 'hello world'")
+
+z.o("\n--- List Tests ---")
+5 lst = [1, 2, 3, 4, 5]
+assert_eq(z.len(lst), 5, "list length is 5")
+assert_eq(z.sum(lst), 15, "list sum is 15")
+assert_true(z.contains(lst, 3), "list contains 3")
+assert_false(z.contains(lst, 99), "list does not contain 99")
+
+z.o("\n--- Type Tests ---")
+assert_eq(z.type(42), "number", "42 is number")
+assert_eq(z.type("hello"), "string", "'hello' is string")
+assert_eq(z.type([1, 2]), "list", "[1,2] is list")
+assert_eq(z.type({}), "map", "{} is map")
+assert_eq(z.type(null), "null", "null is null")
+
+z.o("\n--- Boolean Tests ---")
+assert_true(1, "1 is true")
+assert_false(0, "0 is false")
+assert_true(!0, "!0 is true")
+assert_false(!1, "!1 is false")
+
+test_summary()

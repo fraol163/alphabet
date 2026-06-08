@@ -1,0 +1,5 @@
+#alphabet<en>
+// Edge Case 70: For loop with range
+5 sum = 0
+l (5 i = 0 : i < 10 : i = i + 1) { sum = sum + i }
+i (sum == 45) { z.o("PASS:loop_70_for_range") } e { z.o("FAIL:loop_70_for_range sum=" + str(sum)) }

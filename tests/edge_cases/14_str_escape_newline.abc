@@ -1,0 +1,4 @@
+#alphabet<en>
+// Edge Case 14: Escape sequences - newline
+12 s = "line1\nline2"
+i (z.len(s) > 5) { z.o("PASS:str_14_escape_newline") } e { z.o("FAIL:str_14_escape_newline") }

@@ -54,7 +54,7 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
 
 ## What is Alphabet?
 
-Alphabet is a **programming language that teaches you to think like a programmer** — in your own language. Write code in English, Amharic, Spanish, French, or German. Learn concepts that transfer to Python, Java, JavaScript, and beyond. Unlike most programming languages that force you to learn English AND programming at the same time, Alphabet removes that barrier. You learn concepts first, syntax second. The language uses only 19 keywords (compared to 32+ in C or 35+ in Python), making it one of the simplest languages to pick up. It runs on a bytecode virtual machine with compiled execution, supports compile-time type checking, and includes a built-in REPL that can teach you programming concepts interactively. Whether you are a student learning your first loop, an educator teaching algorithms, or a developer prototype that needs to run anywhere, Alphabet gives you a clean, minimal syntax that transfers directly to production languages.
+Alphabet is a **programming language that teaches you to think like a programmer** —> in your own language. Write code in English, Amharic, Spanish, French, or German. Learn concepts that transfer to Python, Java, JavaScript, and beyond. Unlike most programming languages that force you to learn English AND programming at the same time, Alphabet removes that barrier. You learn concepts first, syntax second. The language uses only 19 keywords (compared to 32+ in C or 35+ in Python), making it one of the simplest languages to pick up. It runs on a bytecode virtual machine with compiled execution, supports compile-time type checking, and includes a built-in REPL that can teach you programming concepts interactively. Whether you are a student learning your first loop, an educator teaching algorithms, or a developer prototype that needs to run anywhere, Alphabet gives you a clean, minimal syntax that transfers directly to production languages.
 
 ### Why Alphabet?
 
@@ -105,7 +105,7 @@ Most programming languages force you to learn English AND programming at the sam
 
 ## Language Comparison
 
-Alphabet occupies a unique position in the programming language landscape. While C and Zig are powerful systems languages with steep learning curves, and Python is a versatile scripting language with English-only syntax, Alphabet focuses specifically on education and accessibility. With only 19 keywords, it has the smallest keyword set of any mainstream-style language, making it ideal for beginners. The numeric type system (using `5` for int, `12` for string, etc.) is unconventional but teaches the concept of type IDs that exist in every compiled language. The for-each loop, pattern matching, and exception handling features mirror what you will find in production languages, so skills transfer directly. Alphabet is not trying to replace Python or Java — it is designed to be the language you learn first, so that every other language becomes easier to pick up.
+Alphabet occupies a unique position in the programming language landscape. While C and Zig are powerful systems languages with steep learning curves, and Python is a versatile scripting language with English-only syntax, Alphabet focuses specifically on education and accessibility. With only 19 keywords, it has the smallest keyword set of any mainstream-style language, making it ideal for beginners. The numeric type system (using `5` for int, `12` for string, etc.) is unconventional but teaches the concept of type IDs that exist in every compiled language. The for-each loop, pattern matching, and exception handling features mirror what you will find in production languages, so skills transfer directly. Alphabet is not trying to replace Python or Java —> it is designed to be the language you learn first, so that every other language becomes easier to pick up.
 
 | Feature | C | Python | Zig | **Alphabet** |
 |---------|---|--------|-----|--------------|
@@ -118,7 +118,7 @@ Alphabet occupies a unique position in the programming language landscape. While
 
 ## Command Line
 
-The Alphabet command line provides 22 subcommands that cover every aspect of the development workflow. You can run programs directly, start an interactive REPL for experimentation, launch an LSP server for editor integration, debug programs with breakpoints, compile without running, inspect bytecode, sandbox execution for security, lint code for warnings, run tests, manage projects, access documentation for all 82 builtins, run benchmarks, explore examples, take an interactive tour, set up voice input, and self-update to the latest version. The CLI is designed to be discoverable — `alphabet --help` shows all options, and each subcommand has its own help text. Programs can also be run as executable scripts using shebang lines on Linux and macOS.
+The Alphabet command line provides 22 subcommands that cover every aspect of the development workflow. You can run programs directly, start an interactive REPL for experimentation, launch an LSP server for editor integration, debug programs with breakpoints, compile without running, inspect bytecode, sandbox execution for security, lint code for warnings, run tests, manage projects, access documentation for all 82 builtins, run benchmarks, explore examples, take an interactive tour, set up voice input, and self-update to the latest version. The CLI is designed to be discoverable —> `alphabet --help` shows all options, and each subcommand has its own help text. Programs can also be run as executable scripts using shebang lines on Linux and macOS.
 
 ```bash
 # Run a program
@@ -179,7 +179,7 @@ chmod +x my_script.abc
 # Show help
 alphabet --help
 ```
-
+```
 ### Environment Variables
 
 | Variable | Description |
@@ -547,8 +547,8 @@ Use `trace slow` to see each token, AST node, and bytecode instruction appear on
 ┌─ Executing ──────────────────────────────┐
 │ 0: PUSH_CONST "SYSTEM_Z"  │ depth:0      │  <- each step with stack depth
 │ 1: PUSH_CONST "hello"     │ depth:1      │
-│ 2: PRINT                   │ depth:2      │
-│ → hello                                 │  <- output appears here
+│ 2: PRINT                   │ depth:2     │
+│ → hello                                  │  <- output appears here
 │ 3: POP                    │ depth:1      │
 │ 4: HALT                   │ depth:0      │
 └──────────────────────────────────────────┘
@@ -713,7 +713,7 @@ Built-in LSP server works with VS Code, Vim, Emacs, and any editor supporting th
 
 ## Contributing
 
-Alphabet is an open source project that welcomes contributions from developers of all skill levels. Whether you want to fix a bug, add a feature, improve documentation, or report an issue, your help is appreciated. The project uses GitHub for collaboration — you can report bugs through GitHub Issues, discuss ideas in GitHub Discussions, and submit code changes through pull requests. The CONTRIBUTING.md file provides detailed guidelines including project structure, coding standards, testing requirements, and the review process. First-time contributors are especially welcome, and good first issues are labeled to help you find accessible starting points.
+Alphabet is an open source project that welcomes contributions from developers of all skill levels. Whether you want to fix a bug, add a feature, improve documentation, or report an issue, your help is appreciated. The project uses GitHub for collaboration —> you can report bugs through GitHub Issues, discuss ideas in GitHub Discussions, and submit code changes through pull requests. The CONTRIBUTING.md file provides detailed guidelines including project structure, coding standards, testing requirements, and the review process. First-time contributors are especially welcome, and good first issues are labeled to help you find accessible starting points.
 
 - Report bugs: [GitHub Issues](https://github.com/fraol163/alphabet/issues)
 - Discuss: [Discussions](https://github.com/fraol163/alphabet/discussions)
@@ -722,13 +722,13 @@ Alphabet is an open source project that welcomes contributions from developers o
 
 ## License
 
-Alphabet is released under the MIT License, one of the most permissive open source licenses available. This means you are free to use, modify, and distribute the language for any purpose — personal, educational, or commercial — without restriction. You can embed Alphabet in your own projects, create derivative works, and even sell products that include it. The only requirement is that you include the original copyright notice and license text in any distribution. The full license text is available in the [LICENSE](LICENSE.txt) file in the project root.
+Alphabet is released under the MIT License, one of the most permissive open source licenses available. This means you are free to use, modify, and distribute the language for any purpose —> personal, educational, or commercial  without restriction. You can embed Alphabet in your own projects, create derivative works, and even sell products that include it. The only requirement is that you include the original copyright notice and license text in any distribution. The full license text is available in the [LICENSE](LICENSE.txt) file in the project root.
 
 ---
 
 ## Contact
 
-Alphabet is created and maintained by Fraol Teshome, a developer passionate about making programming education accessible to everyone regardless of their native language. You can reach out via email(fraolteshome444@gmail.com) for questions, feedback, collaboration ideas, or just to say hello. The project is hosted on GitHub where you can follow development, report issues, and join discussions. If you are using Alphabet in education, research, or a personal project, I would love to hear about your experience — your feedback helps shape the future of the language.
+Alphabet is created and maintained by Fraol Teshome, a developer passionate about making programming education accessible to everyone regardless of their native language. You can reach out via email(fraolteshome444@gmail.com) for questions, feedback, collaboration ideas, or just to say hello. The project is hosted on GitHub where you can follow development, report issues, and join discussions. If you are using Alphabet in education, research, or a personal project, I would love to hear about your experience —> your feedback helps shape the future of the language.
 
 ---
 

@@ -10,6 +10,7 @@
 #include <thread>
 #include <vector>
 #ifdef _WIN32
+#include <direct.h>
 #include <io.h>
 #include <sys/stat.h>
 #include <windows.h>

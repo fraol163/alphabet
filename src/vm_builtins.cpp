@@ -12,6 +12,10 @@
 #include <iostream>
 #include <sstream>
 #include <thread>
+#ifdef _WIN32
+#define popen _popen
+#define pclose _pclose
+#endif
 
 namespace alphabet {
 

@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS builder
+FROM ubuntu:24.04 AS builder
 
 RUN apt-get update && apt-get install -y \
     cmake \
@@ -13,7 +13,7 @@ COPY . .
 RUN cmake -B build -DCMAKE_BUILD_TYPE=Release \
     && cmake --build build -j$(nproc)
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 RUN apt-get update && apt-get install -y \
     libstdc++6 \

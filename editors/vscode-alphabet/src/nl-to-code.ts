@@ -15,11 +15,42 @@ import * as path from 'path';
 
 export class NLToCodeProvider implements WebviewViewProvider {
   public static readonly viewType = 'alphabet.nlToCode';
+  // S3 fix: cap prompt size to prevent abuse (binary argv limits + cost)
+  private static readonly MAX_PROMPT_CHARS = 4000;
+  private static readonly MAX_PROMPT_BYTES = 8192;
 
   constructor(
     private readonly context: ExtensionContext,
     private readonly output: OutputChannel,
   ) {}
+
+  /**
+   * Sanitize and size-check user-typed NL prompt before passing to the
+   * alphabet binary. Returns null if the input is unusable.
+   */
+  private sanitizePrompt(text: unknown): string | null {
+    if (typeof text !== 'string') return null;
+    // Strip control chars (except common whitespace) to avoid feeding the
+    // binary unexpected input that could trigger parser bugs.
+    // eslint-disable-next-line no-control-regex
+    const cleaned = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    if (cleaned.length === 0) return null;
+    if (cleaned.length > NLToCodeProvider.MAX_PROMPT_CHARS) {
+      this.output.appendLine(
+        `[nl-to-code] prompt truncated: ${cleaned.length} > ${NLToCodeProvider.MAX_PROMPT_CHARS} chars`,
+      );
+    }
+    const truncated = cleaned.slice(0, NLToCodeProvider.MAX_PROMPT_CHARS);
+    // UTF-8 byte-length check (Windows argv limit ~32k but we use a tighter cap)
+    const bytes = Buffer.byteLength(truncated, 'utf8');
+    if (bytes > NLToCodeProvider.MAX_PROMPT_BYTES) {
+      this.output.appendLine(
+        `[nl-to-code] prompt bytes ${bytes} exceed ${NLToCodeProvider.MAX_PROMPT_BYTES}; rejected`,
+      );
+      return null;
+    }
+    return truncated;
+  }
 
   resolveWebviewView(
     webviewView: WebviewView,
@@ -33,13 +64,24 @@ export class NLToCodeProvider implements WebviewViewProvider {
     webviewView.webview.html = this.getHtml(webviewView.webview);
     webviewView.webview.onDidReceiveMessage(async (msg) => {
       if (msg.type === 'requestCode') {
-        this.output.appendLine(`[nl-to-code] request: ${msg.text}`);
+        // S3 fix: sanitize and size-cap user input before invoking the binary
+        const prompt = this.sanitizePrompt(msg.text);
+        if (!prompt) {
+          webviewView.webview.postMessage({
+            type: 'codeResult',
+            code: '// [rejected] Empty or oversized prompt. Maximum 4000 characters.',
+            source: 'placeholder',
+            warning: 'Prompt was empty or exceeded the maximum size.',
+          });
+          return;
+        }
+        this.output.appendLine(`[nl-to-code] request: ${prompt.length} chars`);
         try {
-          const code = await this.generateCode(msg.text);
+          const code = await this.generateCode(prompt);
           webviewView.webview.postMessage({ type: 'codeResult', code, source: code.startsWith('// [placeholder]') ? 'placeholder' : 'binary' });
         } catch (err: any) {
           this.output.appendLine(`[nl-to-code] error: ${err?.message ?? String(err)}`);
-          const fallback = this.placeholderCode(msg.text);
+          const fallback = this.placeholderCode(prompt);
           webviewView.webview.postMessage({
             type: 'codeResult',
             code: fallback,
@@ -200,7 +242,7 @@ export class NLToCodeProvider implements WebviewViewProvider {
 <body>
 <h3>NL → Alphabet</h3>
 <p>Describe what you want. Get Alphabet code.</p>
-<textarea id="prompt" placeholder="e.g. read a number and print its square"></textarea>
+<textarea id="prompt" placeholder="e.g. read a number and print its square" maxlength="4000"></textarea>
 <button id="generate">Generate</button>
 <pre id="result" hidden></pre>
 <div class="meta">

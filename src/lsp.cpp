@@ -93,13 +93,61 @@ static std::string parse_string(const std::string& s, size_t& pos) {
                 case 't':
                     out += '\t';
                     break;
+                case 'r':
+                    out += '\r';
+                    break;
+                case 'b':
+                    out += '\b';
+                    break;
+                case 'f':
+                    out += '\f';
+                    break;
+                case '/':
+                    out += '/';
+                    break;
                 case '"':
                     out += '"';
                     break;
                 case '\\':
                     out += '\\';
                     break;
+                case 'u':
+                    // Minimal \uXXXX handling: read 4 hex digits and emit the
+                    // BMP codepoint as UTF-8. Sufficient for LSP filenames and
+                    // most identifiers; surrogate pairs are not combined.
+                    if (pos + 4 < s.size()) {
+                        unsigned int code = 0;
+                        bool bad = false;
+                        for (int k = 0; k < 4; ++k) {
+                            char h = s[pos + 1 + k];
+                            code <<= 4;
+                            if (h >= '0' && h <= '9') code |= (unsigned)(h - '0');
+                            else if (h >= 'a' && h <= 'f') code |= (unsigned)(h - 'a' + 10);
+                            else if (h >= 'A' && h <= 'F') code |= (unsigned)(h - 'A' + 10);
+                            else { bad = true; break; }
+                        }
+                        if (!bad) {
+                            pos += 4;
+                            if (code < 0x80) {
+                                out += (char)code;
+                            } else if (code < 0x800) {
+                                out += (char)(0xC0 | (code >> 6));
+                                out += (char)(0x80 | (code & 0x3F));
+                            } else {
+                                out += (char)(0xE0 | (code >> 12));
+                                out += (char)(0x80 | ((code >> 6) & 0x3F));
+                                out += (char)(0x80 | (code & 0x3F));
+                            }
+                        } else {
+                            // Truncated/bad escape — emit replacement char.
+                            out += '?';
+                        }
+                    } else {
+                        out += '?';
+                    }
+                    break;
                 default:
+                    // Unknown escape: keep the character verbatim per RFC 8259.
                     out += s[pos];
                     break;
                 }
@@ -392,12 +440,27 @@ void LanguageServer::publish_diagnostics(const std::string& uri, const std::stri
         diags.push(d);
     };
 
+    // Normalize line endings: LSP doesn't promise CRLF vs LF, and the parser
+    // can mis-count columns if we pass raw CRLF through unchanged. Cheap to do.
+    std::string normalized;
+    normalized.reserve(content.size());
+    for (size_t i = 0; i < content.size(); ++i) {
+        if (content[i] == '\r') {
+            if (i + 1 < content.size() && content[i + 1] == '\n')
+                continue;
+            normalized.push_back('\n');
+        } else {
+            normalized.push_back(content[i]);
+        }
+    }
+    const std::string& src = normalized;
+
     // Strip just the first line for the header check so a string literal in
     // the body doesn't accidentally satisfy the directive requirement.
     std::string first_line;
     {
-        size_t nl = content.find('\n');
-        first_line = (nl == std::string::npos) ? content : content.substr(0, nl);
+        size_t nl = src.find('\n');
+        first_line = (nl == std::string::npos) ? src : src.substr(0, nl);
     }
 
     bool has_header = first_line.rfind("#alphabet<", 0) == 0;
@@ -410,9 +473,9 @@ void LanguageServer::publish_diagnostics(const std::string& uri, const std::stri
 
     if (has_header) {
         try {
-            Lexer lexer(content);
+            Lexer lexer(src);
             auto tokens = lexer.scan_tokens();
-            Parser parser(tokens, content);
+            Parser parser(tokens, src);
             parser.parse();
 
             if (parser.had_errors() && !parser.first_error().empty()) {
@@ -439,7 +502,7 @@ void LanguageServer::publish_diagnostics(const std::string& uri, const std::stri
                 // Find actual end of offending token by reading the source line
                 int end_col = err_col + 1;
                 {
-                    std::istringstream ls(content);
+                    std::istringstream ls(src);
                     std::string l;
                     int ln = 0;
                     while (std::getline(ls, l)) {
@@ -618,6 +681,127 @@ std::string LanguageServer::get_hover_doc(const std::string& word) {
     return it != docs.end() ? it->second : "";
 }
 
+// ============================================================================
+// Document symbol scan (used by both hover and document symbol provider)
+// ============================================================================
+//
+// Walks the source line-by-line, the same way the lexer would, but without
+// instantiating the full parser. Returns a map: symbol name → markdown
+// documentation string suitable for hover. Only single-document scope for
+// now; cross-file symbols would need a project/index model.
+
+struct DocSymbol {
+    std::string kind;       // "function" | "method" | "class" | "interface" | "variable" | "constant" | "field"
+    std::string signature;  // raw declaration text (one line)
+    int line = 0;            // 0-based line where declared
+};
+
+static std::unordered_map<std::string, std::string> scan_user_symbols(const std::string& source) {
+    std::unordered_map<std::string, std::string> out;
+    std::istringstream stream(source);
+    std::string line;
+    int line_num = 0;
+    std::string current_class;
+
+    auto capture_signature = [&](const std::string& kind, const std::string& name,
+                                  const std::string& line_text) {
+        std::string md = "```alphabet\n";
+        md += line_text;
+        md += "\n```\n\n*";
+        md += kind;
+        md += "* declared on line ";
+        md += std::to_string(line_num + 1);
+        if (!current_class.empty()) {
+            md += " (in `";
+            md += current_class;
+            md += "`)";
+        }
+        out[name] = md;
+    };
+
+    while (std::getline(stream, line)) {
+        size_t first_ns = line.find_first_not_of(" \t");
+        if (first_ns == std::string::npos) { ++line_num; continue; }
+        char fc = line[first_ns];
+        if (fc == '/' || fc == '#') { ++line_num; continue; }
+
+        // class Name
+        if (fc == 'c' && first_ns + 1 < line.size() && line[first_ns + 1] == ' ') {
+            size_t p = first_ns + 2;
+            while (p < line.size() && line[p] == ' ') ++p;
+            size_t s = p;
+            while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_')) ++p;
+            if (p > s) {
+                std::string name = line.substr(s, p - s);
+                current_class = name;
+                capture_signature("class", name, line);
+            }
+        }
+        // interface Name
+        else if (fc == 'j' && first_ns + 1 < line.size() && line[first_ns + 1] == ' ') {
+            size_t p = first_ns + 2;
+            while (p < line.size() && line[p] == ' ') ++p;
+            size_t s = p;
+            while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_')) ++p;
+            if (p > s) {
+                std::string name = line.substr(s, p - s);
+                capture_signature("interface", name, line);
+            }
+        }
+        // m <type> name(params)
+        else if (line.find("m ") != std::string::npos) {
+            size_t mp = line.find("m ");
+            bool anchored = (mp == first_ns) || (mp > 0 && (line[mp - 1] == ' ' || line[mp - 1] == '\t'));
+            if (anchored) {
+                size_t p = mp + 2;
+                while (p < line.size() && line[p] == ' ') ++p;
+                while (p < line.size() && std::isdigit(line[p])) ++p;
+                while (p < line.size() && line[p] == ' ') ++p;
+                size_t s = p;
+                while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_')) ++p;
+                if (p > s) {
+                    std::string name = line.substr(s, p - s);
+                    std::string kind = current_class.empty() ? "function" : "method";
+                    capture_signature(kind, name, line);
+                }
+            }
+        }
+        // const name = ...
+        else if (line.substr(first_ns, 5) == "const" &&
+                 (first_ns + 5 >= line.size() || line[first_ns + 5] == ' ')) {
+            size_t p = first_ns + 5;
+            while (p < line.size() && line[p] == ' ') ++p;
+            size_t s = p;
+            while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_')) ++p;
+            if (p > s) {
+                std::string name = line.substr(s, p - s);
+                capture_signature("constant", name, line);
+            }
+        }
+        // <digit type> name = expr   (variable/field)
+        else if (std::isdigit(fc)) {
+            size_t p = first_ns;
+            while (p < line.size() && std::isdigit(line[p])) ++p;
+            while (p < line.size() && line[p] == ' ') ++p;
+            size_t s = p;
+            while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_')) ++p;
+            if (p > s) {
+                size_t after = p;
+                while (after < line.size() && line[after] == ' ') ++after;
+                if (after < line.size() && line[after] == '=') {
+                    std::string name = line.substr(s, p - s);
+                    std::string kind = current_class.empty() ? "variable" : "field";
+                    capture_signature(kind, name, line);
+                }
+            }
+        }
+
+        if (fc == '}' && !current_class.empty()) current_class.clear();
+        ++line_num;
+    }
+    return out;
+}
+
 JsonValue LanguageServer::handle_hover(int, const JsonValue& params) {
     std::string uri = params.get("textDocument").get_str("uri");
     const JsonValue& pos = params.get("position");
@@ -651,13 +835,24 @@ JsonValue LanguageServer::handle_hover(int, const JsonValue& params) {
         return JsonValue::null();
 
     std::string word = current_line.substr(start, end - start);
-    std::string doc = get_hover_doc(word);
+
+    // User-defined symbols take precedence over built-ins — this lets users
+    // legitimately shadow single-letter keywords (e.g. `5 x = 0`) without
+    // getting the keyword's docstring when they hover their own variable.
+    std::string doc;
+    auto user_syms = scan_user_symbols(it->second);
+    auto uit = user_syms.find(word);
+    if (uit != user_syms.end()) {
+        doc = uit->second;
+    } else {
+        doc = get_hover_doc(word);
+    }
     if (doc.empty())
         return JsonValue::null();
 
     JsonValue contents = JsonValue::object();
     contents.set("kind", JsonValue::string("markdown"));
-    contents.set("value", JsonValue::string("```\n" + doc + "\n```"));
+    contents.set("value", JsonValue::string(doc));
 
     JsonValue result = JsonValue::object();
     result.set("contents", contents);

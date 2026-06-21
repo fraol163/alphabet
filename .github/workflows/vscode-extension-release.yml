@@ -127,6 +127,17 @@ jobs:
         working-directory: editors/vscode-alphabet
         run: npm run build
 
+      # Build the LSP server as WASM so the extension works without
+      # requiring users to install the alphabet binary. Output is staged
+      # to editors/vscode-alphabet/server/wasm/ and packaged into the .vsix.
+      - name: Setup Emscripten
+        uses: myriation/setup-emsdk@v1
+        with:
+          version: 'latest'
+
+      - name: Build LSP WASM
+        run: ./build-wasm-lsp.sh
+
       - name: Package VSIX
         working-directory: editors/vscode-alphabet
         env:

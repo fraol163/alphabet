@@ -4,6 +4,7 @@ node_modules/**
 src/**
 syntaxes/**
 snippets/**
+build-tools/**
 .eslintrc.json
 .prettierrc
 tsconfig.json

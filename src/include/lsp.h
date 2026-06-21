@@ -82,6 +82,10 @@ class LanguageServer {
 
   private:
     std::unordered_map<std::string, std::string> documents_;
+    // Last published diagnostics per URI — read by codeAction to suggest
+    // "disable this diagnostic" quickfixes. Keeps the response purely a
+    // function of the current document state, no extra plumbing.
+    std::unordered_map<std::string, JsonValue> last_diagnostics_;
 
     void send_response(int id, const JsonValue& result);
     void send_error(int id, int code, const std::string& message);
@@ -102,6 +106,11 @@ class LanguageServer {
     JsonValue handle_signature_help(int id, const JsonValue& params);
     JsonValue handle_references(int id, const JsonValue& params);
     JsonValue handle_rename(int id, const JsonValue& params);
+    JsonValue handle_code_action(int id, const JsonValue& params);
+    JsonValue handle_document_highlight(int id, const JsonValue& params);
+    JsonValue handle_semantic_tokens_full(int id, const JsonValue& params);
+    JsonValue handle_semantic_tokens_range(int id, const JsonValue& params);
+    JsonValue handle_inlay_hint(int id, const JsonValue& params);
 
     void publish_diagnostics(const std::string& uri, const std::string& content);
     std::string get_hover_doc(const std::string& word);

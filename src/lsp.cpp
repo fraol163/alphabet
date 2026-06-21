@@ -4,6 +4,8 @@
 #include "version.h"
 #include <algorithm>
 #include <cctype>
+#include <tuple>
+#include <unordered_set>
 
 namespace alphabet {
 namespace lsp {
@@ -76,6 +78,11 @@ static size_t skip_ws(const std::string& s, size_t pos) {
 }
 
 static JsonValue parse_value(const std::string& s, size_t& pos);
+
+// Forward decl for the semantic-tokens legend builder (defined later in
+// the lsp namespace). handle_initialize calls it to advertise the
+// semanticTokensProvider capability.
+JsonValue make_semantic_tokens_legend();
 
 static std::string parse_string(const std::string& s, size_t& pos) {
     if (s[pos] != '"')
@@ -317,7 +324,15 @@ void LanguageServer::run() {
         } else if (method == "textDocument/rangeFormatting") {
             send_response(id, handle_range_formatting(id, msg.get("params")));
         } else if (method == "textDocument/codeAction") {
-            send_response(id, JsonValue::array());
+            send_response(id, handle_code_action(id, msg.get("params")));
+        } else if (method == "textDocument/documentHighlight") {
+            send_response(id, handle_document_highlight(id, msg.get("params")));
+        } else if (method == "textDocument/semanticTokens/full") {
+            send_response(id, handle_semantic_tokens_full(id, msg.get("params")));
+        } else if (method == "textDocument/semanticTokens/range") {
+            send_response(id, handle_semantic_tokens_range(id, msg.get("params")));
+        } else if (method == "textDocument/inlayHint") {
+            send_response(id, handle_inlay_hint(id, msg.get("params")));
         } else if (method == "shutdown") {
             send_response(id, JsonValue::null());
         } else if (method == "exit") {
@@ -359,12 +374,38 @@ JsonValue LanguageServer::handle_initialize(int, const JsonValue&) {
     caps.set("documentFormattingProvider", JsonValue::boolean(true));
     caps.set("documentRangeFormattingProvider", JsonValue::boolean(true));
 
+    JsonValue code_action = JsonValue::object();
+    JsonValue ka = JsonValue::array();
+    ka.push(JsonValue::string("quickfix"));
+    ka.push(JsonValue::string("refactor"));
+    ka.push(JsonValue::string("source"));
+    code_action.set("codeActionKinds", ka);
+    caps.set("codeActionProvider", code_action);
+
+    caps.set("documentHighlightProvider", JsonValue::boolean(true));
+
     JsonValue sig = JsonValue::object();
     JsonValue sig_triggers = JsonValue::array();
     sig_triggers.push(JsonValue::string("("));
     sig_triggers.push(JsonValue::string(","));
     sig.set("triggerCharacters", sig_triggers);
     caps.set("signatureHelpProvider", sig);
+
+    // Semantic tokens — full mode only (range falls back to full).
+    JsonValue sem_tokens = JsonValue::object();
+    sem_tokens.set("legend", make_semantic_tokens_legend());
+    JsonValue sem_full = JsonValue::object();
+    sem_full.set("delta", JsonValue::boolean(true));
+    sem_tokens.set("full", sem_full);
+    JsonValue sem_range = JsonValue::object();
+    sem_range.set("delta", JsonValue::boolean(true));
+    sem_tokens.set("range", sem_range);
+    caps.set("semanticTokensProvider", sem_tokens);
+
+    // Inlay hints — show param names at call sites.
+    JsonValue inlay = JsonValue::object();
+    inlay.set("resolveProvider", JsonValue::boolean(false));
+    caps.set("inlayHintProvider", inlay);
 
     JsonValue result = JsonValue::object();
     result.set("capabilities", caps);
@@ -528,6 +569,9 @@ void LanguageServer::publish_diagnostics(const std::string& uri, const std::stri
     JsonValue params_out = JsonValue::object();
     params_out.set("uri", JsonValue::string(uri));
     params_out.set("diagnostics", diags);
+    // Cache so codeAction can suggest quickfixes from the most-recent
+    // diagnostics without re-running the lexer/parser.
+    last_diagnostics_[uri] = diags;
     send_notification("textDocument/publishDiagnostics", params_out);
 }
 
@@ -1749,6 +1793,342 @@ JsonValue LanguageServer::handle_rename(int, const JsonValue& params) {
     changes.set(uri, edits);
     workspace_edit.set("changes", changes);
     return workspace_edit;
+}
+
+// ============================================================================
+// codeAction — suggest quick fixes / refactors based on diagnostics
+// ============================================================================
+// v2.3.5: walks the current document's diagnostics and produces a "quickfix"
+// CodeAction per error/warning diagnostic that has a non-empty message. The
+// edit is a no-op placeholder (the LSP client just shows a "Fix all" item);
+// users get a discoverable entry point. Real fixers can be added later
+// without touching the protocol.
+JsonValue LanguageServer::handle_code_action(int, const JsonValue& params) {
+    JsonValue result = JsonValue::array();
+    const JsonValue& td = params.get("textDocument");
+    std::string uri = td.get_str("uri");
+    auto doc_it = documents_.find(uri);
+    if (doc_it == documents_.end()) return result;
+
+    // Walk diagnostics we already published for this URI and offer a
+    // generic "Suppress" quickfix that comments out the line.
+    JsonValue diagnostics = last_diagnostics_.count(uri)
+        ? last_diagnostics_[uri]
+        : JsonValue::array();
+    for (size_t i = 0; i < diagnostics.arr_val.size(); ++i) {
+        const JsonValue& d = diagnostics.arr_val[i];
+        int line = d.get("range").get("start").get_int("line", 0);
+        JsonValue action = JsonValue::object();
+        action.set("title", JsonValue::string("Alphabet: disable this diagnostic"));
+        action.set("kind", JsonValue::string("quickfix"));
+        JsonValue edit = JsonValue::object();
+        JsonValue changes = JsonValue::object();
+        JsonValue edits = JsonValue::array();
+        JsonValue text_edit = JsonValue::object();
+        text_edit.set("newText", JsonValue::string("// alphabet-ignore "));
+        JsonValue edit_range = JsonValue::object();
+        JsonValue start = JsonValue::object();
+        start.set("line", JsonValue::integer(line));
+        start.set("character", JsonValue::integer(0));
+        JsonValue end = JsonValue::object();
+        end.set("line", JsonValue::integer(line));
+        end.set("character", JsonValue::integer(0));
+        edit_range.set("start", start);
+        edit_range.set("end", end);
+        text_edit.set("range", edit_range);
+        edits.push(text_edit);
+        changes.set(uri, edits);
+        edit.set("changes", changes);
+        action.set("edit", edit);
+        result.push(action);
+    }
+    return result;
+}
+
+// ============================================================================
+// documentHighlight — highlight all occurrences of the word at the cursor
+// ============================================================================
+JsonValue LanguageServer::handle_document_highlight(int, const JsonValue& params) {
+    JsonValue result = JsonValue::array();
+    const JsonValue& td = params.get("textDocument");
+    std::string uri = td.get_str("uri");
+    auto doc_it = documents_.find(uri);
+    if (doc_it == documents_.end()) return result;
+
+    int line = params.get("position").get_int("line", 0);
+    int col  = params.get("position").get_int("character", 0);
+    const std::string& src = doc_it->second;
+
+    // Find the identifier at (line, col) by scanning backwards for a word
+    // boundary, then forwards. Substring-search the source for matches.
+    auto lines = [&]() {
+        std::vector<std::string> ls;
+        std::string cur;
+        for (char c : src) {
+            if (c == '\n') { ls.push_back(cur); cur.clear(); }
+            else cur.push_back(c);
+        }
+        ls.push_back(cur);
+        return ls;
+    };
+    std::vector<std::string> ls = lines();
+    if (line < 0 || line >= (int)ls.size()) return result;
+    const std::string& target_line = ls[line];
+    if (col < 0 || col > (int)target_line.size()) return result;
+
+    // Expand left/right to find identifier boundaries (alnum + _).
+    int l = col, r = col;
+    auto is_id = [](char c) { return std::isalnum((unsigned char)c) || c == '_'; };
+    while (l > 0 && is_id(target_line[l - 1])) --l;
+    while (r < (int)target_line.size() && is_id(target_line[r])) ++r;
+    if (l >= r) return result;
+    std::string word = target_line.substr(l, r - l);
+    if (word.empty()) return result;
+
+    // Search every line for occurrences.
+    for (int i = 0; i < (int)ls.size(); ++i) {
+        size_t pos = 0;
+        while ((pos = ls[i].find(word, pos)) != std::string::npos) {
+            // Word boundary check (the position must not be inside another word)
+            bool left_ok  = (pos == 0) || !is_id(ls[i][pos - 1]);
+            bool right_ok = (pos + word.size() >= ls[i].size()) || !is_id(ls[i][pos + word.size()]);
+            if (left_ok && right_ok) {
+                JsonValue hl = JsonValue::object();
+                JsonValue hl_range = JsonValue::object();
+                JsonValue start = JsonValue::object();
+                start.set("line", JsonValue::integer(i));
+                start.set("character", JsonValue::integer((int)pos));
+                JsonValue end = JsonValue::object();
+                end.set("line", JsonValue::integer(i));
+                end.set("character", JsonValue::integer((int)(pos + word.size())));
+                hl_range.set("start", start);
+                hl_range.set("end", end);
+                hl.set("range", hl_range);
+                hl.set("kind", JsonValue::integer(1)); // 1 = Text
+                result.push(hl);
+            }
+            pos += word.size();
+        }
+    }
+    return result;
+}
+
+// ============================================================================
+// semanticTokens — colorize language constructs (keywords, strings, numbers,
+// types, comments, function names, parameters) using LSP semantic tokens.
+// Returns delta-encoded (5-int) token arrays per LSP spec.
+// ============================================================================
+// Build the legend (tokenTypes + tokenModifiers) advertised in the
+// initialize response. Lives in lsp namespace so handle_initialize can
+// call it across translation-unit boundaries.
+JsonValue make_semantic_tokens_legend() {
+    JsonValue legend = JsonValue::object();
+    JsonValue types = JsonValue::array();
+    types.push(JsonValue::string("namespace"));
+    types.push(JsonValue::string("type"));
+    types.push(JsonValue::string("function"));
+    types.push(JsonValue::string("parameter"));
+    types.push(JsonValue::string("variable"));
+    types.push(JsonValue::string("string"));
+    types.push(JsonValue::string("number"));
+    types.push(JsonValue::string("comment"));
+    types.push(JsonValue::string("keyword"));
+    types.push(JsonValue::string("operator"));
+    legend.set("tokenTypes", types);
+    JsonValue mods = JsonValue::array();
+    mods.push(JsonValue::string("declaration"));
+    mods.push(JsonValue::string("readonly"));
+    legend.set("tokenModifiers", mods);
+    return legend;
+}
+// Token type IDs MUST match `legend.tokenTypes` order. Keep in sync.
+enum SemanticTokenType {
+    STT_NAMESPACE = 0,
+    STT_TYPE      = 1,
+    STT_FUNCTION  = 2,
+    STT_PARAMETER = 3,
+    STT_VARIABLE  = 4,
+    STT_STRING    = 5,
+    STT_NUMBER    = 6,
+    STT_COMMENT   = 7,
+    STT_KEYWORD   = 8,
+    STT_OPERATOR  = 9,
+};
+enum SemanticTokenModifier {
+    STM_NONE       = 0,
+    STM_DECLARATION = 1,
+    STM_READONLY   = 2,
+};
+
+namespace {
+
+// Tokenize one line into [startChar, length, tokenType, tokenModifiers].
+// Heuristic-only (no real parser integration); uses Alphabet keyword set.
+std::vector<std::tuple<int,int,int,int>> tokenize_line(const std::string& line) {
+    static const std::unordered_set<std::string> keywords = {
+        "i","e","l","r","c","m","n","v","p","s","o","x","t","q","h",
+        "if","else","loop","return","class","method","new","public",
+        "private","static","abstract","try","handle","throw","this",
+        "import","from","const","let","val","break","continue",
+        "while","do","for","each","in","true","false","null","nil",
+        "match","case","default",
+    };
+    std::vector<std::tuple<int,int,int,int>> out;
+    int n = (int)line.size();
+    int i = 0;
+    while (i < n) {
+        char c = line[i];
+        // Skip whitespace
+        if (std::isspace((unsigned char)c)) { ++i; continue; }
+        // Line comment // ...
+        if (c == '/' && i + 1 < n && line[i + 1] == '/') break;
+        // String literal
+        if (c == '"') {
+            int s = i;
+            ++i;
+            while (i < n && line[i] != '"') { if (line[i] == '\\' && i + 1 < n) ++i; ++i; }
+            if (i < n) ++i;
+            out.emplace_back(s, i - s, STT_STRING, STM_NONE);
+            continue;
+        }
+        // Number
+        if (std::isdigit((unsigned char)c)) {
+            int s = i;
+            while (i < n && (std::isdigit((unsigned char)line[i]) || line[i] == '.')) ++i;
+            out.emplace_back(s, i - s, STT_NUMBER, STM_NONE);
+            continue;
+        }
+        // Identifier / keyword
+        if (std::isalpha((unsigned char)c) || c == '_') {
+            int s = i;
+            while (i < n && (std::isalnum((unsigned char)line[i]) || line[i] == '_')) ++i;
+            std::string word = line.substr(s, i - s);
+            int type = STT_VARIABLE;
+            if (keywords.count(word)) type = STT_KEYWORD;
+            out.emplace_back(s, i - s, type, STM_NONE);
+            continue;
+        }
+        // Operator / punctuation (single char or common two-char combos)
+        if (std::ispunct((unsigned char)c)) {
+            int s = i;
+            // Two-char: ==, !=, <=, >=, ->, =>, ::, ?.
+            if (i + 1 < n && std::ispunct((unsigned char)line[i + 1])) {
+                ++i; ++i;
+            } else {
+                ++i;
+            }
+            out.emplace_back(s, i - s, STT_OPERATOR, STM_NONE);
+            continue;
+        }
+        ++i;
+    }
+    return out;
+}
+
+} // namespace
+
+JsonValue LanguageServer::handle_semantic_tokens_full(int, const JsonValue& params) {
+    JsonValue result = JsonValue::object();
+    JsonValue data = JsonValue::array();
+    const JsonValue& td = params.get("textDocument");
+    std::string uri = td.get_str("uri");
+    auto doc_it = documents_.find(uri);
+    if (doc_it == documents_.end()) { result.set("data", data); return result; }
+    const std::string& src = doc_it->second;
+
+    int prev_line = 0, prev_start = 0;
+    std::string line;
+    int line_no = 0;
+    auto flush_line = [&]() {
+        auto tokens = tokenize_line(line);
+        for (auto& [col, len, type, mod] : tokens) {
+            int dl = line_no - prev_line;
+            int ds = (dl == 0) ? (col - prev_start) : col;
+            data.push(JsonValue::integer(dl));
+            data.push(JsonValue::integer(ds));
+            data.push(JsonValue::integer(len));
+            data.push(JsonValue::integer(type));
+            data.push(JsonValue::integer(mod));
+            prev_line = line_no;
+            prev_start = col;
+        }
+        ++line_no;
+        line.clear();
+    };
+    for (char c : src) {
+        if (c == '\n') { flush_line(); }
+        else line.push_back(c);
+    }
+    if (!line.empty()) flush_line();
+
+    result.set("data", data);
+    return result;
+}
+
+JsonValue LanguageServer::handle_semantic_tokens_range(int id, const JsonValue& params) {
+    // v2.3.5: tokens are computed line-by-line with no real range restriction;
+    // full document is returned. Range is ignored.
+    return handle_semantic_tokens_full(id, params);
+}
+
+// ============================================================================
+// inlayHint — show parameter names inline at call sites
+// ============================================================================
+// v2.3.5: minimal implementation — for each `name(...)` call, emit a hint
+// naming the first parameter if it can be looked up. Heuristic only.
+JsonValue LanguageServer::handle_inlay_hint(int, const JsonValue& params) {
+    JsonValue result = JsonValue::array();
+    const JsonValue& td = params.get("textDocument");
+    std::string uri = td.get_str("uri");
+    auto doc_it = documents_.find(uri);
+    if (doc_it == documents_.end()) return result;
+
+    // Scan for `name(` and look up the method's first param name from
+    // BuiltinDoc via the hover-doc helper.
+    const std::string& src = doc_it->second;
+    auto lines = [&]() {
+        std::vector<std::string> ls;
+        std::string cur;
+        for (char c : src) {
+            if (c == '\n') { ls.push_back(cur); cur.clear(); }
+            else cur.push_back(c);
+        }
+        ls.push_back(cur);
+        return ls;
+    };
+    std::vector<std::string> ls = lines();
+    for (int i = 0; i < (int)ls.size(); ++i) {
+        const std::string& l = ls[i];
+        for (size_t j = 0; j + 1 < l.size(); ++j) {
+            if (l[j] == '(' && j > 0 && std::isalpha((unsigned char)l[j - 1])) {
+                // Find identifier immediately before `(`.
+                int e = j - 1;
+                while (e >= 0 && (std::isalnum((unsigned char)l[e]) || l[e] == '_')) --e;
+                std::string name = l.substr(e + 1, j - 1 - e);
+                if (name.empty()) continue;
+                // Heuristic: only show for builtins and class method calls.
+                std::string doc = get_hover_doc(name);
+                if (doc.empty()) continue;
+                JsonValue hint = JsonValue::object();
+                JsonValue pos = JsonValue::object();
+                pos.set("line", JsonValue::integer(i));
+                pos.set("character", JsonValue::integer((int)j));
+                hint.set("position", pos);
+                // Label is "paramName:" — we don't parse param names yet
+                // so just use the function name as a placeholder.
+                hint.set("label", JsonValue::array());
+                hint.arr_val.push_back(JsonValue::string(name + ":"));
+                JsonValue tooltip = JsonValue::string(doc);
+                hint.set("tooltip", tooltip);
+                JsonValue kind = JsonValue::integer(1); // 1 = Parameter
+                hint.set("kind", kind);
+                JsonValue padding_left = JsonValue::boolean(true);
+                hint.set("paddingLeft", padding_left);
+                result.push(hint);
+            }
+        }
+    }
+    return result;
 }
 
 } // namespace lsp

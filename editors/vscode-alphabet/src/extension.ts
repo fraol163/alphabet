@@ -28,6 +28,7 @@ import {
   DocumentSelector as LspDocumentSelector,
 } from 'vscode-languageclient/node';
 import { NLToCodeProvider } from './nl-to-code';
+import { tryStartWasmLsp } from '../server/wasm/lsp-transport';
 
 const MIN_BINARY_VERSION = '2.3.5';
 const CLIENT_ID = 'alphabet';
@@ -79,39 +80,72 @@ export async function activate(context: ExtensionContext): Promise<void> {
   statusBarItem.show();
   context.subscriptions.push(statusBarItem);
 
-  // 1. Resolve the binary
-  const binaryPath = await resolveServerBinary(context);
-  log(`Using alphabet binary: ${binaryPath}`);
+  // 1. Resolve transport — prefer WASM (zero-install), fall back to native binary
+  let serverOptions: ServerOptions;
+  let binaryPath: string | undefined;
+  let binaryVersion: string | undefined;
+  const transportMode = workspace.getConfiguration('alphabet').get<string>('transport') ?? 'auto';
 
-  // 2. Version handshake
-  const binaryVersion = await getBinaryVersion(binaryPath);
-  if (!binaryVersion) {
-    showStartupError(`Could not run alphabet binary at ${binaryPath}.`);
-    setStatusBarError('binary not found');
-    return;
+  if (transportMode !== 'native') {
+    const wasmRunner = await tryStartWasmLsp(context, log);
+    if (wasmRunner) {
+      log('Using WASM Language Server (zero-install mode)');
+      setStatusBarReady('wasm');
+      // Use a factory: vscode-languageclient ServerOptions accepts
+      // () => Promise<StreamInfo | ChildProcess | ...> for custom transports.
+      serverOptions = () => Promise.resolve(makeWasmStreamAdapter(wasmRunner, log));
+    } else {
+      if (transportMode === 'wasm') {
+        showStartupError('alphabet.transport=wasm requested but alphabet.wasm is not bundled.');
+        setStatusBarError('wasm missing');
+        return;
+      }
+      log('WASM LSP not available; falling back to native binary');
+      binaryPath = await resolveServerBinary(context);
+      log(`Using alphabet binary: ${binaryPath}`);
+      binaryVersion = (await getBinaryVersion(binaryPath)) ?? undefined;
+      if (!binaryVersion) {
+        showStartupError(`Could not run alphabet binary at ${binaryPath}.`);
+        setStatusBarError('binary not found');
+        return;
+      }
+      log(`Binary version: ${binaryVersion}`);
+      if (compareVersions(binaryVersion, MIN_BINARY_VERSION) < 0) {
+        void window.showWarningMessage(
+          `Alphabet extension expects binary v${MIN_BINARY_VERSION}+ (found v${binaryVersion}). Some features may be unavailable. Update with: alphabet update --force`,
+        );
+        log(`[warn] Binary version ${binaryVersion} < required ${MIN_BINARY_VERSION}`);
+      }
+      const run: Executable = {
+        command: binaryPath,
+        args: ['--lsp'],
+        transport: TransportKind.stdio,
+        options: {
+          env: { ...process.env, ALPHABET_LSP_CLIENT: 'vscode' },
+        },
+      };
+      serverOptions = { run, debug: run };
+    }
+  } else {
+    // Force native
+    binaryPath = await resolveServerBinary(context);
+    log(`Using alphabet binary (forced): ${binaryPath}`);
+    binaryVersion = (await getBinaryVersion(binaryPath)) ?? undefined;
+    if (!binaryVersion) {
+      showStartupError(`Could not run alphabet binary at ${binaryPath}.`);
+      setStatusBarError('binary not found');
+      return;
+    }
+    const run: Executable = {
+      command: binaryPath,
+      args: ['--lsp'],
+      transport: TransportKind.stdio,
+      options: {
+        env: { ...process.env, ALPHABET_LSP_CLIENT: 'vscode' },
+      },
+    };
+    serverOptions = { run, debug: run };
   }
-  log(`Binary version: ${binaryVersion}`);
-  if (compareVersions(binaryVersion, MIN_BINARY_VERSION) < 0) {
-    void window.showWarningMessage(
-      `Alphabet extension expects binary v${MIN_BINARY_VERSION}+ (found v${binaryVersion}). Some features may be unavailable. Update with: alphabet update --force`,
-    );
-    log(`[warn] Binary version ${binaryVersion} < required ${MIN_BINARY_VERSION}`);
-  }
-
-  // 3. Configure client
-  // Note: vscode-languageclient v9 auto-appends "--stdio" to args when
-  // TransportKind.stdio is used. alphabet accepts --stdio as an alias
-  // for --lsp since v2.3.6.
-  const run: Executable = {
-    command: binaryPath,
-    args: ['--lsp'],
-    transport: TransportKind.stdio,
-    options: {
-      env: { ...process.env, ALPHABET_LSP_CLIENT: 'vscode' },
-    },
-  };
-
-  const serverOptions: ServerOptions = { run, debug: run };
 
   // outputChannel was just assigned above; the ! is safe here.
   const out = outputChannel!;
@@ -178,6 +212,9 @@ export async function activate(context: ExtensionContext): Promise<void> {
   }
 
   // 5. Register all features
+  // `binaryPath` is undefined when running under the WASM transport.
+  // Commands that shell out to the binary (run/lint/compile/buildWasm)
+  // fall back to findBinary() internally when the parameter is undefined.
   registerCommands(context, binaryPath);
   registerDiagnosticsFilter(context);
   registerFormatter(context);
@@ -342,11 +379,69 @@ function setStatusBarError(reason: string): void {
   statusBarItem.backgroundColor = new ThemeColor('statusBarItem.errorBackground');
 }
 
+/**
+ * Build a custom Reader/Writer pair that bridges vscode-languageclient's
+ * stdio transport to an in-process WASM LSP runner.
+ *
+ * vscode-languageclient expects Node.js Duplex-shaped streams. We
+ * implement the minimal interface it actually uses:
+ *   reader: emits 'data' events with Buffer chunks; has read() method
+ *   writer: write(chunk) returns boolean; has end() method
+ */
+function makeWasmStreamAdapter(
+  runner: { send: (b: Buffer | Uint8Array) => void; onMessage: (h: (b: Buffer) => void) => void },
+  log: (msg: string) => void,
+): { reader: NodeJS.ReadableStream; writer: NodeJS.WritableStream } {
+  // Reader: a Readable that yields bytes the WASM runner pushes via onMessage
+  const { Readable, Writable } = require('stream') as typeof import('stream');
+  const reader = new Readable({
+    read() {
+      // Pull is driven by WASM pushes; nothing to do here.
+    },
+  });
+  const writer = new Writable({
+    write(chunk: Buffer | Uint8Array, _enc: string, cb: (err?: Error | null) => void) {
+      try {
+        runner.send(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        cb();
+      } catch (err) {
+        log(`[wasm-lsp] writer error: ${err}`);
+        cb(err as Error);
+      }
+    },
+    final(cb: (err?: Error | null) => void) {
+      // Emscripten has no clean shutdown. Closing the writer signals the
+      // LSP loop that we won't send more — std::getline will return false
+      // on the next call and the server.run() loop will exit.
+      cb();
+    },
+  });
+  runner.onMessage((bytes: Buffer) => {
+    reader.push(bytes);
+  });
+  return { reader: reader as NodeJS.ReadableStream, writer: writer as NodeJS.WritableStream };
+}
+
 // ============================================================================
 // Commands
 // ============================================================================
 
-function registerCommands(context: ExtensionContext, binaryPath: string): void {
+function registerCommands(context: ExtensionContext, binaryPath: string | undefined): void {
+  /**
+   * Resolve the binary path for a command invocation. Prefers the path
+   * passed in (from the LSP transport at activation time). Falls back to
+   * on-demand resolution via resolveServerBinary() so commands still work
+   * when the LSP transport is WASM and binaryPath is undefined.
+   */
+  async function resolveCmdBinary(): Promise<string | undefined> {
+    if (binaryPath) return binaryPath;
+    try {
+      return await resolveServerBinary(context);
+    } catch {
+      return undefined;
+    }
+  }
+
   /**
    * Build the command line to invoke for a given configuration setting.
    * The template MUST contain `${file}` as a placeholder — we refuse to
@@ -398,9 +493,10 @@ function registerCommands(context: ExtensionContext, binaryPath: string): void {
       const file = editor.document.uri.fsPath;
       // If the user hasn't overridden alphabet.lint.command, use the
       // resolved binary so linting works even when `alphabet` isn't on PATH.
+      const cmdBinary = await resolveCmdBinary();
       const configured = workspace.getConfiguration('alphabet').get<string>('lint.command');
       const defaultTpl = configured === undefined
-        ? `${binaryPath} lint \${file}`
+        ? `${cmdBinary ?? 'alphabet'} lint \${file}`
         : configured;
       let cmd: string;
       try {
@@ -421,9 +517,10 @@ function registerCommands(context: ExtensionContext, binaryPath: string): void {
       const out = file.replace(/\.abc$/, '.abc.bc');
       // Same pattern: when the user hasn't set alphabet.compile.command,
       // route through the resolved binary so the bundled LSP path is used.
+      const cmdBinary = await resolveCmdBinary();
       const configured = workspace.getConfiguration('alphabet').get<string>('compile.command');
       const defaultTpl = configured === undefined
-        ? `${binaryPath} -c -o "\${out}" "\${file}"`
+        ? `${cmdBinary ?? 'alphabet'} -c -o "\${out}" "\${file}"`
         : configured;
       if (!defaultTpl.includes('${file}')) {
         void window.showErrorMessage(

@@ -130,11 +130,14 @@ export class NLToCodeProvider implements WebviewViewProvider {
   private placeholderCode(prompt: string): string {
     // Deterministic stub used when the binary or `alphabet nl` subcommand is
     // unavailable. Marks itself as a placeholder so the webview can warn.
+    // IMPORTANT: line 1 must be the `#alphabet<lang>` header — the parser
+    // checks the first line for it and fails otherwise. The placeholder
+    // marker comment goes on line 2.
     const lines = prompt.trim().split(/\s+/);
     const varName = (lines[0] ?? 'x').toLowerCase().replace(/[^a-z0-9_]/g, '') || 'x';
     return [
-      '// [placeholder] Generated from prompt: "' + prompt + '"',
       '#alphabet<en>',
+      '// [placeholder] Generated from prompt: "' + prompt + '"',
       '',
       `5 ${varName} = 0`,
       '',

@@ -114,8 +114,18 @@
         },
         "alphabet.run.command": {
           "type": "string",
-          "default": "alphabet run",
-          "markdownDescription": "Command used by the run button. Placeholders: `${file}`."
+          "default": "alphabet run ${file}",
+          "markdownDescription": "Command used by the **▶ Run** button. Must contain the `${file}` placeholder — the extension will refuse to run if it's missing. Placeholders: `${file}` (quoted automatically)."
+        },
+        "alphabet.lint.command": {
+          "type": "string",
+          "default": "alphabet lint ${file}",
+          "markdownDescription": "Command used by the **Lint** button. Must contain `${file}`."
+        },
+        "alphabet.compile.command": {
+          "type": "string",
+          "default": "alphabet -c -o ${out} ${file}",
+          "markdownDescription": "Command used by the **Compile** button. Must contain `${file}`. Placeholders: `${file}` (quoted automatically), `${out}` (output path)."
         },
         "alphabet.completion.engine": {
           "type": "string",

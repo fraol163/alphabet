@@ -301,6 +301,30 @@ function setStatusBarError(reason: string): void {
 // ============================================================================
 
 function registerCommands(context: ExtensionContext, binaryPath: string): void {
+  /**
+   * Build the command line to invoke for a given configuration setting.
+   * The template MUST contain `${file}` as a placeholder — we refuse to
+   * run if it doesn't, since otherwise the binary gets called with no
+   * argument (the previous bug: "alphabet run must have its argument").
+   * The file path is quoted to handle spaces.
+   */
+  function buildCommand(
+    settingKey: string,
+    defaultTemplate: string,
+    file: string,
+  ): string {
+    const raw = workspace.getConfiguration('alphabet').get<string>(settingKey)
+      ?? defaultTemplate;
+    if (!raw.includes('${file}')) {
+      void window.showErrorMessage(
+        `alphabet.${settingKey} must contain \${file} placeholder. ` +
+        `Got: ${raw}`,
+      );
+      throw new Error(`Missing \${file} in alphabet.${settingKey}`);
+    }
+    return raw.replace(/\$\{file\}/g, `"${file}"`);
+  }
+
   context.subscriptions.push(
     commands.registerCommand('alphabet.run', async () => {
       const editor = window.activeTextEditor;
@@ -310,10 +334,15 @@ function registerCommands(context: ExtensionContext, binaryPath: string): void {
       }
       await editor.document.save();
       const file = editor.document.uri.fsPath;
-      const cmd = workspace.getConfiguration('alphabet.run').get<string>('command') ?? 'alphabet run';
+      let cmd: string;
+      try {
+        cmd = buildCommand('run.command', 'alphabet run ${file}', file);
+      } catch {
+        return; // buildCommand already showed an error notification
+      }
       const terminal = window.createTerminal({ name: 'Alphabet Run' });
       terminal.show();
-      terminal.sendText(cmd.replace('${file}', `"${file}"`));
+      terminal.sendText(cmd);
     }),
 
     commands.registerCommand('alphabet.lint', async () => {
@@ -321,9 +350,21 @@ function registerCommands(context: ExtensionContext, binaryPath: string): void {
       if (!editor) return;
       await editor.document.save();
       const file = editor.document.uri.fsPath;
+      // If the user hasn't overridden alphabet.lint.command, use the
+      // resolved binary so linting works even when `alphabet` isn't on PATH.
+      const configured = workspace.getConfiguration('alphabet').get<string>('lint.command');
+      const defaultTpl = configured === undefined
+        ? `${binaryPath} lint \${file}`
+        : configured;
+      let cmd: string;
+      try {
+        cmd = buildCommand('lint.command', defaultTpl, file);
+      } catch {
+        return;
+      }
       const terminal = window.createTerminal({ name: 'Alphabet Lint' });
       terminal.show();
-      terminal.sendText(`${binaryPath} lint "${file}"`);
+      terminal.sendText(cmd);
     }),
 
     commands.registerCommand('alphabet.compile', async () => {
@@ -332,9 +373,24 @@ function registerCommands(context: ExtensionContext, binaryPath: string): void {
       await editor.document.save();
       const file = editor.document.uri.fsPath;
       const out = file.replace(/\.abc$/, '.abc.bc');
+      // Same pattern: when the user hasn't set alphabet.compile.command,
+      // route through the resolved binary so the bundled LSP path is used.
+      const configured = workspace.getConfiguration('alphabet').get<string>('compile.command');
+      const defaultTpl = configured === undefined
+        ? `${binaryPath} -c -o "\${out}" "\${file}"`
+        : configured;
+      if (!defaultTpl.includes('${file}')) {
+        void window.showErrorMessage(
+          `alphabet.compile.command must contain \${file} placeholder. Got: ${defaultTpl}`,
+        );
+        return;
+      }
+      const cmd = defaultTpl
+        .replace(/\$\{out\}/g, out)
+        .replace(/\$\{file\}/g, file);
       const terminal = window.createTerminal({ name: 'Alphabet Compile' });
       terminal.show();
-      terminal.sendText(`${binaryPath} -c -o "${out}" "${file}"`);
+      terminal.sendText(cmd);
     }),
 
     commands.registerCommand('alphabet.buildWasm', async () => {

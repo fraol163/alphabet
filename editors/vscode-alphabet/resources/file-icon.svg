@@ -1,17 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#a855f7"/>
-      <stop offset="100%" stop-color="#1e293b"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="10" fill="url(#g)"/>
-  <!-- Stylized A -->
-  <g stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <path d="M 32 14 L 18 48" stroke="#67e8f9" stroke-width="6"/>
-    <path d="M 32 14 L 46 48" stroke="#67e8f9" stroke-width="6"/>
-    <path d="M 23 38 L 41 38" stroke="#fbbf24" stroke-width="3"/>
-  </g>
-  <polygon points="32,10 28,18 36,18" fill="#67e8f9"/>
+<!--
+  Alphabet file icon (shown next to .abc files in the explorer).
+  Same flat-fill style as the activity-bar view-icon for visual
+  consistency. Smaller, simpler glyph — just a stylized "A" on a
+  rounded purple square.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" shape-rendering="crispEdges">
+  <rect x="0" y="0" width="24" height="24" rx="4" fill="#7c3aed"/>
+  <path d="M 7 18 L 12 6 L 17 18 L 14.7 18 L 13.7 15.5 L 10.3 15.5 L 9.3 18 Z M 10.9 13.7 L 13.1 13.7 L 12 10.8 Z"
+        fill="#ffffff"/>
 </svg>

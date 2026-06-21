@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#a855f7"/>
-      <stop offset="100%" stop-color="#1e293b"/>
-    </linearGradient>
-  </defs>
-  <rect width="24" height="24" rx="4" fill="url(#g)"/>
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M 12 5 L 6 19" stroke="#67e8f9" stroke-width="2.5"/>
-    <path d="M 12 5 L 18 19" stroke="#67e8f9" stroke-width="2.5"/>
-    <path d="M 8 14 L 16 14" stroke="#fbbf24" stroke-width="1.5"/>
-  </g>
+<!--
+  Alphabet activity-bar icon for the NL-to-Code view.
+  24x24 viewBox, FLAT fills only (no gradients, no filters, no opacity
+  beyond 1.0). VS Code applies its own theme color over monochrome icons;
+  giving it explicit color makes the icon recognizable across themes.
+
+  "A" + downward arrow combo — translate-natural-language-prompt → code.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" shape-rendering="crispEdges">
+  <rect x="0" y="0" width="24" height="24" rx="4" fill="#7c3aed"/>
+  <path d="M 7 18 L 12 6 L 17 18 L 14.7 18 L 13.7 15.5 L 10.3 15.5 L 9.3 18 Z M 10.9 13.7 L 13.1 13.7 L 12 10.8 Z"
+        fill="#ffffff"/>
+  <path d="M 9 19 L 15 19 L 15 20.2 L 13.6 20.2 L 13.6 22 L 10.4 22 L 10.4 20.2 L 9 20.2 Z"
+        fill="#fbbf24"/>
 </svg>

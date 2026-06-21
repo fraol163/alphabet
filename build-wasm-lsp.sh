@@ -28,9 +28,29 @@ fi
 VERSION=$(cat VERSION 2>/dev/null || echo "dev")
 echo "Building Alphabet LSP WASM (version $VERSION)"
 
+# Find the Emscripten CMake toolchain explicitly. `emcc -v` no longer prints
+# the path in emsdk >= 4, so we resolve it from the known emsdk layout.
+EMSDK_TOOLCHAIN=""
+for candidate in \
+    "$HOME/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" \
+    "/opt/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" \
+    "/usr/local/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"; do
+    if [ -f "$candidate" ]; then
+        EMSDK_TOOLCHAIN="$candidate"
+        break
+    fi
+done
+if [ -z "$EMSDK_TOOLCHAIN" ]; then
+    echo "ERROR: Could not locate Emscripten.cmake toolchain file."
+    echo "Searched: $HOME/emsdk, /opt/emsdk, /usr/local/emsdk"
+    exit 1
+fi
+echo "Using toolchain: $EMSDK_TOOLCHAIN"
+
 rm -rf build-wasm-lsp
-emcmake cmake -S . -B build-wasm-lsp -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_TOOLCHAIN_FILE="$(emcc -v 2>&1 | grep -oE '/[^ ]*emscripten\.cmake' | head -1)"
+emcmake cmake -S editors/vscode-alphabet/build-tools/wasm-lsp -B build-wasm-lsp \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_TOOLCHAIN_FILE="$EMSDK_TOOLCHAIN"
 
 cmake --build build-wasm-lsp --target alphabet_lsp -j "$(nproc 2>/dev/null || echo 2)"
 

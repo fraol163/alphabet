@@ -1,0 +1,62 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Alphabet: Run",
+      "type": "shell",
+      "command": "alphabet",
+      "args": ["run", "${file}"],
+      "problemMatcher": ["$alphabet"],
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Alphabet: Run with debug",
+      "type": "shell",
+      "command": "alphabet",
+      "args": ["--debug", "${file}"],
+      "problemMatcher": ["$alphabet"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Alphabet: Compile (bytecode)",
+      "type": "shell",
+      "command": "alphabet",
+      "args": ["-c", "-o", "${fileDirname}/${fileBasenameNoExtension}.abc.bc", "${file}"],
+      "problemMatcher": ["$alphabet"],
+      "presentation": { "reveal": "silent" }
+    },
+    {
+      "label": "Alphabet: Build WASM",
+      "type": "shell",
+      "command": "alphabet",
+      "args": ["build", "--target", "wasm", "${file}"],
+      "problemMatcher": ["$alphabet"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Alphabet: Lint",
+      "type": "shell",
+      "command": "alphabet",
+      "args": ["lint", "${file}"],
+      "problemMatcher": ["$alphabet"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Alphabet: Run tests",
+      "type": "shell",
+      "command": "alphabet",
+      "args": ["test", "${workspaceFolder}/tests"],
+      "problemMatcher": ["$alphabet"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Alphabet: Update",
+      "type": "shell",
+      "command": "alphabet",
+      "args": ["update"],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    }
+  ]
+}

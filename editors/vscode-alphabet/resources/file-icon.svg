@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="10" fill="url(#g)"/>
+  <!-- Stylized A -->
+  <g stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 32 14 L 18 48" stroke="#67e8f9" stroke-width="6"/>
+    <path d="M 32 14 L 46 48" stroke="#67e8f9" stroke-width="6"/>
+    <path d="M 23 38 L 41 38" stroke="#fbbf24" stroke-width="3"/>
+  </g>
+  <polygon points="32,10 28,18 36,18" fill="#67e8f9"/>
+</svg>

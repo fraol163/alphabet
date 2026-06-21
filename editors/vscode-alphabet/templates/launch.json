@@ -1,0 +1,34 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "alphabet",
+      "request": "launch",
+      "name": "Alphabet: Run current file",
+      "program": "${file}",
+      "stopOnEntry": false,
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "alphabet",
+      "request": "launch",
+      "name": "Alphabet: Debug current file",
+      "program": "${file}",
+      "stopOnEntry": true,
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "alphabet",
+      "request": "attach",
+      "name": "Alphabet: Attach to VM",
+      "address": "localhost",
+      "port": 7011
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Alphabet: Run + Attach",
+      "configurations": ["Alphabet: Run current file"]
+    }
+  ]
+}

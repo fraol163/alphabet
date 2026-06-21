@@ -1,0 +1,134 @@
+{
+  "Print Hello": {
+    "prefix": "hello",
+    "body": [
+      "#alphabet<en>",
+      "",
+      "m 0 main() {",
+      "  z.o(\"Hello, Alphabet!\")",
+      "}"
+    ],
+    "description": "Minimal Alphabet program that prints a greeting"
+  },
+  "Function": {
+    "prefix": "fn",
+    "body": [
+      "m ${1:int} ${2:name}(${3:int} ${4:param}) {",
+      "  ${5:// body}",
+      "  r ${0:0}",
+      "}"
+    ],
+    "description": "Function with return type, parameters, and body"
+  },
+  "Method": {
+    "prefix": "method",
+    "body": [
+      "m ${1:int} ${2:name}(${3}) {",
+      "  ${0:// body}",
+      "}"
+    ],
+    "description": "Class method"
+  },
+  "Class": {
+    "prefix": "class",
+    "body": [
+      "c ${1:ClassName} {",
+      "  s ${2:int} ${3:counter} = 0",
+      "",
+      "  m 0 ${4:init}(${5}) {",
+      "    ${0:// constructor}",
+      "  }",
+      "}"
+    ],
+    "description": "Class with static field and initializer"
+  },
+  "If statement": {
+    "prefix": "if",
+    "body": [
+      "i (${1:condition}) {",
+      "  ${0:// body}",
+      "}"
+    ],
+    "description": "Conditional"
+  },
+  "If-else": {
+    "prefix": "ifelse",
+    "body": [
+      "i (${1:condition}) {",
+      "  ${2:// if}",
+      "} e {",
+      "  ${0:// else}",
+      "}"
+    ],
+    "description": "If-else"
+  },
+  "While loop": {
+    "prefix": "while",
+    "body": [
+      "l (${1:condition}) {",
+      "  ${0:// body}",
+      "}"
+    ],
+    "description": "While loop"
+  },
+  "For loop": {
+    "prefix": "for",
+    "body": [
+      "l (${1:int} ${2:i} = ${3:0} : ${2:i} < ${4:n} : ${2:i} = ${2:i} + 1) {",
+      "  ${0:// body}",
+      "}"
+    ],
+    "description": "For loop with initializer, condition, increment"
+  },
+  "Try-catch": {
+    "prefix": "try",
+    "body": [
+      "t {",
+      "  ${1:// try}",
+      "} h (12 ${2:err}) {",
+      "  ${0:// handle}",
+      "}"
+    ],
+    "description": "Try / handle (catch)"
+  },
+  "Match": {
+    "prefix": "match",
+    "body": [
+      "q (${1:value}) {",
+      "  ${2:pattern}: ${3:// body}",
+      "  _: ${0:// default}",
+      "}"
+    ],
+    "description": "Pattern match"
+  },
+  "Import": {
+    "prefix": "import",
+    "body": [
+      "x \"${1:path/to/module.abc}\""
+    ],
+    "description": "Import a module"
+  },
+  "Constant": {
+    "prefix": "const",
+    "body": [
+      "const ${1:name} = ${0:value}"
+    ],
+    "description": "Constant declaration"
+  },
+  "New instance": {
+    "prefix": "new",
+    "body": [
+      "${1:ClassName} ${2:obj} = n ${1:ClassName}(${3})"
+    ],
+    "description": "Instantiate a class"
+  },
+  "Main function": {
+    "prefix": "main",
+    "body": [
+      "m 0 main() {",
+      "  ${0:// entry point}",
+      "}"
+    ],
+    "description": "Program entry point"
+  }
+}

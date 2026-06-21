@@ -219,7 +219,8 @@ void LanguageServer::send_notification(const std::string& method, const JsonValu
 void LanguageServer::run() {
     std::cerr << "Alphabet LSP Server v" << ALPHABET_VERSION << " started\n";
     std::cerr << "Waiting for editor connection...\n";
-    std::cerr << "Capabilities: hover, completion, definition, symbols\n\n";
+    std::cerr << "Capabilities: hover, completion, definition, references, rename, "
+              "symbols, formatting, rangeFormatting, signatureHelp, codeAction\n\n";
     std::string line;
     while (std::getline(std::cin, line)) {
         int content_length = 0;
@@ -245,6 +246,10 @@ void LanguageServer::run() {
             handle_did_open(msg.get("params"));
         } else if (method == "textDocument/didChange") {
             handle_did_change(msg.get("params"));
+        } else if (method == "textDocument/didSave") {
+            handle_did_save(msg.get("params"));
+        } else if (method == "textDocument/didClose") {
+            handle_did_close(msg.get("params"));
         } else if (method == "textDocument/completion") {
             send_response(id, handle_completion(id, msg.get("params")));
         } else if (method == "textDocument/hover") {
@@ -253,6 +258,18 @@ void LanguageServer::run() {
             send_response(id, handle_document_symbol(id, msg.get("params")));
         } else if (method == "textDocument/definition") {
             send_response(id, handle_definition(id, msg.get("params")));
+        } else if (method == "textDocument/references") {
+            send_response(id, handle_references(id, msg.get("params")));
+        } else if (method == "textDocument/rename") {
+            send_response(id, handle_rename(id, msg.get("params")));
+        } else if (method == "textDocument/signatureHelp") {
+            send_response(id, handle_signature_help(id, msg.get("params")));
+        } else if (method == "textDocument/formatting") {
+            send_response(id, handle_formatting(id, msg.get("params")));
+        } else if (method == "textDocument/rangeFormatting") {
+            send_response(id, handle_range_formatting(id, msg.get("params")));
+        } else if (method == "textDocument/codeAction") {
+            send_response(id, JsonValue::array());
         } else if (method == "shutdown") {
             send_response(id, JsonValue::null());
         } else if (method == "exit") {
@@ -269,6 +286,8 @@ JsonValue LanguageServer::handle_initialize(int, const JsonValue&) {
     JsonValue sync = JsonValue::object();
     sync.set("openClose", JsonValue::boolean(true));
     sync.set("change", JsonValue::integer(1));
+    sync.set("willSave", JsonValue::boolean(false));
+    sync.set("save", JsonValue::boolean(true));
     caps.set("textDocumentSync", sync);
 
     JsonValue comp = JsonValue::object();
@@ -276,13 +295,28 @@ JsonValue LanguageServer::handle_initialize(int, const JsonValue&) {
     triggers.push(JsonValue::string(" "));
     triggers.push(JsonValue::string("."));
     triggers.push(JsonValue::string("("));
+    triggers.push(JsonValue::string("\n"));
     comp.set("triggerCharacters", triggers);
+    JsonValue res = JsonValue::object();
+    res.set("editRange", JsonValue::boolean(true));
+    comp.set("resolveProvider", res);
     caps.set("completionProvider", comp);
 
     caps.set("hoverProvider", JsonValue::boolean(true));
 
     caps.set("documentSymbolProvider", JsonValue::boolean(true));
     caps.set("definitionProvider", JsonValue::boolean(true));
+    caps.set("referencesProvider", JsonValue::boolean(true));
+    caps.set("renameProvider", JsonValue::boolean(true));
+    caps.set("documentFormattingProvider", JsonValue::boolean(true));
+    caps.set("documentRangeFormattingProvider", JsonValue::boolean(true));
+
+    JsonValue sig = JsonValue::object();
+    JsonValue sig_triggers = JsonValue::array();
+    sig_triggers.push(JsonValue::string("("));
+    sig_triggers.push(JsonValue::string(","));
+    sig.set("triggerCharacters", sig_triggers);
+    caps.set("signatureHelpProvider", sig);
 
     JsonValue result = JsonValue::object();
     result.set("capabilities", caps);
@@ -293,6 +327,24 @@ JsonValue LanguageServer::handle_initialize(int, const JsonValue&) {
     result.set("serverInfo", server_info);
 
     return result;
+}
+
+void LanguageServer::handle_did_save(const JsonValue& params) {
+    std::string uri = params.get("textDocument").get_str("uri");
+    auto it = documents_.find(uri);
+    if (it != documents_.end()) {
+        publish_diagnostics(uri, it->second);
+    }
+}
+
+void LanguageServer::handle_did_close(const JsonValue& params) {
+    std::string uri = params.get("textDocument").get_str("uri");
+    documents_.erase(uri);
+    JsonValue empty = JsonValue::array();
+    JsonValue params_out = JsonValue::object();
+    params_out.set("uri", JsonValue::string(uri));
+    params_out.set("diagnostics", empty);
+    send_notification("textDocument/publishDiagnostics", params_out);
 }
 
 void LanguageServer::handle_did_open(const JsonValue& params) {
@@ -315,22 +367,48 @@ void LanguageServer::handle_did_change(const JsonValue& params) {
 void LanguageServer::publish_diagnostics(const std::string& uri, const std::string& content) {
     JsonValue diags = JsonValue::array();
 
-    if (content.find("#alphabet<") == std::string::npos) {
-        JsonValue d = JsonValue::object();
+    // Helper lambda to build a full-line range for a given 0-based line number
+    auto line_range = [&](int line, int start_col, int end_col) {
         JsonValue range = JsonValue::object();
         JsonValue start = JsonValue::object();
-        start.set("line", JsonValue::integer(0));
-        start.set("character", JsonValue::integer(0));
-        JsonValue end = JsonValue::object();
-        end.set("line", JsonValue::integer(0));
-        end.set("character", JsonValue::integer(10));
+        start.set("line", JsonValue::integer(line));
+        start.set("character", JsonValue::integer(start_col));
         range.set("start", start);
+        JsonValue end = JsonValue::object();
+        end.set("line", JsonValue::integer(line));
+        end.set("character", JsonValue::integer(end_col));
         range.set("end", end);
-        d.set("range", range);
-        d.set("severity", JsonValue::integer(1));
-        d.set("message", JsonValue::string("Missing required header '#alphabet<lang>' on line 1"));
+        return range;
+    };
+
+    auto push_diag = [&](int line, int col, int end_col, int severity,
+                         const std::string& code, const std::string& message) {
+        JsonValue d = JsonValue::object();
+        d.set("range", line_range(line, col, end_col));
+        d.set("severity", JsonValue::integer(severity));
+        d.set("code", JsonValue::string(code));
+        d.set("source", JsonValue::string("alphabet"));
+        d.set("message", JsonValue::string(message));
         diags.push(d);
-    } else {
+    };
+
+    // Strip just the first line for the header check so a string literal in
+    // the body doesn't accidentally satisfy the directive requirement.
+    std::string first_line;
+    {
+        size_t nl = content.find('\n');
+        first_line = (nl == std::string::npos) ? content : content.substr(0, nl);
+    }
+
+    bool has_header = first_line.rfind("#alphabet<", 0) == 0;
+
+    if (!has_header) {
+        push_diag(0, 0, (int)first_line.size(), 1, "alphabet/E001",
+                  "Missing required header '#alphabet<lang>' on line 1 "
+                  "(valid: en, am, de, es, fr)");
+    }
+
+    if (has_header) {
         try {
             Lexer lexer(content);
             auto tokens = lexer.scan_tokens();
@@ -342,32 +420,45 @@ void LanguageServer::publish_diagnostics(const std::string& uri, const std::stri
                 int err_line = 0, err_col = 0;
                 size_t lp = err.find("line ");
                 if (lp != std::string::npos) {
-                    err_line = std::stoi(err.substr(lp + 5)) - 1;
+                    try {
+                        err_line = std::stoi(err.substr(lp + 5)) - 1;
+                    } catch (...) { err_line = 0; }
                 }
                 size_t cp = err.find("column ");
                 if (cp != std::string::npos) {
-                    err_col = std::stoi(err.substr(cp + 7)) - 1;
+                    try {
+                        err_col = std::stoi(err.substr(cp + 7)) - 1;
+                    } catch (...) { err_col = 0; }
                 }
-
-                JsonValue d = JsonValue::object();
-                JsonValue range = JsonValue::object();
-                JsonValue start = JsonValue::object();
-                start.set("line", JsonValue::integer(err_line));
-                start.set("character", JsonValue::integer(err_col));
-                JsonValue end = JsonValue::object();
-                end.set("line", JsonValue::integer(err_line));
-                end.set("character", JsonValue::integer(err_col + 5));
-                range.set("start", start);
-                range.set("end", end);
-                d.set("range", range);
-                d.set("severity", JsonValue::integer(1));
+                if (err_line < 0) err_line = 0;
+                if (err_col < 0) err_col = 0;
 
                 size_t newline = err.find('\n');
                 std::string clean_msg = (newline != std::string::npos) ? err.substr(0, newline) : err;
-                d.set("message", JsonValue::string(clean_msg));
-                diags.push(d);
+
+                // Find actual end of offending token by reading the source line
+                int end_col = err_col + 1;
+                {
+                    std::istringstream ls(content);
+                    std::string l;
+                    int ln = 0;
+                    while (std::getline(ls, l)) {
+                        if (ln == err_line) {
+                            int end = err_col;
+                            while (end < (int)l.size() && (std::isalnum(l[end]) || l[end] == '_'))
+                                ++end;
+                            end_col = std::max(end, err_col + 1);
+                            if (end_col > (int)l.size()) end_col = (int)l.size();
+                            break;
+                        }
+                        ++ln;
+                    }
+                }
+
+                push_diag(err_line, err_col, end_col, 1, "alphabet/E100", clean_msg);
             }
         } catch (const std::exception&) {
+            // Swallow lexer/parser crashes so they don't bring the server down.
         }
     }
 
@@ -1017,6 +1108,452 @@ JsonValue LanguageServer::handle_definition(int, const JsonValue& params) {
     }
 
     return JsonValue::null();
+}
+
+// ============================================================================
+// Formatting
+// ============================================================================
+//
+// Format strategy:
+//   1. Normalize line endings to \n
+//   2. Trim trailing whitespace from each line
+//   3. Strip leading/trailing blank lines
+//   4. Preserve the user's original indentation but re-tabify runs of spaces
+//      in multiples of 4
+//   5. Ensure single trailing newline
+//
+// This is intentionally simple and safe — we never re-flow code, only clean up
+// whitespace. The formatter is idempotent: formatting a formatted file leaves
+// it unchanged.
+
+static std::string rtrim(const std::string& s) {
+    size_t end = s.find_last_not_of(" \t\r");
+    return end == std::string::npos ? "" : s.substr(0, end + 1);
+}
+
+static std::string normalize_indent(const std::string& line, int /*unit*/) {
+    size_t i = 0;
+    int spaces = 0;
+    while (i < line.size() && (line[i] == ' ' || line[i] == '\t')) {
+        if (line[i] == '\t')
+            spaces += 4;
+        else
+            ++spaces;
+        ++i;
+    }
+    int depth = spaces / 4;
+    int extra = spaces % 4;
+    std::string out;
+    for (int d = 0; d < depth; ++d)
+        out += "    ";
+    out += std::string(extra, ' ');
+    out += line.substr(i);
+    return out;
+}
+
+std::string LanguageServer::format_text(const std::string& source) const {
+    std::string normalized;
+    normalized.reserve(source.size());
+
+    for (size_t i = 0; i < source.size(); ++i) {
+        if (source[i] == '\r') {
+            if (i + 1 < source.size() && source[i + 1] == '\n')
+                continue;
+            normalized.push_back('\n');
+        } else {
+            normalized.push_back(source[i]);
+        }
+    }
+
+    std::vector<std::string> lines;
+    std::string cur;
+    for (char c : normalized) {
+        if (c == '\n') {
+            lines.push_back(rtrim(cur));
+            cur.clear();
+        } else {
+            cur.push_back(c);
+        }
+    }
+    if (!cur.empty())
+        lines.push_back(rtrim(cur));
+
+    while (!lines.empty() && lines.front().empty())
+        lines.erase(lines.begin());
+    while (!lines.empty() && lines.back().empty())
+        lines.pop_back();
+
+    // Collapse runs of 2+ blank lines into a single blank line.
+    std::vector<std::string> collapsed;
+    collapsed.reserve(lines.size());
+    bool last_blank = false;
+    for (auto& ln : lines) {
+        bool blank = ln.empty();
+        if (blank && last_blank)
+            continue;
+        collapsed.push_back(ln);
+        last_blank = blank;
+    }
+
+    std::string out;
+    for (size_t i = 0; i < collapsed.size(); ++i) {
+        out += normalize_indent(collapsed[i], indent_unit());
+        out += '\n';
+    }
+    return out;
+}
+
+JsonValue LanguageServer::handle_formatting(int, const JsonValue& params) {
+    std::string uri = params.get("textDocument").get_str("uri");
+    auto it = documents_.find(uri);
+    if (it == documents_.end()) {
+        JsonValue empty = JsonValue::array();
+        return empty;
+    }
+
+    int tab_size = params.get("options").get_int("tabSize", 4);
+    if (tab_size <= 0) tab_size = 4;
+
+    std::string source = it->second;
+    std::string formatted = format_text(source);
+
+    int orig_lines = 1;
+    for (char c : source)
+        if (c == '\n') ++orig_lines;
+    int new_lines = 1;
+    for (char c : formatted)
+        if (c == '\n') ++new_lines;
+
+    JsonValue range = JsonValue::object();
+    JsonValue start = JsonValue::object();
+    start.set("line", JsonValue::integer(0));
+    start.set("character", JsonValue::integer(0));
+    range.set("start", start);
+    JsonValue end = JsonValue::object();
+    end.set("line", JsonValue::integer(std::max(orig_lines, new_lines)));
+    end.set("character", JsonValue::integer(0));
+    range.set("end", end);
+
+    JsonValue edit = JsonValue::object();
+    edit.set("range", range);
+    edit.set("newText", JsonValue::string(formatted));
+
+    JsonValue edits = JsonValue::array();
+    edits.push(edit);
+
+    (void)tab_size;
+    return edits;
+}
+
+JsonValue LanguageServer::handle_range_formatting(int, const JsonValue& params) {
+    std::string uri = params.get("textDocument").get_str("uri");
+    auto it = documents_.find(uri);
+    if (it == documents_.end()) {
+        JsonValue empty = JsonValue::array();
+        return empty;
+    }
+
+    const JsonValue& range = params.get("range");
+    int start_line = range.get("start").get_int("line");
+    int end_line = range.get("end").get_int("line");
+
+    std::istringstream stream(it->second);
+    std::string line;
+    std::vector<std::string> lines;
+    while (std::getline(stream, line))
+        lines.push_back(line);
+
+    if (start_line < 0) start_line = 0;
+    if (end_line >= (int)lines.size()) end_line = (int)lines.size() - 1;
+    if (start_line > end_line) {
+        JsonValue empty = JsonValue::array();
+        return empty;
+    }
+
+    std::string block;
+    for (int i = start_line; i <= end_line; ++i) {
+        block += lines[i];
+        if (i < end_line) block += '\n';
+    }
+
+    std::string formatted = format_text(block);
+    if (formatted.size() && formatted.back() == '\n')
+        formatted.pop_back();
+
+    std::vector<std::string> out_lines;
+    std::string cur;
+    for (char c : formatted) {
+        if (c == '\n') {
+            out_lines.push_back(cur);
+            cur.clear();
+        } else {
+            cur.push_back(c);
+        }
+    }
+    if (!cur.empty() || !out_lines.empty())
+        out_lines.push_back(cur);
+
+    JsonValue edits = JsonValue::array();
+    for (size_t i = 0; i < out_lines.size(); ++i) {
+        int ln = start_line + (int)i;
+        if (ln >= (int)lines.size()) break;
+        JsonValue edit_range = JsonValue::object();
+        JsonValue edit_start = JsonValue::object();
+        edit_start.set("line", JsonValue::integer(ln));
+        edit_start.set("character", JsonValue::integer(0));
+        edit_range.set("start", edit_start);
+        JsonValue edit_end = JsonValue::object();
+        edit_end.set("line", JsonValue::integer(ln + 1));
+        edit_end.set("character", JsonValue::integer(0));
+        edit_range.set("end", edit_end);
+
+        JsonValue edit = JsonValue::object();
+        edit.set("range", edit_range);
+        edit.set("newText", JsonValue::string(out_lines[i]));
+        edits.push(edit);
+    }
+
+    return edits;
+}
+
+// ============================================================================
+// Signature help — show builtin signatures
+// ============================================================================
+
+JsonValue LanguageServer::handle_signature_help(int, const JsonValue& params) {
+    std::string uri = params.get("textDocument").get_str("uri");
+    auto it = documents_.find(uri);
+    if (it == documents_.end())
+        return JsonValue::null();
+
+    const JsonValue& pos = params.get("position");
+    int line = pos.get_int("line");
+    int character = pos.get_int("character");
+
+    std::istringstream stream(it->second);
+    std::string cur_line;
+    int ln = 0;
+    while (std::getline(stream, cur_line)) {
+        if (ln == line) break;
+        ++ln;
+    }
+
+    int paren_pos = -1;
+    int depth = 0;
+    for (int i = std::min(character, (int)cur_line.size() - 1); i >= 0; --i) {
+        if (cur_line[i] == ')')
+            ++depth;
+        else if (cur_line[i] == '(') {
+            if (depth == 0) {
+                paren_pos = i;
+                break;
+            }
+            --depth;
+        }
+    }
+    if (paren_pos < 0)
+        return JsonValue::null();
+
+    int start = paren_pos;
+    while (start > 0 && (std::isalnum(cur_line[start - 1]) || cur_line[start - 1] == '_' ||
+                         cur_line[start - 1] == '.'))
+        --start;
+    std::string call_name = cur_line.substr(start, paren_pos - start);
+
+    struct Sig {
+        const char* name;
+        const char* sig;
+        const char* doc;
+    } sigs[] = {
+        {"z.o",      "z.o(value)",                 "Print value to stdout"},
+        {"z.i",      "z.i()",                       "Read a line from stdin"},
+        {"z.sqrt",   "z.sqrt(x: number): number",   "Square root"},
+        {"z.abs",    "z.abs(x: number): number",    "Absolute value"},
+        {"z.sin",    "z.sin(x: number): number",    "Sine (radians)"},
+        {"z.cos",    "z.cos(x: number): number",    "Cosine (radians)"},
+        {"z.pow",    "z.pow(base, exp): number",    "Power"},
+        {"z.floor",  "z.floor(x: number): number",  "Floor"},
+        {"z.ceil",   "z.ceil(x: number): number",   "Ceiling"},
+        {"z.len",    "z.len(x): number",            "Length of string or list"},
+        {"z.type",   "z.type(x): string",          "Type name"},
+        {"z.tostr",  "z.tostr(x): string",          "Convert to string"},
+        {"z.tonum",  "z.tonum(x): number",          "Convert to number"},
+        {"z.t",      "z.t(message)",                "Throw an exception"},
+        {"z.f",      "z.f(path): string",           "Read file"},
+        {"z.split",  "z.split(s, delim): list",     "Split string"},
+        {"z.join",   "z.join(list, sep): string",   "Join list"},
+        {"z.replace","z.replace(s, old, new): str", "Replace substring"},
+        {"z.trim",   "z.trim(s): string",           "Trim whitespace"},
+        {"z.upper",  "z.upper(s): string",          "Uppercase"},
+        {"z.lower",  "z.lower(s): string",          "Lowercase"},
+        {"z.dyn",    "z.dyn(lib, fn, ...args)",     "FFI call"},
+    };
+
+    JsonValue signatures = JsonValue::array();
+    int active = 0;
+    for (size_t i = 0; i < sizeof(sigs) / sizeof(sigs[0]); ++i) {
+        if (call_name == sigs[i].name) {
+            JsonValue s = JsonValue::object();
+            s.set("label", JsonValue::string(sigs[i].sig));
+            s.set("documentation", JsonValue::string(sigs[i].doc));
+            signatures.push(s);
+            active = (int)signatures.arr_val.size() - 1;
+        }
+    }
+    if (signatures.arr_val.empty())
+        return JsonValue::null();
+
+    JsonValue result = JsonValue::object();
+    result.set("signatures", signatures);
+    result.set("activeSignature", JsonValue::integer(active));
+    result.set("activeParameter", JsonValue::integer(0));
+    return result;
+}
+
+// ============================================================================
+// References — find all references to the symbol under cursor
+// ============================================================================
+
+JsonValue LanguageServer::handle_references(int, const JsonValue& params) {
+    std::string uri = params.get("textDocument").get_str("uri");
+    auto it = documents_.find(uri);
+    if (it == documents_.end())
+        return JsonValue::array();
+
+    const JsonValue& pos = params.get("position");
+    int line = pos.get_int("line");
+    int character = pos.get_int("character");
+
+    std::istringstream stream(it->second);
+    std::string current_line;
+    int ln = 0;
+    while (std::getline(stream, current_line)) {
+        if (ln == line) break;
+        ++ln;
+    }
+    if (character > (int)current_line.size())
+        return JsonValue::array();
+
+    int s = character, e = character;
+    while (s > 0 && (std::isalnum(current_line[s - 1]) || current_line[s - 1] == '_'))
+        --s;
+    while (e < (int)current_line.size() && (std::isalnum(current_line[e]) || current_line[e] == '_'))
+        ++e;
+    if (s == e) return JsonValue::array();
+
+    std::string needle = current_line.substr(s, e - s);
+    if (needle.empty()) return JsonValue::array();
+
+    JsonValue refs = JsonValue::array();
+    std::istringstream s2(it->second);
+    std::string line_str;
+    int line_num = 0;
+    while (std::getline(s2, line_str)) {
+        size_t search_from = 0;
+        while (search_from < line_str.size()) {
+            size_t pos2 = line_str.find(needle, search_from);
+            if (pos2 == std::string::npos) break;
+            bool word_left = pos2 > 0 && (std::isalnum(line_str[pos2 - 1]) || line_str[pos2 - 1] == '_');
+            bool word_right =
+                pos2 + needle.size() < line_str.size() &&
+                (std::isalnum(line_str[pos2 + needle.size()]) || line_str[pos2 + needle.size()] == '_');
+            if (!word_left && !word_right) {
+                JsonValue loc = JsonValue::object();
+                loc.set("uri", JsonValue::string(uri));
+                JsonValue range = JsonValue::object();
+                JsonValue start = JsonValue::object();
+                start.set("line", JsonValue::integer(line_num));
+                start.set("character", JsonValue::integer((int)pos2));
+                range.set("start", start);
+                JsonValue end = JsonValue::object();
+                end.set("line", JsonValue::integer(line_num));
+                end.set("character", JsonValue::integer((int)(pos2 + needle.size())));
+                range.set("end", end);
+                loc.set("range", range);
+                refs.push(loc);
+            }
+            search_from = pos2 + needle.size();
+            if (search_from == 0) break;
+        }
+        ++line_num;
+    }
+    return refs;
+}
+
+// ============================================================================
+// Rename — rename symbol across the document
+// ============================================================================
+
+JsonValue LanguageServer::handle_rename(int, const JsonValue& params) {
+    std::string uri = params.get("textDocument").get_str("uri");
+    auto it = documents_.find(uri);
+    if (it == documents_.end())
+        return JsonValue::null();
+
+    const JsonValue& pos = params.get("position");
+    int line = pos.get_int("line");
+    int character = pos.get_int("character");
+    std::string new_name = params.get("newName").str_val;
+    if (new_name.empty()) return JsonValue::null();
+
+    std::istringstream stream(it->second);
+    std::string current_line;
+    int ln = 0;
+    while (std::getline(stream, current_line)) {
+        if (ln == line) break;
+        ++ln;
+    }
+    if (character > (int)current_line.size()) return JsonValue::null();
+
+    int s = character, e = character;
+    while (s > 0 && (std::isalnum(current_line[s - 1]) || current_line[s - 1] == '_'))
+        --s;
+    while (e < (int)current_line.size() && (std::isalnum(current_line[e]) || current_line[e] == '_'))
+        ++e;
+    if (s == e) return JsonValue::null();
+
+    std::string old_name = current_line.substr(s, e - s);
+    if (old_name == new_name) return JsonValue::null();
+
+    JsonValue edits = JsonValue::array();
+    std::istringstream s2(it->second);
+    std::string line_str;
+    int line_num = 0;
+    while (std::getline(s2, line_str)) {
+        size_t search_from = 0;
+        while (search_from < line_str.size()) {
+            size_t pos2 = line_str.find(old_name, search_from);
+            if (pos2 == std::string::npos) break;
+            bool word_left = pos2 > 0 && (std::isalnum(line_str[pos2 - 1]) || line_str[pos2 - 1] == '_');
+            bool word_right =
+                pos2 + old_name.size() < line_str.size() &&
+                (std::isalnum(line_str[pos2 + old_name.size()]) || line_str[pos2 + old_name.size()] == '_');
+            if (!word_left && !word_right) {
+                JsonValue edit = JsonValue::object();
+                JsonValue range = JsonValue::object();
+                JsonValue start = JsonValue::object();
+                start.set("line", JsonValue::integer(line_num));
+                start.set("character", JsonValue::integer((int)pos2));
+                range.set("start", start);
+                JsonValue end = JsonValue::object();
+                end.set("line", JsonValue::integer(line_num));
+                end.set("character", JsonValue::integer((int)(pos2 + old_name.size())));
+                range.set("end", end);
+                edit.set("range", range);
+                edit.set("newText", JsonValue::string(new_name));
+                edits.push(edit);
+            }
+            search_from = pos2 + old_name.size();
+            if (search_from == 0) break;
+        }
+        ++line_num;
+    }
+
+    JsonValue workspace_edit = JsonValue::object();
+    JsonValue changes = JsonValue::object();
+    changes.set(uri, edits);
+    workspace_edit.set("changes", changes);
+    return workspace_edit;
 }
 
 } // namespace lsp

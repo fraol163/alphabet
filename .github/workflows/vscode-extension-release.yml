@@ -1,0 +1,195 @@
+name: Release VS Code Extension
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 0.2.0)'
+        required: true
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }}-${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x64
+            target: linux-x64
+            binary_name: alphabet
+          - os: ubuntu-24.04-arm
+            arch: arm64
+            target: linux-arm64
+            binary_name: alphabet
+          - os: macos-13
+            arch: x64
+            target: darwin-x64
+            binary_name: alphabet
+          - os: macos-latest
+            arch: arm64
+            target: darwin-arm64
+            binary_name: alphabet
+          - os: windows-latest
+            arch: x64
+            target: win32-x64
+            binary_name: alphabet.exe
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: editors/vscode-alphabet/package-lock.json
+
+      - name: Setup Python (alphabet deps)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install CMake
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libstdc++-12-dev
+        if: runner.os == 'Linux'
+
+      - name: Install Xcode CLT
+        run: xcode-select --install || true
+        if: runner.os == 'macOS'
+
+      - name: Build alphabet (Release)
+        working-directory: ${{ github.workspace }}
+        run: |
+          cmake -B build-${{ matrix.target }} -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-${{ matrix.target }} --config Release -j 4 --target alphabet
+
+      - name: Stage binary
+        run: |
+          mkdir -p editors/vscode-alphabet/server/bin
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cp build-${{ matrix.target }}/Release/${{ matrix.binary_name }} \
+               editors/vscode-alphabet/server/bin/alphabet-${{ matrix.target }}.exe
+          else
+            cp build-${{ matrix.target }}/alphabet \
+               editors/vscode-alphabet/server/bin/alphabet-${{ matrix.target }}
+            chmod +x editors/vscode-alphabet/server/bin/alphabet-${{ matrix.target }}
+          fi
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.target }}
+          path: editors/vscode-alphabet/server/bin/alphabet-${{ matrix.target }}${{ runner.os == 'Windows' && '.exe' || '' }}
+
+  bundle:
+    name: Package VSIX
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: editors/vscode-alphabet/package-lock.json
+
+      - name: Download all binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: editors/vscode-alphabet/server/bin
+          pattern: binary-*
+          merge-multiple: true
+
+      - name: Rename binaries
+        run: |
+          cd editors/vscode-alphabet/server/bin
+          for f in alphabet-linux-x64 alphabet-linux-arm64 alphabet-darwin-x64 alphabet-darwin-arm64; do
+            [ -f "$f" ] || [ -f "${f}.exe" ] && continue
+          done
+          ls -la
+
+      - name: Install npm dependencies
+        working-directory: editors/vscode-alphabet
+        run: npm ci
+
+      - name: Bundle TypeScript
+        working-directory: editors/vscode-alphabet
+        run: npm run build
+
+      - name: Package VSIX
+        working-directory: editors/vscode-alphabet
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          npx @vscode/vsce package --no-dependencies
+          ls -la *.vsix
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: editors/vscode-alphabet/*.vsix
+
+  publish-marketplace:
+    name: Publish to Marketplace
+    needs: bundle
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download VSIX
+        uses: actions/download-artifact@v4
+        with:
+          name: vsix
+          path: ./dist
+
+      - name: Publish to VS Code Marketplace
+        working-directory: editors/vscode-alphabet
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          npx @vscode/vsce publish --packagePath dist/*.vsix \
+            --no-git-tag-version \
+            --no-update-package-json
+
+      - name: Publish to OpenVSX
+        working-directory: editors/vscode-alphabet
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          npx ovsx publish dist/*.vsix \
+            --pat $OVSX_PAT
+
+  release:
+    name: Create GitHub Release
+    needs: [build, bundle]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download VSIX
+        uses: actions/download-artifact@v4
+        with:
+          name: vsix
+          path: ./dist
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.vsix
+            editors/vscode-alphabet/server/bin/*
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') }}

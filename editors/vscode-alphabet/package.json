@@ -1,0 +1,277 @@
+{
+  "name": "alphabet",
+  "displayName": "Alphabet Language",
+  "description": "Official VS Code support for the Alphabet programming language — multi-language syntax (en/am/de/es/fr), LSP-powered completion, hover, go-to-definition, diagnostics, NL-to-Code, and WASM build.",
+  "version": "0.1.0",
+  "publisher": "fraolteshome",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters",
+    "Snippets",
+    "Debuggers",
+    "Education",
+    "Other"
+  ],
+  "keywords": [
+    "alphabet",
+    "programming-language",
+    "amharic",
+    "multilingual",
+    "lsp",
+    "bytecode-vm",
+    "wasm",
+    "nl-to-code"
+  ],
+  "homepage": "https://github.com/yourusername/Alphabet_Language",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/Alphabet_Language.git",
+    "directory": "editors/vscode-alphabet"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/Alphabet_Language/issues"
+  },
+  "license": "MIT",
+  "icon": "resources/icon.png",
+  "galleryBanner": {
+    "color": "#581c87",
+    "theme": "dark"
+  },
+  "activationEvents": [
+    "onLanguage:alphabet",
+    "workspaceContains:**/*.abc",
+    "onCommand:alphabet.run",
+    "onCommand:alphabet.lint",
+    "onCommand:alphabet.nlToCode",
+    "onView:alphabet.nlToCode",
+    "onWalkthrough:alphabet.gettingStarted"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "alphabet",
+        "aliases": ["Alphabet", "alphabet"],
+        "extensions": [".abc"],
+        "filenames": [],
+        "firstLine": "^#alphabet<[a-z]{2}>$",
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "resources/file-icon.svg",
+          "dark": "resources/file-icon.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "alphabet",
+        "scopeName": "source.alphabet",
+        "path": "./syntaxes/alphabet.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "alphabet",
+        "path": "./snippets/alphabet.json"
+      }
+    ],
+    "themes": [],
+    "iconThemes": [],
+    "configuration": {
+      "title": "Alphabet",
+      "type": "object",
+      "properties": {
+        "alphabet.lsp.path": {
+          "type": "string",
+          "default": null,
+          "markdownDescription": "Absolute path to the `alphabet` binary. Leave empty to use the bundled one."
+        },
+        "alphabet.lsp.trace": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "markdownDescription": "Trace LSP communication. `verbose` logs all messages."
+        },
+        "alphabet.format.enable": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Format `.abc` files on save (when supported by the server)."
+        },
+        "alphabet.lint.enable": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Run the linter and surface diagnostics."
+        },
+        "alphabet.lint.severity": {
+          "type": "string",
+          "enum": ["error", "warning", "information", "hint"],
+          "default": "warning",
+          "markdownDescription": "Minimum severity for diagnostics."
+        },
+        "alphabet.run.command": {
+          "type": "string",
+          "default": "alphabet run",
+          "markdownDescription": "Command used by the run button. Placeholders: `${file}`."
+        },
+        "alphabet.completion.engine": {
+          "type": "string",
+          "enum": ["lsp", "lsp+nl"],
+          "default": "lsp",
+          "markdownDescription": "Completion engine: pure LSP, or LSP augmented by NL-to-Code."
+        },
+        "alphabet.telemetry.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Send anonymous usage data (no code content) to help improve Alphabet."
+        },
+        "alphabet.files.associations": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["**/*.abc"],
+          "markdownDescription": "Glob patterns for files to treat as Alphabet."
+        }
+      }
+    },
+    "commands": [
+      { "command": "alphabet.run",            "title": "Alphabet: Run File",                    "icon": "$(play)",            "category": "Alphabet" },
+      { "command": "alphabet.lint",           "title": "Alphabet: Lint File",                   "icon": "$(checklist)",       "category": "Alphabet" },
+      { "command": "alphabet.compile",        "title": "Alphabet: Compile to Bytecode",         "icon": "$(package)",         "category": "Alphabet" },
+      { "command": "alphabet.buildWasm",      "title": "Alphabet: Build WASM",                  "icon": "$(export)",          "category": "Alphabet" },
+      { "command": "alphabet.nlToCode",       "title": "Alphabet: Open NL-to-Code Panel",       "icon": "$(comment-discussion)", "category": "Alphabet" },
+      { "command": "alphabet.nlToCode.focus", "title": "Alphabet: Focus on NL-to-Code View",    "category": "Alphabet" },
+      { "command": "alphabet.restartServer",  "title": "Alphabet: Restart Language Server",     "icon": "$(debug-restart)",   "category": "Alphabet" },
+      { "command": "alphabet.showOutput",     "title": "Alphabet: Show Server Output",          "icon": "$(output)",          "category": "Alphabet" },
+      { "command": "alphabet.openDocs",       "title": "Alphabet: Open Documentation",          "category": "Alphabet" },
+      { "command": "alphabet.newFile",        "title": "Alphabet: New .abc File",               "category": "Alphabet" },
+      { "command": "alphabet.openWalkthrough","title": "Alphabet: Show Getting Started",        "icon": "$(notebook)",        "category": "Alphabet" }
+    ],
+    "menus": {
+      "editor/title/run": [
+        { "command": "alphabet.run",       "when": "editorLangId == alphabet", "group": "navigation@1" }
+      ],
+      "editor/title": [
+        { "command": "alphabet.lint",      "when": "editorLangId == alphabet", "group": "navigation@2" },
+        { "command": "alphabet.buildWasm", "when": "editorLangId == alphabet", "group": "navigation@3" }
+      ],
+      "editor/context": [
+        { "command": "alphabet.run",  "when": "resourceLangId == alphabet", "group": "alphabet@1" },
+        { "command": "alphabet.lint", "when": "resourceLangId == alphabet", "group": "alphabet@2" }
+      ],
+      "explorer/context": [
+        { "command": "alphabet.run",  "when": "resourceExtname == .abc", "group": "alphabet@1" },
+        { "command": "alphabet.lint", "when": "resourceExtname == .abc", "group": "alphabet@2" }
+      ],
+      "commandPalette": [
+        { "command": "alphabet.run",            "when": "editorLangId == alphabet || resourceExtname == .abc" },
+        { "command": "alphabet.lint",           "when": "editorLangId == alphabet || resourceExtname == .abc" },
+        { "command": "alphabet.compile",        "when": "editorLangId == alphabet" },
+        { "command": "alphabet.buildWasm",      "when": "editorLangId == alphabet" }
+      ]
+    },
+    "breakpoints": [{ "language": "alphabet" }],
+    "problemMatchers": [
+      {
+        "owner": "alphabet",
+        "pattern": {
+          "regexp": "^(.*?):(\\d+):(\\d+):\\s+(error|warning|info):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "alphabet-explorer",
+          "title": "Alphabet",
+          "icon": "resources/view-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "alphabet-explorer": [
+        {
+          "id": "alphabet.nlToCode",
+          "name": "NL → Alphabet",
+          "when": "workspaceLangId == alphabet"
+        }
+      ]
+    },
+    "walkthroughs": [
+      {
+        "id": "alphabet.gettingStarted",
+        "title": "Get started with the Alphabet programming language",
+        "description": "Multi-language programming with built-in LSP, NL-to-Code, and WASM compilation.",
+        "steps": [
+          {
+            "id": "alphabet.welcome",
+            "title": "Welcome to Alphabet",
+            "description": "Alphabet is a programming language with **multi-language syntax** — write keywords in English, Amharic (`ክፍል`), Spanish (`clase`), French (`classe`), or German (`klasse`). All targeting one unified bytecode VM with WASM support.\n\n[Create your first .abc file](command:alphabet.newFile)",
+            "media": { "image": "resources/walkthrough/welcome.png", "altText": "Alphabet welcome" },
+            "when": "workspaceLangId != alphabet"
+          },
+          {
+            "id": "alphabet.firstFile",
+            "title": "Create your first .abc file",
+            "description": "Click below to create a new Alphabet source file with a hello-world template.\n\n[New .abc File](command:alphabet.newFile)",
+            "completionEvents": ["onFileSystem:abc"]
+          },
+          {
+            "id": "alphabet.runIt",
+            "title": "Run your program",
+            "description": "Use the **▶ Run** button in the editor title bar, or press `F5` to launch with debug. The terminal will show your program's output.\n\n[Run current file](command:alphabet.run)",
+            "completionEvents": ["onTerminalExecuted:alphabet run"]
+          },
+          {
+            "id": "alphabet.lintFormat",
+            "title": "Lint and format",
+            "description": "Alphabet extension surfaces linter warnings as you type, with hover docs, go-to-definition, and completion. Format on save is enabled by default.\n\nConfigure lint severity: [Settings](command:workbench.action.openSettings?%22alphabet.lint.severity%22)"
+          },
+          {
+            "id": "alphabet.nlToCode",
+            "title": "Try NL-to-Code",
+            "description": "Describe what you want in natural language and get Alphabet code. Open the **NL → Alphabet** view in the activity bar.\n\n[Open NL-to-Code panel](command:alphabet.nlToCode)",
+            "completionEvents": ["onView:alphabet.nlToCode"]
+          },
+          {
+            "id": "alphabet.multilang",
+            "title": "Multi-language keywords",
+            "description": "Switch the language of your code by changing the first line directive:\n\n```\n#alphabet<en>  // English\n#alphabet<am>  // Amharic (ክፍል = class)\n#alphabet<es>  // Spanish (clase)\n#alphabet<de>  // German (klasse)\n#alphabet<fr>  // French (classe)\n```\n\nThe full keyword matrix is in the documentation."
+          },
+          {
+            "id": "alphabet.buildWasm",
+            "title": "Build to WebAssembly",
+            "description": "Compile your `.abc` files to WASM for browser/edge deployment.\n\n[Build WASM](command:alphabet.buildWasm)",
+            "completionEvents": ["onCommand:alphabet.buildWasm"]
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.config.mjs",
+    "watch": "node esbuild.config.mjs --watch",
+    "package": "npm run build && vsce package --no-dependencies",
+    "publish": "npm run build && vsce publish",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^2.22.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1",
+    "vscode-uri": "^3.0.0"
+  }
+}

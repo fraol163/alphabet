@@ -1,0 +1,136 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Alphabet",
+  "scopeName": "source.alphabet",
+  "fileTypes": ["abc"],
+  "firstLineMatch": "^#alphabet<([a-z]{2})>",
+  "patterns": [
+    { "include": "#header" },
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#fstrings" },
+    { "include": "#builtin-types" },
+    { "include": "#builtin-functions" },
+    { "include": "#multi-char-keywords" },
+    { "include": "#single-char-keywords" },
+    { "include": "#multilang-keywords" },
+    { "include": "#constants" },
+    { "include": "#numbers" },
+    { "include": "#identifiers" },
+    { "include": "#operators" },
+    { "include": "#brackets" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "header": {
+      "match": "^\\s*(#alphabet\\s*<\\s*[a-z]{2}\\s*>)",
+      "captures": {
+        "1": { "name": "keyword.directive.alphabet" }
+      }
+    },
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.alphabet",
+          "match": "//[^/].*$"
+        },
+        {
+          "name": "comment.line.triple-slash.alphabet",
+          "match": "///.*$"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.alphabet",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.alphabet",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "fstrings": {
+      "begin": "f\"",
+      "end": "\"",
+      "name": "string.quoted.double.fstring.alphabet",
+      "patterns": [
+        {
+          "name": "constant.character.escape.alphabet",
+          "match": "\\\\."
+        },
+        {
+          "begin": "\\$\\{",
+          "end": "\\}",
+          "name": "meta.interpolation.alphabet",
+          "patterns": [{ "include": "$self" }]
+        }
+      ]
+    },
+    "builtin-types": {
+      "match": "\\b(?:void|i8|i16|i32|i64|int|f32|f64|float|bool|str|list|map)\\b",
+      "name": "storage.type.alphabet"
+    },
+    "builtin-functions": {
+      "match": "\\bz\\.(?:o|i|sqrt|abs|sin|cos|pow|floor|ceil|len|type|tostr|tonum|tos|t|f|split|join|replace|trim|upper|lower|dyn)\\b",
+      "name": "support.function.builtin.alphabet"
+    },
+    "single-char-keywords": {
+      "match": "\\b(?:i|e|l|b|k|r|c|m|n|v|p|s|t|h|x|q|j)\\b",
+      "name": "keyword.control.alphabet"
+    },
+    "multi-char-keywords": {
+      "match": "\\b(?:abstract|interface|extends|export|true|false)\\b",
+      "name": "keyword.control.alphabet"
+    },
+    "multilang-keywords": {
+      "patterns": [
+        { "match": "\\b(?:if|else|loop|while|return|break|continue|class|method|new|public|private|static|try|catch|handle|print|output|input|import|match|const|interface|extends|export|abstract|true|false)\\b", "name": "keyword.control.alphabet" },
+        { "match": "\\b(?:ክፍል|ሥር|በይነገጽ|ዘዴ|ከሆነ|ያለበለዚያ|ሉፕ|እስከሆነ|ተመለስ|ስበር|ቀጥል|አዲስ|ግልጽ|ግል|ቋሚ|ሞክር|ያዟ|ውጤት|ግብአት|አስገባ|ምረጥ|ወራሽ|ላክ|ቋሚ-እሴት)\\b", "name": "keyword.control.alphabet" },
+        { "match": "\\b(?:clase|abstracto|interfaz|método|si|sino|bucle|mientras|retornar|romper|continuar|nuevo|público|privado|estático|intentar|capturar|imprimir|salida|entrada|importar|coincidir|extiende|exportar|constante)\\b", "name": "keyword.control.alphabet" },
+        { "match": "\\b(?:classe|abstrait|interface|méthode|si|sinon|boucle|tantque|retour|rompre|continuer|nouveau|public|privé|statique|essayer|attraper|afficher|entrer|importer|correspondre|étend|exporter|constante)\\b", "name": "keyword.control.alphabet" },
+        { "match": "\\b(?:klasse|abstrakt|schnittstelle|methode|wenn|sonst|schleife|solange|zurück|brechen|fortsetzen|neu|öffentlich|privat|statisch|versuchen|fangen|ausgeben|eingabe|importieren|übereinstimmen|erweitert|exportieren|konstante)\\b", "name": "keyword.control.alphabet" }
+      ]
+    },
+    "constants": {
+      "match": "\\b(?:true|false|null)\\b",
+      "name": "constant.language.alphabet"
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.alphabet",
+          "match": "\\b\\d+\\.\\d+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.alphabet",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+    "identifiers": {
+      "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b",
+      "name": "variable.other.readwrite.alphabet"
+    },
+    "operators": {
+      "patterns": [
+        { "match": "[+\\-*/%]", "name": "keyword.operator.arithmetic.alphabet" },
+        { "match": "==|!=|<=|>=|<|>", "name": "keyword.operator.comparison.alphabet" },
+        { "match": "&&|\\|\\||!", "name": "keyword.operator.logical.alphabet" },
+        { "match": "=", "name": "keyword.operator.assignment.alphabet" }
+      ]
+    },
+    "brackets": {
+      "patterns": [
+        { "begin": "\\{", "end": "\\}", "name": "meta.brace.curly.alphabet", "patterns": [{ "include": "$self" }] },
+        { "begin": "\\(", "end": "\\)", "name": "meta.paren.round.alphabet", "patterns": [{ "include": "$self" }] },
+        { "begin": "\\[", "end": "\\]", "name": "meta.bracket.square.alphabet", "patterns": [{ "include": "$self" }] }
+      ]
+    },
+    "punctuation": {
+      "match": "[,;:.]",
+      "name": "punctuation.separator.alphabet"
+    }
+  }
+}

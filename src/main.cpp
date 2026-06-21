@@ -1378,7 +1378,7 @@ int main(int argc, char* argv[]) {
             continue;
         }
 
-        if (arg == "--lsp") {
+        if (arg == "--lsp" || arg == "--stdio") {
             lsp_mode = true;
             continue;
         }

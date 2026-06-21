@@ -91,13 +91,22 @@ class LanguageServer {
     JsonValue handle_initialize(int id, const JsonValue& params);
     void handle_did_open(const JsonValue& params);
     void handle_did_change(const JsonValue& params);
+    void handle_did_save(const JsonValue& params);
+    void handle_did_close(const JsonValue& params);
     JsonValue handle_completion(int id, const JsonValue& params);
     JsonValue handle_hover(int id, const JsonValue& params);
     JsonValue handle_document_symbol(int id, const JsonValue& params);
     JsonValue handle_definition(int id, const JsonValue& params);
+    JsonValue handle_formatting(int id, const JsonValue& params);
+    JsonValue handle_range_formatting(int id, const JsonValue& params);
+    JsonValue handle_signature_help(int id, const JsonValue& params);
+    JsonValue handle_references(int id, const JsonValue& params);
+    JsonValue handle_rename(int id, const JsonValue& params);
 
     void publish_diagnostics(const std::string& uri, const std::string& content);
     std::string get_hover_doc(const std::string& word);
+    std::string format_text(const std::string& source) const;
+    int indent_unit() const { return 4; }
 };
 
 } // namespace lsp

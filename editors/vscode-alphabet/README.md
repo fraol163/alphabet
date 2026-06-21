@@ -1,17 +1,39 @@
 # Alphabet Language — VS Code Extension
 
-Official VS Code support for the [Alphabet](https://github.com/yourusername/Alphabet_Language) programming language.
+Official VS Code support for the [Alphabet](https://github.com/fraol163/Alphabet_Language) programming language (v2.3.5).
+
+## ✨ Zero-install: works without the `alphabet` binary
+
+The extension ships the Language Server as **357 KB of WebAssembly** in the `.vsix`. Users do **not** need to install the `alphabet` binary, a C++ toolchain, or any local build tooling. Open any `.abc` file and the LSP works.
+
+If a native binary is present on `PATH` (or `alphabet.lsp.path` is set), the extension will use it for slightly faster cold-start and full feature parity. Otherwise it transparently falls back to the bundled WASM.
+
+Settings:
+- `alphabet.transport` — `auto` (default, prefer WASM), `wasm` (force WASM), `native` (force binary)
 
 ## Features
 
-- 🌍 **Multi-language syntax** — Write keywords in English, Amharic (`ክፍል`), Spanish (`clase`), French (`classe`), or German (`klasse`)
-- ⚡ **Language Server Protocol** — Completion, hover docs, go-to-definition, document symbols, real-time diagnostics
-- 🎨 **Syntax highlighting** — Full TextMate grammar covering en/am/de/es/fr keywords
-- 🚀 **Run button** — One-click `.abc` execution
-- 🔧 **Compile & lint** — Direct integration with the `alphabet` binary
-- 📦 **WASM build** — One-click WebAssembly build pipeline
-- 💬 **NL-to-Code panel** — Sidebar webview for natural-language → Alphabet code (placeholder)
-- 🔍 **Snippets** — `fn`, `class`, `if`, `for`, `try`, `match`, `main`, etc.
+| | Feature | Backend |
+|---|---|---|
+| 🌍 | **Multi-language syntax** — keywords in English, Amharic (`ክፍል`), Spanish (`clase`), French (`classe`), German (`klasse`) | TextMate grammar |
+| 📝 | **Completion** — trigger on space/dot/`(`/newline, with `editRange` resolve support | LSP `completionProvider` |
+| 📖 | **Hover docs** — inline documentation for builtins, classes, methods | LSP `hoverProvider` |
+| 🔗 | **Go-to-definition** — jump from identifier to its declaration | LSP `definitionProvider` |
+| 🔍 | **Find references** — every occurrence of a symbol | LSP `referencesProvider` |
+| ✏️ | **Rename symbol** — workspace-aware refactor | LSP `renameProvider` |
+| 📋 | **Document outline** — symbols panel for the file | LSP `documentSymbolProvider` |
+| 💡 | **Signature help** — parameter hints triggered on `(` and `,` | LSP `signatureHelpProvider` |
+| 🔧 | **Quick fixes** — `codeAction` for every diagnostic | LSP `codeActionProvider` |
+| 🔆 | **Document highlight** — all occurrences of the word at cursor | LSP `documentHighlightProvider` |
+| 🎨 | **Semantic tokens** — modern syntax coloring (keywords/strings/numbers/types/operators) | LSP `semanticTokensProvider` (10 token types, full + range, delta-encoded) |
+| 📌 | **Inlay hints** — inline parameter names at call sites | LSP `inlayHintProvider` |
+| 🛠 | **Format on save** — full-document + range formatting | LSP `documentFormattingProvider` + `documentRangeFormattingProvider` |
+| 🔍 | **Real-time diagnostics** — parse + lint errors as you type | LSP `textDocument/publishDiagnostics` |
+| 🎨 | **Syntax highlighting** | TextMate grammar (en/am/de/es/fr) |
+| 🚀 | **Run button** — one-click `.abc` execution | VS Code command |
+| 📦 | **Compile to bytecode** + **WASM build** | VS Code commands |
+| 💬 | **NL-to-Code panel** — sidebar webview | Webview |
+| 🧩 | **Snippets** — `fn`, `class`, `if`, `for`, `try`, `match`, `main` | VS Code snippets |
 
 ## Installation
 
@@ -53,14 +75,18 @@ m 0 main() {
 
 | Setting | Default | Description |
 |---|---|---|
-| `alphabet.lsp.path` | `null` | Path to `alphabet` binary. Empty = bundled binary. |
+| `alphabet.transport` | `auto` | `auto` / `wasm` / `native` — picks LSP transport |
+| `alphabet.lsp.path` | `null` | Path to native `alphabet` binary (overrides transport) |
 | `alphabet.lsp.trace` | `off` | LSP trace level: `off` / `messages` / `verbose` |
 | `alphabet.format.enable` | `true` | Format `.abc` on save |
 | `alphabet.lint.enable` | `true` | Run linter and show diagnostics |
 | `alphabet.lint.severity` | `warning` | Minimum diagnostic severity |
 | `alphabet.run.command` | `alphabet run` | Command run by the play button |
+| `alphabet.compile.command` | `alphabet -c -o` | Command run by the compile button |
+| `alphabet.buildWasm.command` | `alphabet build-wasm` | Command run by the WASM build button |
 | `alphabet.completion.engine` | `lsp` | `lsp` or `lsp+nl` (experimental NL augmentation) |
 | `alphabet.telemetry.enabled` | `false` | Opt-in anonymous usage stats |
+| `alphabet.files.associations` | `**/*.abc` | Glob patterns for files to treat as Alphabet |
 
 ## Commands
 
@@ -75,52 +101,74 @@ m 0 main() {
 | `Alphabet: Show Server Output` | — | Show extension output |
 | `Alphabet: Open Documentation` | — | Open GitHub README |
 | `Alphabet: New .abc File` | — | Scaffold a new file |
+| `Alphabet: Show Getting Started` | — | Open the walkthrough |
+
+## How zero-install works
+
+```
+                ┌─────────────────────────────────────┐
+                │   VS Code Extension (.vsix)         │
+                │  ┌───────────────────────────────┐  │
+                │  │  dist/extension.js (TS+esbuild)│ │
+                │  │  server/wasm/alphabet.js       │ │
+                │  │  server/wasm/alphabet.wasm     │ │
+                │  │    (LSP server compiled to     │ │
+                │  │     WebAssembly — 357 KB)       │ │
+                │  └───────────────────────────────┘  │
+                └─────────────────────────────────────┘
+                              │
+                              ▼
+   User opens hello.abc → extension activates
+   → tryStartWasmLsp() loads alphabet.wasm via Node WebAssembly
+   → vscode-languageclient talks to in-process WASM LSP
+   → full features (completion, hover, semantic tokens) without binary
+```
+
+If WASM fails to load (corrupted bundle, missing file), the extension falls back to spawning the native `alphabet` binary if available, then to PATH lookup. The extension NEVER silently breaks — it shows a clear error.
 
 ## Troubleshooting
 
-### Binary not found
+### The extension loads but completion/hover don't work
 
-The extension bundles a prebuilt `alphabet` binary for your platform. If missing:
-1. Install Alphabet from source: `git clone https://github.com/yourusername/Alphabet_Language && cd Alphabet_Language && cmake -B build && cmake --build build`
-2. Either put `alphabet` on your `PATH`, or set `alphabet.lsp.path` in VS Code settings
+1. Open **View → Output → Alphabet Language Server** to see init logs
+2. Check whether the LSP started (look for "Alphabet language server started" or "Using WASM Language Server")
+3. If you see "Method not found" errors, your binary/WASM is older than the extension expects — update with `alphabet update --force` or reinstall the extension
 
-### Server not starting
+### I want to force the native binary
 
-Open the output panel:
-- `View → Output → Alphabet Language Server`
+Set `alphabet.transport: native` and `alphabet.lsp.path: /absolute/path/to/alphabet`.
 
-Common causes:
-- Wrong architecture binary (x64 vs ARM64)
-- Missing system libraries (e.g. `libstdc++` on older Linux)
-- Antivirus blocking the binary
+### WASM initialization fails
 
-### Version mismatch
+The extension will fall back to the native binary automatically. If you want to debug, set `alphabet.lsp.trace: verbose`.
 
-The extension checks the binary version on activation. If too old:
-```
-alphabet update --force
-```
+## Development
 
-## Architecture
+### Build the WASM LSP server locally
 
-```
-VS Code Extension (TypeScript)
-  ├── extension.ts          ← LSP client wrapper
-  ├── nl-to-code.ts         ← Webview panel
-  ├── syntaxes/*.tmLanguage.json
-  ├── language-configuration.json
-  └── snippets/alphabet.json
+```bash
+# Install emsdk (~500 MB)
+git clone https://github.com/emscripten-core/emsdk ~/emsdk
+cd ~/emsdk && ./emsdk install latest && ./emsdk activate latest
+source ./emsdk_env.sh
 
-Alphabet Binary (C++17, bundled)
-  ├── src/lsp.cpp           ← LSP server (reuse as-is)
-  └── src/main.cpp          ← --lsp entry point
+# Build
+cd /path/to/Alphabet_Language
+./build-wasm-lsp.sh
+
+# Run smoke test
+node editors/vscode-alphabet/server/wasm/smoke-test.mjs
 ```
 
-All language intelligence flows through the existing C++ LSP server. The TypeScript client only:
-1. Spawns the binary
-2. Forwards JSON-RPC over stdio
-3. Maps responses to VS Code UI
+### Package the .vsix
 
-## License
+```bash
+cd editors/vscode-alphabet
+npm install
+npm run build  # esbuild → dist/extension.js
+npx @vscode/vsce package --no-dependencies
+```
 
-MIT
+### CI
+
+`.github/workflows/vscode-extension-release.yml` builds the WASM and packages the VSIX on every release tag.

@@ -1,7 +1,7 @@
 #alphabet<en>
 // Edge Case 59: Inheritance 3 levels
-c Base { v m 11 base_fn() { r 1 } }
-c Mid ^ Base { v m 11 mid_fn() { r 2 } }
-c Top ^ Mid { v m 11 top_fn() { r 3 } }
+c Base { v m 5 base_fn() { r 1 } }
+c Mid ^ Base { v m 5 mid_fn() { r 2 } }
+c Top ^ Mid { v m 5 top_fn() { r 3 } }
 15 tp = n Top()
 i (tp.base_fn() == 1 && tp.mid_fn() == 2 && tp.top_fn() == 3) { z.o("PASS:class_59_inherit3") } e { z.o("FAIL:class_59_inherit3") }

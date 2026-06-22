@@ -2,3 +2,4 @@
 // Simple test file
 5 x = 10
 z.o(x)
+z.pow(2,4)

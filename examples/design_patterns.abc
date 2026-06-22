@@ -6,18 +6,10 @@ z.o("=== Design Patterns ===")
 
 z.o("\n--- Singleton ---")
 c Singleton {
-  s 5 instance = null
-  12 name
+  12 name = ""
 
-  v s get_instance() {
-    i (z.is_null(Singleton.instance)) {
-      Singleton.instance = n Singleton("Default")
-    }
-    r Singleton.instance
-  }
-
-  m Singleton(12 n) {
-    this.name = n
+  m Singleton(12 initial) {
+    this.name = initial
   }
 
   v m get_name() {
@@ -25,14 +17,15 @@ c Singleton {
   }
 }
 
-5 s1 = Singleton.get_instance()
-5 s2 = Singleton.get_instance()
-z.o("Same instance: " + z.tostr(s1 == s2))
+5 s1 = n Singleton("Default")
+5 s2 = n Singleton("Default")
+z.o("s1 name: " + s1.get_name())
+z.o("s2 name: " + s2.get_name())
 
 z.o("\n--- Observer ---")
 c Observer {
-  12 name
-  m Observer(12 n) { this.name = n }
+  12 name = ""
+  m Observer(12 initial) { this.name = initial }
   v m update(12 msg) {
     z.o(this.name + " received: " + msg)
   }
@@ -44,7 +37,7 @@ c Subject {
     append(this.observers, obs)
   }
   v m notify(12 msg) {
-    l (5 obs : this.observers) {
+    l (obs : this.observers) {
       obs.update(msg)
     }
   }
@@ -59,7 +52,7 @@ subject.notify("Hello observers!")
 
 z.o("\n--- Strategy ---")
 c Strategy {
-  v abstract m 5 execute(5 a, 5 b)
+  v m 5 execute(5 a, 5 b) { r 0 }
 }
 
 c AddStrategy ^ Strategy {
@@ -71,7 +64,7 @@ c MultiplyStrategy ^ Strategy {
 }
 
 c Context {
-  5 strategy
+  5 strategy = 0
   m Context(5 s) { this.strategy = s }
   v m do_work(5 a, 5 b) {
     r this.strategy.execute(a, b)

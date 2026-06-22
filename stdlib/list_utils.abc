@@ -9,7 +9,7 @@ m 5 list_avg(5 lst) {
   r z.avg(lst)
 }
 
-m list_min(5 lst) {
+m 5 list_min(5 lst) {
   i (z.len(lst) == 0) { r null }
   5 min_val = lst[0]
   l (5 i = 1 : i < z.len(lst) : i = i + 1) {
@@ -20,7 +20,7 @@ m list_min(5 lst) {
   r min_val
 }
 
-m list_max(5 lst) {
+m 5 list_max(5 lst) {
   i (z.len(lst) == 0) { r null }
   5 max_val = lst[0]
   l (5 i = 1 : i < z.len(lst) : i = i + 1) {
@@ -41,7 +41,7 @@ m 5 list_median(5 lst) {
   r (sorted[n / 2 - 1] + sorted[n / 2]) / 2
 }
 
-m list_mode(5 lst) {
+m 5 list_mode(5 lst) {
   5 counts = {}
   l (5 val : lst) {
     i (z.is_null(counts[val])) {

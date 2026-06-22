@@ -13,24 +13,24 @@ z.o("=== Student Grade Processor ===")
 ]
 
 z.o("All students:")
-l (5 s : students) {
+l (s : students) {
   z.o("  " + s["name"] + " - " + z.tostr(s["grade"]) + "% (" + s["subject"] + ")")
 }
 
 5 cs_students = []
-l (5 s : students) {
+l (s : students) {
   i (s["subject"] == "CS") {
     append(cs_students, s)
   }
 }
 
 z.o("\nCS students:")
-l (5 s : cs_students) {
+l (s : cs_students) {
   z.o("  " + s["name"] + ": " + z.tostr(s["grade"]) + "%")
 }
 
 5 total = 0
-l (5 s : students) {
+l (s : students) {
   total = total + s["grade"]
 }
 5 avg = total / z.len(students)
@@ -38,7 +38,7 @@ z.o("\nClass average: " + z.tostr(avg) + "%")
 
 5 highest = 0
 5 top_student = ""
-l (5 s : students) {
+l (s : students) {
   i (s["grade"] > highest) {
     highest = s["grade"]
     top_student = s["name"]

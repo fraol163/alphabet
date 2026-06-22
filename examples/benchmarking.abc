@@ -15,9 +15,9 @@ m 5 benchmark(12 name, 5 fn, 5 iterations) {
 }
 
 m 5 bench_fibonacci() {
-  m 5 fib(5 n) {
-    i (n <= 1) { r n }
-    r fib(n - 1) + fib(n - 2)
+  m 5 fib(5 num) {
+    i (num <= 1) { r num }
+    r fib(num - 1) + fib(num - 2)
   }
   r fib(20)
 }

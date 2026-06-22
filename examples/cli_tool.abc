@@ -16,6 +16,7 @@ i (z.len(args) == 0) {
   z.exit(0)
 }
 
+
 5 command = args[0]
 
 q (command) {

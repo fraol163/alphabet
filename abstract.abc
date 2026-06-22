@@ -1,5 +1,5 @@
 #alphabet<en>
-# Abstract class — use 'a' keyword before 'c'
+// Abstract class — use 'a' keyword before 'c'
 a c Shape {
   5 area = 0
 
@@ -12,7 +12,7 @@ a c Shape {
   }
 }
 
-# Concrete class extends abstract
+// Concrete class extends abstract
 c Circle ^ Shape {
   5 radius = 0
 

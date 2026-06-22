@@ -1,7 +1,7 @@
 #alphabet<es>
 /// Spanish keywords test
 si (42 > 10) {
-  imprimir("Si funciona")
+  z.o("Si funciona")
 } sino {
-  imprimir("Sino funciona")
+  z.o("Sino funciona")
 }

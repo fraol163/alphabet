@@ -1,10 +1,10 @@
 #alphabet<en>
 c Cat {
-  str name = ""
-  void meow() {
+  12 name = ""
+  m meow() {
     z.o(name + " says meow!")
   }
 }
-Cat c = new Cat()
+5 c = n Cat()
 c.name = "___"
 c.meow()

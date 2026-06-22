@@ -22,12 +22,12 @@ z.o(describe([1, 2, 3]))
 z.o(describe({"a": 1}))
 
 z.o("\n=== Number Classifier ===")
-5 classify = m(5 n) {
+5 classify = m(5 num) {
   q (1) {
-    n < 0: { r "negative" }
-    n == 0: { r "zero" }
-    n < 10: { r "single digit" }
-    n < 100: { r "double digit" }
+    num < 0: { r "negative" }
+    num == 0: { r "zero" }
+    num < 10: { r "single digit" }
+    num < 100: { r "double digit" }
     default: { r "large number" }
   }
 }

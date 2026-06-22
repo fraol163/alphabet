@@ -46,9 +46,9 @@ m 13 matrix_multiply(5 a, 5 b) {
 }
 
 m 0 matrix_print(5 mat) {
-  l (5 row : mat) {
+  l (row : mat) {
     5 line = ""
-    l (5 val : row) {
+    l (val : row) {
       line = line + z.tostr(val) + "\t"
     }
     z.o(line)

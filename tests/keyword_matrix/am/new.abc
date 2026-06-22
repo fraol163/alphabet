@@ -28,5 +28,5 @@ ob.oval = 2
 13 lst = [10, 20, 30]
 ከሆነ (z.len(lst) == 3) { z.o("PASS:new_s7") }
 // S8: create map
-14 mp = {{"a": 1, "b": 2}}
+14 mp = {"a": 1, "b": 2}}
 ከሆነ (z.len(mp) == 2) { z.o("PASS:new_s8") }

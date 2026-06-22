@@ -164,7 +164,7 @@ i (z.contains([1, 2, 3], 2)) { z.o("PASS:contains") }
 i (z.len(range5) == 5) { z.o("PASS:range_fn") }
 
 // === IMPORT STDLIB ===
-x "stdlib/math.abc"
+x "../../../stdlib/math.abc"
 i (true) { z.o("PASS:import") }
 
 // === NESTED LOOPS ===

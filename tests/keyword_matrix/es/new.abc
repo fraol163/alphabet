@@ -28,5 +28,5 @@ si (oa.oval == 1 && ob.oval == 2) { z.o("PASS:new_s6") }
 13 lst = [10, 20, 30]
 si (z.len(lst) == 3) { z.o("PASS:new_s7") }
 // S8: create map
-14 mp = {{"a": 1, "b": 2}}
+14 mp = {"a": 1, "b": 2}}
 si (z.len(mp) == 2) { z.o("PASS:new_s8") }

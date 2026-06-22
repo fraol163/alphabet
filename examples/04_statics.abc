@@ -1,5 +1,5 @@
 #alphabet<en>
-# Variables and Types
+// Variables and Types
 
 5 x = 100
 z.o("Integer:")

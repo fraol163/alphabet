@@ -1,5 +1,5 @@
 #alphabet<en>
-# Exception Handling Test
+// Exception Handling Test
 t {
   z.o("In try block")
   z.t("Custom Error 15")

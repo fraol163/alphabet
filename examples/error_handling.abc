@@ -7,13 +7,13 @@ z.o("=== Error Handling ===")
 t {
   5 result = 10 / 0
   z.o("This won't print: " + z.tostr(result))
-} h (error) {
+} h (5 error) {
   z.o("Caught error: Division by zero")
 }
 
 t {
   5 data = z.json_parse("not valid json")
-} h (error) {
+} h (5 error) {
   z.o("Caught JSON error: invalid syntax")
 }
 
@@ -22,7 +22,7 @@ z.o("\n=== Safe Access ===")
 t {
   5 val = lst[10]
   z.o("This won't print: " + z.tostr(val))
-} h (error) {
+} h (5 error) {
   z.o("Caught: index out of bounds")
 }
 

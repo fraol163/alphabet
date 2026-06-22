@@ -1,10 +1,10 @@
 #alphabet<en>
 // === ABSTRACT TESTS ===
-c Shape { v a m 11 area() { } }
-c Circle a Shape { v 5 rad = 5 v m 11 area() { r 3 * rad * rad } }
+c Shape { v m 5 area() { } }
+c Circle a Shape { v 5 rad = 5 v m 5 area() { r 3 * rad * rad } }
 15 ci = n Circle()
 i (ci.area() == 75) { z.o("PASS:abs_s1") }
-c Rect a Shape { v 5 rw = 0 v 5 rh = 0 v m 11 area() { r rw * rh } }
+c Rect a Shape { v 5 rw = 0 v 5 rh = 0 v m 5 area() { r rw * rh } }
 15 re = n Rect()
 re.rw = 3
 re.rh = 4

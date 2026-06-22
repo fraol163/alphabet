@@ -1,27 +1,27 @@
 #alphabet<en>
 @ is_number, is_string, is_list, is_map, is_bool, is_empty, is_email, is_url, in_range
 
-m 11 is_number(val) {
+m 11 is_number(0 val) {
   r z.type(val) == "number"
 }
 
-m 11 is_string(val) {
+m 11 is_string(0 val) {
   r z.type(val) == "string"
 }
 
-m 11 is_list(val) {
+m 11 is_list(0 val) {
   r z.type(val) == "list"
 }
 
-m 11 is_map(val) {
+m 11 is_map(0 val) {
   r z.type(val) == "map"
 }
 
-m 11 is_bool(val) {
+m 11 is_bool(0 val) {
   r z.type(val) == "bool"
 }
 
-m 11 is_empty(val) {
+m 11 is_empty(0 val) {
   i (z.is_null(val)) { r 1 }
   i (z.type(val) == "string") { r z.len(val) == 0 }
   i (z.type(val) == "list") { r z.len(val) == 0 }

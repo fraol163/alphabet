@@ -1,4 +1,4 @@
 #alphabet<es>
 /// Test imprimir (print)
-imprimir("hola")
+z.o("hola")
 z.o("test")

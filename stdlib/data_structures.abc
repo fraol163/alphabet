@@ -7,18 +7,18 @@ m 5 stack_new() {
   r []
 }
 
-m 0 stack_push(5 stack, value) {
+m 0 stack_push(5 stack, 0 value) {
   append(stack, value)
 }
 
-m stack_pop(5 stack) {
+m 5 stack_pop(5 stack) {
   i (z.len(stack) == 0) { r null }
   5 val = stack[z.len(stack) - 1]
   pop_back(stack)
   r val
 }
 
-m stack_peek(5 stack) {
+m 5 stack_peek(5 stack) {
   i (z.len(stack) == 0) { r null }
   r stack[z.len(stack) - 1]
 }
@@ -35,18 +35,18 @@ m 5 queue_new() {
   r []
 }
 
-m 0 queue_enqueue(5 queue, value) {
+m 0 queue_enqueue(5 queue, 0 value) {
   append(queue, value)
 }
 
-m queue_dequeue(5 queue) {
+m 5 queue_dequeue(5 queue) {
   i (z.len(queue) == 0) { r null }
   5 val = queue[0]
   z.remove(queue, 0)
   r val
 }
 
-m queue_peek(5 queue) {
+m 5 queue_peek(5 queue) {
   i (z.len(queue) == 0) { r null }
   r queue[0]
 }
@@ -63,22 +63,22 @@ m 5 deque_new() {
   r []
 }
 
-m 0 deque_push_front(5 deque, value) {
+m 0 deque_push_front(5 deque, 0 value) {
   z.insert(deque, 0, value)
 }
 
-m 0 deque_push_back(5 deque, value) {
+m 0 deque_push_back(5 deque, 0 value) {
   append(deque, value)
 }
 
-m deque_pop_front(5 deque) {
+m 5 deque_pop_front(5 deque) {
   i (z.len(deque) == 0) { r null }
   5 val = deque[0]
   z.remove(deque, 0)
   r val
 }
 
-m deque_pop_back(5 deque) {
+m 5 deque_pop_back(5 deque) {
   i (z.len(deque) == 0) { r null }
   5 val = deque[z.len(deque) - 1]
   pop_back(deque)

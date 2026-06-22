@@ -14,14 +14,14 @@ m 0 config_save(5 config, 12 filename) {
   z.fw(filename, json)
 }
 
-m config_get(5 config, 12 key, default) {
+m config_get(5 config, 12 key, 0 default) {
   i (z.is_null(config[key])) {
     r default
   }
   r config[key]
 }
 
-m 0 config_set(5 config, 12 key, value) {
+m 0 config_set(5 config, 12 key, 0 value) {
   config[key] = value
 }
 

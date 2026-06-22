@@ -16,7 +16,7 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
 **Learn to think. Code in your language.**
 
 [![Build Status](https://github.com/fraol163/alphabet/actions/workflows/ci.yml/badge.svg)](https://github.com/fraol163/alphabet/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)](#installation)
 
 ---
@@ -24,8 +24,12 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
 ## Table of Contents
 
 - [What is Alphabet?](#what-is-alphabet)
+  - [Why Alphabet?](#why-alphabet)
+  - [Key Features](#key-features)
+  - [Who Is Alphabet For?](#who-is-alphabet-for)
 - [Installation](#installation)
 - [Hello World](#hello-world)
+- [Language Comparison](#language-comparison)
 - [Language Features](#language-features)
   - [Variables and Types](#variables-and-types)
   - [Control Flow](#control-flow)
@@ -42,19 +46,36 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
   - [Built-In Functions](#built-in-functions)
   - [Multilingual Keywords](#multilingual-keywords)
 - [Standard Library](#standard-library)
+  - [Stdlib Modules](#stdlib-modules)
+- [Examples](#examples)
+  - [Example Programs](#example-programs)
+- [Learning Curriculum](#learning-curriculum)
 - [Command Line](#command-line)
+  - [CLI Flags](#cli-flags)
+  - [CLI Subcommands](#cli-subcommands)
+  - [REPL Commands](#repl-commands)
+  - [Shebang Scripts](#shebang-scripts)
+  - [Environment Variables](#environment-variables)
 - [Documentation](#documentation)
+  - [Getting Started](#getting-started)
+  - [Reference](#reference)
+  - [Advanced](#advanced)
+  - [Community](#community)
 - [Testing](#testing)
+- [Project Statistics](#project-statistics)
 - [v2.3.4 vs v2.3.5](#v234-vs-v235)
+  - [What v2.3.4 Had](#what-v234-had)
+  - [What's New in v2.3.5](#whats-new-in-v235)
 - [What Problem Does Alphabet Solve?](#what-problem-does-alphabet-solve)
 - [Contributing](#contributing)
 - [License](#license)
+- [Contact](#contact)
 
 ---
 
 ## What is Alphabet?
 
-Alphabet is a **programming language that teaches you to think like a programmer** —> in your own language. Write code in English, Amharic, Spanish, French, or German. Learn concepts that transfer to Python, Java, JavaScript, and beyond. Unlike most programming languages that force you to learn English AND programming at the same time, Alphabet removes that barrier. You learn concepts first, syntax second. The language uses only 19 keywords (compared to 32+ in C or 35+ in Python), making it one of the simplest languages to pick up. It runs on a bytecode virtual machine with compiled execution, supports compile-time type checking, and includes a built-in REPL that can teach you programming concepts interactively. Whether you are a student learning your first loop, an educator teaching algorithms, or a developer prototype that needs to run anywhere, Alphabet gives you a clean, minimal syntax that transfers directly to production languages.
+Alphabet is a **programming language that teaches you to think like a programmer** — in your own language. Write code in English, Amharic, Spanish, French, or German. Learn concepts that transfer to Python, Java, JavaScript, and beyond. Unlike most programming languages that force you to learn English AND programming at the same time, Alphabet removes that barrier. You learn concepts first, syntax second. The language uses only 26 keyword entries (with aliases) per language mapped to 22 single-letter symbols, making it one of the simplest languages to pick up. It runs on a bytecode virtual machine with compiled execution, supports compile-time type checking, and includes a built-in REPL that can teach you programming concepts interactively. Whether you are a student learning your first loop, an educator teaching algorithms, or a developer prototyping something that needs to run anywhere, Alphabet gives you a clean, minimal syntax that transfers directly to production languages.
 
 ### Why Alphabet?
 
@@ -72,9 +93,9 @@ Most programming languages force you to learn English AND programming at the sam
 
 - **Multilingual** - Write code in English, Amharic, Spanish, French, or German
 - **Named Types** - `int x = 10`, `str name = "hello"` — readable, transferable syntax
-- **Type Inference** - `let x = 10`, `val name = "hello"` — let the compiler figure it out
-- **Concept-First** - `explain variable` in REPL teaches concepts before syntax
-- **Simple I/O** - `o("hello")` to print, `input()` to read — no namespace needed
+- **Type Inference** - let the compiler figure it out
+- **Concept-First** - REPL teaches concepts before syntax
+- **Simple I/O** - `o("hello")` to print, `i()` to read
 - **For-Each Loop** - `l (item : list) { o(item) }` — iterate collections naturally
 - **Range Expressions** - `1..10` creates a list, works in loops and assignments
 - **Raw Strings** - `r"no\escapes"` — backslashes are literal
@@ -90,7 +111,7 @@ Most programming languages force you to learn English AND programming at the sam
 - **Embedding API** - Embed Alphabet in C++ applications
 - **Voice Input** - Speak code in any of 5 languages (Vosk + Whisper)
 - **NL-to-Code** - Natural language to code conversion
-- **Threading** - z.thread(), z.join(), z.lock() for concurrent execution
+- **Threading** - `z.thread()`, `z.join_all()` for concurrent execution
 
 ### Who Is Alphabet For?
 
@@ -98,18 +119,19 @@ Most programming languages force you to learn English AND programming at the sam
 
 **For Students:** Focus on programming concepts — variables, loops, functions, classes — not memorizing syntax.
 
-**For Educators:** Teach logic and algorithms with concept explanations built into the REPL. `explain variable` teaches the concept before the code.
+**For Educators:** Teach logic and algorithms with concept explanations built into the REPL.
 
 **For Anyone Moving to Python/Java/JS:** Every concept you learn in Alphabet transfers directly. `int x = 10` in Alphabet is `int x = 10` in Java.
 
+---
 
 ## Language Comparison
 
-Alphabet occupies a unique position in the programming language landscape. While C and Zig are powerful systems languages with steep learning curves, and Python is a versatile scripting language with English-only syntax, Alphabet focuses specifically on education and accessibility. With only 19 keywords, it has the smallest keyword set of any mainstream-style language, making it ideal for beginners. The numeric type system (using `5` for int, `12` for string, etc.) is unconventional but teaches the concept of type IDs that exist in every compiled language. The for-each loop, pattern matching, and exception handling features mirror what you will find in production languages, so skills transfer directly. Alphabet is not trying to replace Python or Java —> it is designed to be the language you learn first, so that every other language becomes easier to pick up.
+Alphabet occupies a unique position in the programming language landscape. While C and Zig are powerful systems languages with steep learning curves, and Python is a versatile scripting language with English-only syntax, Alphabet focuses specifically on education and accessibility. With only 26 keyword entries per language, it has the smallest keyword set of any mainstream-style language, making it ideal for beginners. The numeric type system (using `5` for int, `12` for string, etc.) is unconventional but teaches the concept of type IDs that exist in every compiled language. The for-each loop, pattern matching, and exception handling features mirror what you will find in production languages, so skills transfer directly. Alphabet is not trying to replace Python or Java — it is designed to be the language you learn first, so that every other language becomes easier to pick up.
 
 | Feature | C | Python | Zig | **Alphabet** |
 |---------|---|--------|-----|--------------|
-| Keywords | 32 | 35 | 43 | **19** |
+| Keywords | 32 | 35 | 43 | **26 entries** |
 | Type System | Manual | Dynamic | Static | **Numeric IDs** |
 | Learning Curve | Steep | Medium | Medium | **Flat** |
 | Best For | Systems | Scripts | Systems | **Education** |
@@ -118,7 +140,7 @@ Alphabet occupies a unique position in the programming language landscape. While
 
 ## Command Line
 
-The Alphabet command line provides 22 subcommands that cover every aspect of the development workflow. You can run programs directly, start an interactive REPL for experimentation, launch an LSP server for editor integration, debug programs with breakpoints, compile without running, inspect bytecode, sandbox execution for security, lint code for warnings, run tests, manage projects, access documentation for all 82 builtins, run benchmarks, explore examples, take an interactive tour, set up voice input, and self-update to the latest version. The CLI is designed to be discoverable —> `alphabet --help` shows all options, and each subcommand has its own help text. Programs can also be run as executable scripts using shebang lines on Linux and macOS.
+The Alphabet command line provides 13 subcommands plus core flags that cover every aspect of the development workflow. You can run programs directly, start an interactive REPL for experimentation, launch an LSP server for editor integration, debug programs with breakpoints, compile without running, inspect bytecode, sandbox execution for security, lint code for warnings, run tests, manage projects, access documentation for all builtins, run benchmarks, explore examples, take an interactive tour, set up voice input, and self-update to the latest version. The CLI is designed to be discoverable — `alphabet --help` shows all options, and each subcommand has its own help text. Programs can also be run as executable scripts using shebang lines on Linux and macOS.
 
 ```bash
 # Run a program
@@ -132,9 +154,8 @@ alphabet run program.abc arg1 arg2
 alphabet --repl
 
 # Learning curriculum
-alphabet learn                    # list all lessons
-alphabet learn 01                 # show lesson 01
-alphabet learn 01 --run           # run exercise and check
+alphabet examples                 # list all examples
+alphabet tour                     # interactive tour
 
 # Create new project
 alphabet init myproject
@@ -161,6 +182,62 @@ alphabet update
 alphabet --version
 ```
 
+### CLI Flags
+
+| Flag | Description |
+|------|-------------|
+| `--version`, `-v` | Show version information |
+| `--help`, `-h` | Show help message |
+| `--compile`, `-c` | Compile only, don't run |
+| `--output`, `-o` | Output file for compiled bytecode |
+| `--repl` | Start interactive REPL |
+| `--lsp` | Start Language Server Protocol server |
+| `--debug` | Run in debug mode (breakpoints) |
+| `--sandbox` | Sandbox mode: block FFI and file access |
+| `--dump-bytecode` | Print compiled bytecode and exit |
+
+### CLI Subcommands
+
+| Subcommand | Description |
+|------------|-------------|
+| `run <file>` | Run a program |
+| `init <name>` | Create new project structure |
+| `test [dir]` | Run test files |
+| `info` | Show project info |
+| `doc <name>` | Show builtin documentation |
+| `bench` | Run VM benchmark suite |
+| `examples` | List available examples |
+| `tour` | Interactive language tour |
+| `lint <file>` | Lint a file for warnings |
+| `pkg` | Package manager (install, list, search) |
+| `setup-voice` | Install voice dependencies |
+| `voice-tutorial` | Learn voice input |
+| `update` | Self-update to latest version |
+
+### REPL Commands
+
+| Command | Description |
+|---------|-------------|
+| `q`, `quit`, `exit` | Exit REPL |
+| `help` | Show commands |
+| `clear` | Clear screen |
+| `clear history` | Clear command history |
+| `clear all` | Clear screen + history |
+| `reset` | Clear everything |
+| `vars` | Show defined variables |
+| `keywords` | Show keywords for current language |
+| `history` | Show command history |
+| `!!` | Repeat last command |
+| `trace` | Show trace mode status |
+| `trace on` | Enable execution trace |
+| `trace off` | Disable execution trace |
+| `trace slow` | Watch each step happen gradually |
+| `trace fast` | Instant results (default) |
+| `lang` | Show current language |
+| `builtins` | List all builtins by category |
+| `voice` | Voice-to-text input (checks deps first) |
+| `reload` | Clear variables, keep code |
+
 ### Shebang Scripts
 
 Make Alphabet programs executable on Linux/macOS:
@@ -176,10 +253,7 @@ o("Hello from a script!")
 chmod +x my_script.abc
 ./my_script.abc
 ```
-# Show help
-alphabet --help
-```
-```
+
 ### Environment Variables
 
 | Variable | Description |
@@ -190,9 +264,10 @@ alphabet --help
 
 ## Documentation
 
-Alphabet provides comprehensive documentation organized into four categories to serve every learning style and experience level. The Getting Started section includes a beginner guide that walks you through your first program in 10 minutes, a step-by-step tutorial with progressively complex examples, and a complete guide that covers every feature in depth. The Reference section provides a printable quick reference card with all 19 keywords, a detailed language reference covering types, operators, and syntax, and an installation guide for every platform. The Advanced section covers performance benchmarks, deep dives into FFI and LSP integration, and the technical architecture. The Community section includes contributing guidelines and the project roadmap showing what features are planned for future releases.
+Alphabet provides comprehensive documentation organized into four categories to serve every learning style and experience level. The Getting Started section includes a beginner guide that walks you through your first program in 10 minutes, a step-by-step tutorial with progressively complex examples, and a complete guide that covers every feature in depth. The Reference section provides a printable quick reference card, a detailed language reference covering types, operators, and syntax, and an installation guide for every platform. The Advanced section covers performance benchmarks, deep dives into FFI and LSP integration, and the technical architecture. The Community section includes contributing guidelines and the project roadmap showing what features are planned for future releases.
 
 ### Getting Started
+
 | Guide | Description |
 |-------|-------------|
 | [Getting Started](docs/GETTING_STARTED.md) | Beginner guide (10 min) |
@@ -200,6 +275,7 @@ Alphabet provides comprehensive documentation organized into four categories to 
 | [Complete Guide](docs/COMPLETE_GUIDE.md) | Full language tutorial |
 
 ### Reference
+
 | Guide | Description |
 |-------|-------------|
 | [Quick Reference](QUICK_REFERENCE.md) | Printable cheat sheet |
@@ -207,6 +283,7 @@ Alphabet provides comprehensive documentation organized into four categories to 
 | [Installation](docs/INSTALLATION.md) | Setup guide |
 
 ### Advanced
+
 | Guide | Description |
 |-------|-------------|
 | [Benchmarks](docs/BENCHMARKS.md) | Performance data |
@@ -214,6 +291,7 @@ Alphabet provides comprehensive documentation organized into four categories to 
 | [Architecture](docs/PRESENTATION.md) | Technical overview |
 
 ### Community
+
 | Guide | Description |
 |-------|-------------|
 | [Contributing](CONTRIBUTING.md) | How to contribute |
@@ -223,7 +301,7 @@ Alphabet provides comprehensive documentation organized into four categories to 
 
 ## Testing
 
-Alphabet includes a comprehensive test suite that verifies every component of the language works correctly. The test suite runs 34 unit tests covering the lexer, parser, compiler, and virtual machine, plus 257 test files that verify all 5 keyword languages (English, Amharic, Spanish, French, German) produce correct output. The tests cover variables, control flow, loops, functions, classes, inheritance, static methods, constructors, this keyword, string operations, list operations, map operations, pattern matching, exception handling, closures, and more. All tests run automatically with CMake and CTest, and the CI pipeline runs them on every commit to catch regressions. The test results are displayed with clear pass/fail indicators and detailed error messages when something breaks.
+Alphabet includes a comprehensive test suite that verifies every component of the language works correctly. The test suite runs 34 ctest unit tests covering the lexer, parser, compiler, and virtual machine, plus 257 test files that verify all 5 keyword languages (English, Amharic, Spanish, French, German) produce correct output. The tests cover variables, control flow, loops, functions, classes, inheritance, static methods, constructors, this keyword, string operations, list operations, map operations, pattern matching, exception handling, closures, and more. All tests run automatically with CMake and CTest, and the CI pipeline runs them on every commit to catch regressions. The test results are displayed with clear pass/fail indicators and detailed error messages when something breaks.
 
 ```bash
 cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
@@ -239,121 +317,141 @@ cd build && ctest --output-on-failure
 |--------|-------|
 | Version | v2.3.5 |
 | Tests | 34 ctest + 257 test files |
-| Builtins | 90 functions |
+| Builtins | 74 functions |
 | Stdlib Modules | 21 |
 | Examples | 38 programs |
-| CLI Commands | 22 subcommands |
+| CLI Subcommands | 13 |
 | Languages | 5 (en/am/es/fr/de) |
-| Keywords | 26 per language |
-| Opcodes | 42 |
+| Keywords | 26 entries per language (22 unique symbols) |
+| Opcodes | 45 |
 | Token Types | 45 |
-| Source Files | 33 (.cpp + .h) |
-| LOC | 14,073 C++ |
+| Source Files | 34 (.cpp + .h) |
+| LOC | 13,827 C++ |
 | Optimization | Constant folding pass |
+| Learning Lessons | 10 (with exercise + solution) |
 
-### CLI Commands
+---
 
-**v2.3.4 had only:** `alphabet --version`, `alphabet --repl`, `alphabet --lsp`, `alphabet --debug`, `alphabet --sandbox`, `alphabet --dump-bytecode`, `alphabet --compile`, `alphabet --output`, `alphabet update`
+## Standard Library
 
-**v2.3.5 added 12 new subcommands:**
+The Alphabet standard library provides 21 reusable modules covering math, I/O, strings, lists, JSON, crypto, configuration, testing, and more. Every module is implemented in Alphabet itself (`.abc` files) and can be imported with `x <module>`. The complete list is below.
 
-```
-alphabet init <name>      Create new project (NEW)
-alphabet run <file>       Run a program (NEW)
-alphabet test [dir]       Run test files (NEW)
-alphabet info             Show project info (NEW)
-alphabet doc <name>       Show builtin docs (NEW)
-alphabet bench            Run benchmarks (NEW)
-alphabet examples         List examples (NEW)
-alphabet tour             Interactive tour (NEW)
-alphabet lint <file>      Lint for warnings (NEW)
-alphabet pkg              Package manager (NEW)
-alphabet voice-tutorial   Learn voice input (NEW)
-alphabet setup-voice      Install voice dependencies (NEW)
-```
+### Stdlib Modules
 
-**All 22 commands with examples:**
+| Module | Description |
+|--------|-------------|
+| `math` | Basic math: sqrt, pow, abs, min, max, floor, ceil, round |
+| `math_ext` | Extended math: trigonometric, logarithmic, statistics |
+| `string` | String operations: upper, lower, find, replace, split, trim |
+| `string_utils` | Advanced string utilities: padding, alignment, templates |
+| `list` | List operations: map, filter, reduce, sort, reverse |
+| `list_utils` | List utilities: chunk, flatten, zip, enumerate, unique |
+| `collections` | Collection helpers: stack, queue, sets |
+| `data_structures` | Data structures: linked lists, trees, graphs |
+| `functional` | Functional programming: compose, curry, partial application |
+| `json` | JSON parsing and generation |
+| `io` | File I/O: read, write, append, exists |
+| `os` | OS operations: env, args, exec, system calls |
+| `system` | System info: timestamp, env vars, process control |
+| `datetime` | Date and time formatting |
+| `random` | Random number generation: rand, randint, choice |
+| `crypto` | Cryptographic operations: hash, hmac |
+| `config` | Configuration file parsing (TOML-style) |
+| `validate` | Input validation helpers |
+| `assert` | Assertion helpers for testing |
+| `test` | Test framework: describe, it, expect |
+| `testing` | Extended testing utilities |
 
-```bash
-# Flags
-alphabet --version        Show version
-alphabet --repl           Interactive REPL
-alphabet --lsp            LSP server for VS Code
-alphabet --debug          Debug mode
-alphabet --sandbox        Sandbox mode
-alphabet --dump-bytecode  Inspect bytecode
-alphabet --compile        Compile only
-alphabet --output <file>  Output file
+Import a module with `x <module>`:
 
-# Subcommands (NEW in v2.3.5)
-alphabet init myproject           Create new project
-alphabet run program.abc          Run a program
-alphabet test tests/              Run test files
-alphabet info                     Show project info
-alphabet doc o                  Show builtin docs
-alphabet bench                    Run benchmarks
-alphabet examples                 List examples
-alphabet tour                     Interactive tour
-alphabet lint program.abc         Lint for warnings
-alphabet pkg list                 Package manager
-alphabet pkg search math          Search packages
-alphabet pkg install math         Install packages
-alphabet setup-voice              Install voice deps
-alphabet voice-tutorial           Learn voice input
-alphabet update                   Check for updates
-alphabet update --force           Reinstall current version (fix bugs)
+```alphabet
+#alphabet<en>
+x math
+5 r = math.sqrt(16)
+z.o(r)
+
+x json
+m data = {"name": "Alice", "age": 30}
+z.o(json.stringify(data))
 ```
 
-### REPL Commands
+---
 
-**v2.3.4 had only:** `q`, `quit`, `exit`, `help`, `clear`, `clear history`, `clear all`, `reset`, `vars`, `keywords`, `history`, `!!`
+## Examples
 
-**v2.3.5 added 8 new commands:**
+Alphabet ships with 38 example programs covering every major feature. Browse them locally or copy them as starting points for your own projects.
 
-```
-trace        Show trace mode status (NEW)
-trace on     Enable execution trace (NEW)
-trace off    Disable execution trace (NEW)
-trace slow   Watch each step happen gradually (NEW)
-trace fast   Instant results (default) (NEW)
-lang         Show current language (NEW)
-builtins     List all 82 builtins (NEW)
-voice        Voice-to-text input (NEW)
-reload       Clear variables, keep code (NEW)
-```
+### Example Programs
 
-**All 19 REPL commands:**
+| File | Description |
+|------|-------------|
+| `01_hello.abc` | First program |
+| `02_collections.abc` | Lists and maps |
+| `03_exceptions.abc` | Try/handle blocks |
+| `04_statics.abc` | Static fields and methods |
+| `amharic.abc` | Amharic keywords demo |
+| `ascii_art.abc` | ASCII Art Generator |
+| `benchmarking.abc` | Timing and performance measurement |
+| `caesar_cipher.abc` | Caesar cipher encryption |
+| `calculator.abc` | Calculator example |
+| `classes.abc` | Class-based OOP example |
+| `cli_tool.abc` | CLI Tool Example |
+| `comprehensive.abc` | Comprehensive feature test |
+| `data_processing.abc` | Data processing pipeline |
+| `design_patterns.abc` | Singleton, Observer, Strategy patterns |
+| `error_handling.abc` | Error handling patterns |
+| `fibonacci.abc` | Fibonacci sequence calculator |
+| `file_io.abc` | File I/O example |
+| `functional.abc` | Functional programming patterns |
+| `guessing_game.abc` | Number guessing game |
+| `hello_shebang.abc` | Hello world with shebang line |
+| `json.abc` | JSON parsing and generation |
+| `lib_greeter.abc` | Greeter class library example |
+| `lib_math.abc` | Math library example |
+| `matrix.abc` | Matrix operations (create, add, multiply, print) |
+| `networking.abc` | Networking Utilities |
+| `pattern_matching.abc` | Match/case pattern matching |
+| `recursion.abc` | Tower of Hanoi, binary search, merge sort |
+| `sorting.abc` | Bubble sort and selection sort |
+| `state_machine.abc` | State machine implementation |
+| `text_adventure.abc` | Mini text adventure game |
+| `unit_testing.abc` | Unit testing framework usage |
+| `web_api.abc` | HTTP requests, JSON, error handling |
+| `test_break.abc` | Break statement tests |
+| `test_continue.abc` | Continue statement tests |
+| `test_escapes.abc` | String escape sequence tests |
+| `test_import.abc` | Module import tests |
+| `test_import_class.abc` | Class import tests |
+| `test_stdlib.abc` | Standard library smoke test |
 
-```bash
-# v2.3.4 commands
-q/quit/exit  Exit REPL
-help         Show commands
-clear        Clear screen
-clear history Clear command history
-clear all    Clear screen + history
-reset        Clear everything
-vars         Show defined variables
-keywords     Show keywords for current language
-history      Show command history
-!!           Repeat last command
+Run any example with `alphabet examples/<file>` or browse them all with `alphabet examples`.
 
-# v2.3.5 new commands
-trace        Show trace mode status
-trace on     Enable execution trace (on by default)
-trace off    Disable execution trace
-trace slow   Watch each step happen gradually
-trace fast   Instant results (default)
-lang         Show current language
-builtins     List all 82 builtins
-voice        Voice-to-text input (checks deps first)
-reload       Clear variables, keep code
-```
+---
+
+## Learning Curriculum
+
+Alphabet ships with a 10-lesson interactive curriculum. Each lesson has an `exercise.abc` (with blanks to fill in) and a `solution.abc` (the complete working version). Walk through them in order for a structured introduction to the language.
+
+| # | Lesson | Topics |
+|---|--------|--------|
+| 01 | `01_hello_world` | Print, basic syntax, comments |
+| 02 | `02_variables` | Variable declaration, named types, type inference |
+| 03 | `03_basic_math` | Arithmetic, operators, math functions |
+| 04 | `04_conditionals` | If/else, comparison operators, boolean logic |
+| 05 | `05_loops` | While loops, for loops, break, continue |
+| 06 | `06_functions` | Function declaration, parameters, return values |
+| 07 | `07_lists` | List creation, indexing, iteration, list operations |
+| 08 | `08_classes` | Class declaration, fields, methods, constructors |
+| 09 | `09_error_handling` | Try/handle, exception types, error recovery |
+| 10 | `10_project_calculator` | Capstone: build a calculator combining all concepts |
+
+Each lesson has an exercise (with `___` placeholders) and a solution. Use the REPL or your editor to fill in the blanks, then run with `alphabet learning/<NN_topic>/solution.abc` to see the expected output.
 
 ---
 
 ## v2.3.4 vs v2.3.5
 
-This section compares what was available in v2.3.4 (May 28, 2026) and what was added or fixed in v2.3.5 (June 7, 2026).
+This section compares what was available in v2.3.4 and what was added or fixed in v2.3.5. v2.3.5 was released June 2026 and is the current version. v2.3.4 was the previous release.
 
 ### What v2.3.4 Had
 
@@ -371,319 +469,88 @@ v2.3.4 was the first feature-complete release with a working compiler, VM, and t
 
 ### What's New in v2.3.5
 
-v2.3.5 is a major release adding functional programming, closures, voice input, a browser playground, threading, and over 40 new features. Here is what each feature does and how to use it.
+v2.3.5 is a major release that expanded the standard library, added voice input, browser playground support, threading, improved error messages, fixed several compiler bugs, and added the interactive learning curriculum. The summary table below shows the before/after counts, followed by the specific features that are genuinely new (not carried over from v2.3.4).
 
-#### 1. super() - Call Parent Class Constructors
-
-Inherit from a parent class and call its constructor using `super()`.
-
-```alphabet
-#alphabet<en>
-c Base {
-    v 5 value = 0
-    m 1 Base(5 v) {
-        this.value = v
-    }
-}
-c Child ^ Base {
-    m 1 Child(5 v) {
-        super(v)
-    }
-    m 5 get_value() {
-        r this.value
-    }
-}
-5 c = n Child(42)
-z.o(c.get_value())
-```
-
-Output: `42`
-
-#### 2. Functional Programming - map, filter, reduce, closures
-
-Transform lists with lambdas.
-
-```alphabet
-#alphabet<en>
-m nums = [1, 2, 3, 4, 5]
-m doubled = z.map(nums, m (x) { r x * 2 })
-z.o(doubled)
-
-m evens = z.filter(nums, m (x) { r x % 2 == 0 })
-z.o(evens)
-
-5 total = z.reduce(nums, 0, m (acc, x) { r acc + x })
-z.o(total)
-```
-
-Output: `[2, 4, 6, 8, 10]` then `[2, 4]` then `15`
-
-Lambdas capture global variables (closures):
-
-```alphabet
-#alphabet<en>
-5 multiplier = 3
-m multiply = m (x) { r x * multiplier }
-z.o(multiply(5))
-```
-
-Output: `15`
-
-#### 3. Ternary Operator
-
-One-line conditional expressions.
-
-```alphabet
-#alphabet<en>
-5 x = 10
-5 result = x > 5 ? "big" : "small"
-z.o(result)
-```
-
-Output: `big`
-
-#### 4. Voice Input - Speak Code in 5 Languages
-
-Speak code in English, Amharic, Spanish, French, or German.
-
-```bash
-alphabet setup-voice
-alphabet --repl
->>> voice
-# Speak: "print hello world"
-```
-
-Vosk for English/Spanish/French/German (offline). Whisper for Amharic (offline).
-
-#### 5. Browser Playground - Run Code in Your Browser
-
-```bash
-open playground/index.html
-```
-
-Dark theme, 7 built-in examples, 5 language selector, Ctrl+Enter to run.
-
-**Note:** The web IDE runs code through the native v2.3.5 binary via the server, giving you the FULL language experience in the browser.
-
-#### 6. Threading Support - Concurrent Execution
-
-```alphabet
-#alphabet<en>
-z.thread(m () { z.o("Hello from thread 1") })
-z.thread(m () { z.o("Hello from thread 2") })
-z.join_all()
-```
-
-Functions: `z.thread(fn)`, `z.join(id)`, `z.join_all()`, `z.lock(name)`, `z.acquire(name)`, `z.release(name)`
-
-#### 7. Constant Folding - Compile-Time Optimization
-
-The compiler evaluates constant expressions at compile time. `3 + 4` becomes `7` before running.
-
-```alphabet
-#alphabet<en>
-5 x = (2 + 3) * 4
-z.o(x)
-```
-
-Output: `20` - computed at compile time, no runtime cost.
-
-#### 8. REPL Trace Mode - See How Compilation Works
-
-The REPL shows you exactly what happens when you type code through 4 phases.
-
-```
->>> 5 x = 10
-
-┌─ Tokenizing ─────────────────────────────┐
-│ 5 x = 10
-└──────────────────────────────────────────┘
-┌─ Parsing ────────────────────────────────┐
-│ VarDecl(x: 5 = Lit(10))
-└──────────────────────────────────────────┘
-┌─ Compiling ──────────────────────────────┐
-│ 0: PUSH_CONST 10
-│ 1: STORE_VAR 0
-│ 2: POP
-│ 3: HALT
-└──────────────────────────────────────────┘
-┌─ Executing ──────────────────────────────┐
-│ 0: PUSH_CONST 10  │ depth:0
-│ 1: STORE_VAR 0    │ depth:1
-│ 2: POP            │ depth:1
-│ 3: HALT           │ depth:0
-└──────────────────────────────────────────┘
-```
-
-**Commands:**
-```
-trace on      Enable trace (on by default)
-trace off     Disable trace
-trace slow    Watch each step happen gradually
-trace fast    Instant results (default)
-```
-
-#### 9. Trace Slow Mode - Watch Compilation Happen
-
-Use `trace slow` to see each token, AST node, and bytecode instruction appear one by one with delays.
-
-```
->>> trace slow
->>> z.o("hello")
-
-┌─ Tokenizing ─────────────────────────────┐
-│ z . o ( hello )                           │  <- tokens appear one by one
-└──────────────────────────────────────────┘  <- pause
-┌─ Parsing ────────────────────────────────┐
-│ ExprStmt(Call(Get(Var(z).o), [Lit("hello")])) │ <- appears
-└──────────────────────────────────────────┘  <- pause
-┌─ Compiling ──────────────────────────────┐
-│ 0: PUSH_CONST "SYSTEM_Z"                 │  <- instructions appear one by one
-│ 1: PUSH_CONST "hello"                    │
-│ 2: PRINT                                 │
-│ 3: POP                                   │
-│ 4: HALT                                  │
-└──────────────────────────────────────────┘  <- pause
-┌─ Executing ──────────────────────────────┐
-│ 0: PUSH_CONST "SYSTEM_Z"  │ depth:0      │  <- each step with stack depth
-│ 1: PUSH_CONST "hello"     │ depth:1      │
-│ 2: PRINT                   │ depth:2     │
-│ → hello                                  │  <- output appears here
-│ 3: POP                    │ depth:1      │
-│ 4: HALT                   │ depth:0      │
-└──────────────────────────────────────────┘
-```
-
-#### 10. Package Manager - Install Stdlib Modules
-
-```bash
-alphabet pkg list        # List available packages
-alphabet pkg search math # Search for a package
-alphabet pkg install math # Install a package
-```
-
-#### 11. Improved Error Messages - Keyword Conflict Hints
-
-When you accidentally use a keyword as a variable name, the error tells you what went wrong.
-
-```
->>> i = 10
-Error at line 1, column 3: Expect expression.
-  i = 10
-    ^
-  Hint: 'i' is the 'if' keyword. Use a different variable name.
-```
-
-Works for all 26 single-letter keywords.
-
-#### 12. Embedding API - Use Alphabet in C++ Apps
-
-```cpp
-#include "alphabet_embed.h"
-Alphabet VM;
-VM.init();
-VM.eval("z.o('Hello from C++')");
-VM.run();
-```
-
-#### 13. Project Management
-
-```bash
-alphabet init myproject   # Create new project structure
-alphabet info             # Show project info from alphabet.toml
-```
-
-#### 14. New Standard Library Modules
-
-21 modules (up from 4 in v2.3.4) covering math, strings, JSON, collections, testing, and more.
-
-```alphabet
-#alphabet<en>
-x math
-5 r = math.sqrt(16)
-z.o(r)
-
-x json
-m data = {"name": "Alice", "age": 30}
-z.o(json.stringify(data))
-```
-
-Available: math, string_utils, json, collections, testing, validate, datetime, list_utils, math_ext, system, crypto, config, data_structures, functional, os, and more.
-
-#### 15. Formal Language Specification
-
-docs/SPEC.md - 1548 lines covering the complete language grammar, type system, and semantics.
-
-#### 16. Bug Fixes
-
-Critical bugs fixed in v2.3.5:
-
-- **continue in for-loops**: Previously caused infinite loops
-- **Static methods**: Previously returned null
-- **Constructor dispatch**: Previously looked for `init` instead of class name
-- **Nested for-each**: Variable name conflicts fixed with unique `__fe0`, `__fe1`
-- **Abstract class parsing**: `a c ClassName` syntax now works
-- **this.field type inference**: Compiler now correctly infers types
-
-#### 17. REPL Improvements
-
-- `voice` command checks dependencies before starting
-- `builtins` command lists all 82 builtins by category
-- `reload` command clears variables but keeps code
-- `q` is now exclusively the `match` keyword (use `quit`/`exit` to leave)
-
-#### 18. Error Recovery
-
-Parser shows hints for common errors:
-
-```
-Missing closing parenthesis → "Hint: check for missing closing parenthesis"
-Missing expression → "Hint: check for missing operator, value, or keyword conflict"
-Missing variable name → "Hint: variable names can't be keywords"
-Missing class name → "Hint: use 'n ClassName()' for constructors"
-Missing braces → "Hint: check for missing opening/closing brace"
-```
-
-#### 19. LSP Server Improvements
-
-- Startup message shows version and capabilities
-- Supports: hover, completion, definition, symbols
-
-#### 20. Windows Support
-
-- `SetConsoleMode(ENABLE_VIRTUAL_TERMINAL_PROCESSING)` for ANSI colors
-
-and match more fixes and improvement
-
-### Summary Table
+#### Genuinely New in v2.3.5
 
 | Category | v2.3.4 | v2.3.5 | Added |
 |----------|--------|--------|-------|
-| CLI Subcommands | 1 | 13 | +12 |
-| REPL Commands | 12 | 21 | +9 |
+| CLI Subcommands | 0 | 13 | +13 |
+| REPL Commands | 12 | 19 | +7 |
 | Stdlib Modules | 4 | 21 | +17 |
 | Test Files | 34 ctest | 34 ctest + 257 | +257 |
-| LOC | ~14,000 | 14,073 | +73 |
 | Examples | 0 | 38 | +38 |
-| Playground | No | Yes | New |
-| Voice Input | No | Yes | New |
-| Trace Mode | No | Yes | New |
-| Package Manager | No | Yes | New |
-| Threading | No | Yes | New |
-| Closures | No | Yes | New |
-| Functional Prog | No | Yes | New |
-| Embedding API | No | Yes | New |
+| Learning Lessons | 0 | 10 | +10 |
+| LOC | ~12,000 | 13,827 | +1,800 |
+| Source Files | 30 | 34 | +4 |
+| Builtins | ~60 | 74 | +14 |
+
+#### Features New in v2.3.5 (Not in v2.3.4)
+
+1. **super()** - Call parent class constructors from child classes.
+2. **Trace Mode** - REPL shows 4-phase execution (tokenize, parse, compile, execute) with stack depth. Includes `trace slow` for step-by-step animation.
+3. **Package Manager** - `alphabet pkg list/search/install` for stdlib modules.
+4. **Improved Error Messages** - Hint system explains keyword conflicts (`'i' is the 'if' keyword. Use a different variable name.`). Works for all 26 keywords.
+5. **Embedding API** - `alphabet_embed.h` lets C++ apps embed the Alphabet VM.
+6. **Project Management** - `alphabet init myproject` scaffolds a project, `alphabet info` shows project metadata.
+7. **Voice Input** - Speak code in 5 languages (Vosk for en/es/fr/de offline, Whisper for Amharic offline). Setup: `alphabet setup-voice`.
+8. **Browser Playground** - Web playground at `playground/index.html` with 7 examples and 5 language selector.
+9. **Trace Slow Mode** - `trace slow` makes each step appear with a delay for learning how compilation works.
+10. **17 New Stdlib Modules** - math_ext, string_utils, list_utils, collections, data_structures, functional, json, io, os, system, datetime, random, crypto, config, validate, assert, test, testing.
+11. **Bug Fixes**:
+    - `continue` in for-loops no longer causes infinite loops
+    - Static methods now work correctly
+    - Constructor dispatch looks for class name, not `init`
+    - Nested for-each variable name conflicts fixed with unique `__feN` names
+    - Abstract class parsing (`a c ClassName`) now works
+    - `this.field` type inference now correct
+12. **CLI Self-Update** - `alphabet update` and `alphabet update --force` to reinstall current version.
+13. **REPL `reload`** - Clears variables but keeps accumulated code.
+14. **REPL `voice`** - Checks voice dependencies before starting.
+15. **REPL `builtins`** - Lists all builtins by category.
+16. **`q` is exclusively the `match` keyword** - Use `quit`/`exit` to leave REPL.
+17. **38 Working Examples** - Comprehensive coverage of every language feature.
+18. **10-Lesson Learning Curriculum** - Structured interactive lessons with exercises and solutions.
+
+#### Features Already in v2.3.4 (Not New in v2.3.5)
+
+To avoid confusion, these features were already available in v2.3.4 and were not added in v2.3.5:
+
+- Closures and lambdas
+- `map`, `filter`, `reduce` higher-order functions
+- Ternary operator (`x > 5 ? "big" : "small"`)
+- For-each loops (`l (item : list) { ... }`)
+- Range expressions (`1..10`)
+- Threading support (`z.thread`, `z.join_all`)
+- Null-safe operator
+- Public/private visibility
+- Static methods
+- FFI for native C calls
+- LSP server
+- Debugger with breakpoints
+- Pattern matching
+- Exception handling
+- Abstract classes and interfaces
+- Operator overloading
+- Default parameters
+- Labeled break/continue
+- 45-opcode VM
+- Garbage collection
+- Bytecode serialization
+- Constant folding
 
 ---
 
 ## What Problem Does Alphabet Solve?
 
-Alphabet addresses four fundamental problems that make programming harder than it needs to be. First, education overload: beginners struggle with syntax before understanding concepts, and Alphabet's 19-keyword design removes that barrier. Second, rapid prototyping: quick experiments without boilerplate code, letting you focus on ideas rather than ceremony. Third, multilingual programming: write code in your native language so you can learn logic without fighting English syntax. Fourth, tooling integration: built-in LSP server, debugger, and REPL work with any editor supporting the Language Server Protocol. These four problems affect millions of learners worldwide, and Alphabet solves them all with a single, minimal language that teaches concepts that transfer to every other programming language you will ever use.
+Alphabet addresses four fundamental problems that make programming harder than it needs to be. First, **education overload**: beginners struggle with syntax before understanding concepts, and Alphabet's minimal keyword design removes that barrier. Second, **rapid prototyping**: quick experiments without boilerplate code, letting you focus on ideas rather than ceremony. Third, **multilingual programming**: write code in your native language so you can learn logic without fighting English syntax. Fourth, **tooling integration**: built-in LSP server, debugger, and REPL work with any editor supporting the Language Server Protocol. These four problems affect millions of learners worldwide, and Alphabet solves them all with a single, minimal language that teaches concepts that transfer to every other programming language you will ever use.
 
 ### 1. Education Overload
-Beginners struggle with syntax before understanding concepts. Alphabet removes this barrier with only 19 keywords.
+
+Beginners struggle with syntax before understanding concepts. Alphabet removes this barrier with only 26 keyword entries per language.
 
 ### 2. Rapid Prototyping
+
 Quick experiments without boilerplate. Compare:
 
 **Python:**
@@ -704,34 +571,32 @@ m 5 factorial(5 num) {
 ```
 
 ### 3. Multilingual Programming
+
 Write code in your native language. Alphabet supports English, Amharic, Spanish, French, and German keywords.
 
 ### 4. Tooling Integration
+
 Built-in LSP server works with VS Code, Vim, Emacs, and any editor supporting the Language Server Protocol.
 
 ---
 
 ## Contributing
 
-Alphabet is an open source project that welcomes contributions from developers of all skill levels. Whether you want to fix a bug, add a feature, improve documentation, or report an issue, your help is appreciated. The project uses GitHub for collaboration —> you can report bugs through GitHub Issues, discuss ideas in GitHub Discussions, and submit code changes through pull requests. The CONTRIBUTING.md file provides detailed guidelines including project structure, coding standards, testing requirements, and the review process. First-time contributors are especially welcome, and good first issues are labeled to help you find accessible starting points.
+Alphabet is an open source project that welcomes contributions from developers of all skill levels. Whether you want to fix a bug, add a feature, improve documentation, or report an issue, your help is appreciated. The project uses GitHub for collaboration — you can report bugs through GitHub Issues, discuss ideas in GitHub Discussions, and submit code changes through pull requests. The CONTRIBUTING.md file provides detailed guidelines including project structure, coding standards, testing requirements, and the review process. First-time contributors are especially welcome, and good first issues are labeled to help you find accessible starting points.
 
 - Report bugs: [GitHub Issues](https://github.com/fraol163/alphabet/issues)
-- Discuss: [Discussions](https://github.com/fraol163/alphabet/discussions)
+- Discuss: [GitHub Discussions](https://github.com/fraol163/alphabet/discussions)
 
 ---
 
 ## License
 
-Alphabet is released under the MIT License, one of the most permissive open source licenses available. This means you are free to use, modify, and distribute the language for any purpose —> personal, educational, or commercial  without restriction. You can embed Alphabet in your own projects, create derivative works, and even sell products that include it. The only requirement is that you include the original copyright notice and license text in any distribution. The full license text is available in the [LICENSE](LICENSE.txt) file in the project root.
+Alphabet is released under the MIT License, one of the most permissive open source licenses available. This means you are free to use, modify, and distribute the language for any purpose — personal, educational, or commercial — without restriction. You can embed Alphabet in your own projects, create derivative works, and even sell products that include it. The only requirement is that you include the original copyright notice and license text in any distribution. The full license text is available in the [LICENSE.txt](LICENSE.txt) file in the project root.
 
 ---
 
 ## Contact
 
-Alphabet is created and maintained by Fraol Teshome, a developer passionate about making programming education accessible to everyone regardless of their native language. You can reach out via email(fraolteshome444@gmail.com) for questions, feedback, collaboration ideas, or just to say hello. The project is hosted on GitHub where you can follow development, report issues, and join discussions. If you are using Alphabet in education, research, or a personal project, I would love to hear about your experience —> your feedback helps shape the future of the language.
-
----
+Alphabet is created and maintained by Fraol Teshome, a developer passionate about making programming education accessible to everyone regardless of their native language. You can reach out via email (fraolteshome444@gmail.com) for questions, feedback, collaboration ideas, or just to say hello. The project is hosted on GitHub where you can follow development, report issues, and join discussions. If you are using Alphabet in education, research, or a personal project, I would love to hear about your experience — your feedback helps shape the future of the language.
 
 **Built with C++17**
-
-**Resources:** [Documentation](docs/) · [Examples](examples/) · [Source Code](src/) · [Standard Library](stdlib/)

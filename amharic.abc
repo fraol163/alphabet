@@ -1,6 +1,6 @@
 #alphabet<am>
-# Amharic keywords demo
-# ክፍል=class  ዘዴ=method  ከሆነ=if  ሉፕ=loop  ተመለስ=return
+// Amharic keywords demo
+// ክፍል=class  ዘዴ=method  ከሆነ=if  ሉፕ=loop  ተመለስ=return
 5 ቁጥር = 42
 12 ስም = "አልፋቤት"
 ውጤት.o(ስም)

@@ -2,5 +2,6 @@
 // Edge Case 12: Very long string (1000 chars)
 12 s = ""
 5 i = 0
-l (i < 1000) { s = s + "a" i = i + 1 }
+l (i < 1000) { s = s + "a"
+i = i + 1 }
 i (z.len(s) == 1000) { z.o("PASS:str_12_long") } e { z.o("FAIL:str_12_long len=" + str(z.len(s))) }

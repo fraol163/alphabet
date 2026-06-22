@@ -1,13 +1,13 @@
 #alphabet<en>
 // === ACCESS (public/private/static) TESTS ===
 // S1: public method callable
-v m 11 pub_fn() { r 1 }
+v m 5 pub_fn() { r 1 }
 i (pub_fn() == 1) { z.o("PASS:access_s1") }
 // S2: public field accessible
 v 5 pub_var = 42
 i (pub_var == 42) { z.o("PASS:access_s2") }
 // S3: class with public method
-c AccessCls { v m 11 greet() { r "hi" } }
+c AccessCls { v m 5 greet() { r "hi" } }
 15 ac = n AccessCls()
 i (ac.greet() == "hi") { z.o("PASS:access_s3") }
 // S4: class with public field

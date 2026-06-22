@@ -5,14 +5,14 @@
 z.o("=== Recursive Algorithms ===")
 
 z.o("\n--- Tower of Hanoi ---")
-m 0 hanoi(5 n, 12 from, 12 to, 12 aux) {
-  i (n == 1) {
+m 0 hanoi(5 num, 12 from, 12 to, 12 aux) {
+  i (num == 1) {
     z.o("Move disk 1 from " + from + " to " + to)
     r
   }
-  hanoi(n - 1, from, aux, to)
-  z.o("Move disk " + z.tostr(n) + " from " + from + " to " + to)
-  hanoi(n - 1, aux, to, from)
+  hanoi(num - 1, from, aux, to)
+  z.o("Move disk " + z.tostr(num) + " from " + from + " to " + to)
+  hanoi(num - 1, aux, to, from)
 }
 
 z.o("Tower of Hanoi (3 disks):")
@@ -46,24 +46,24 @@ m 13 merge_sort(5 lst) {
 
 m 13 merge(5 left, 5 right) {
   5 result = []
-  5 i = 0
-  5 j = 0
-  l (i < z.len(left) && j < z.len(right)) {
-    i (left[i] <= right[j]) {
-      append(result, left[i])
-      i = i + 1
+  5 p1 = 0
+  5 p2 = 0
+  l (p1 < z.len(left) && p2 < z.len(right)) {
+    i (left[p1] <= right[p2]) {
+      append(result, left[p1])
+      p1 = p1 + 1
     } e {
-      append(result, right[j])
-      j = j + 1
+      append(result, right[p2])
+      p2 = p2 + 1
     }
   }
-  l (i < z.len(left)) {
-    append(result, left[i])
-    i = i + 1
+  l (p1 < z.len(left)) {
+    append(result, left[p1])
+    p1 = p1 + 1
   }
-  l (j < z.len(right)) {
-    append(result, right[j])
-    j = j + 1
+  l (p2 < z.len(right)) {
+    append(result, right[p2])
+    p2 = p2 + 1
   }
   r result
 }

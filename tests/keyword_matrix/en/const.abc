@@ -1,24 +1,24 @@
 #alphabet<en>
 // === CONST TESTS ===
 // S1: const int
-const 5 MAX = 100
+const MAX = 100
 i (MAX == 100) { z.o("PASS:const_s1") }
 // S2: const string
-const 12 CNAME = "Alphabet"
+const CNAME = "Alphabet"
 i (CNAME == "Alphabet") { z.o("PASS:const_s2") }
 // S3: const bool
-const 11 DEBUG = true
+const DEBUG = true
 i (DEBUG) { z.o("PASS:const_s3") }
 // S4: const float
-const 8 CPI = 3.14
+const CPI = 3.14
 i (z.type(CPI) == "number") { z.o("PASS:const_s4") }
 // S5: const in expression
-const 5 CLIMIT = 10
+const CLIMIT = 10
 5 half = CLIMIT / 2
 i (half == 5) { z.o("PASS:const_s5") }
 // S6: const passed to function
 m 11 check_limit(11 num_a) { r num_a < 100 }
 i (check_limit(MAX)) { z.o("PASS:const_s6") }
 // S7: const in function scope
-m 11 use_const() { const 5 LOCAL = 50 r LOCAL }
+m 11 use_const() { const LOCAL = 50 r LOCAL }
 i (use_const() == 50) { z.o("PASS:const_s7") }

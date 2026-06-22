@@ -113,7 +113,7 @@ i (reversed[0] == 3) { o("PASS:reverse") }
 i (z.contains([1, 2, 3], 2)) { o("PASS:contains") }
 13 range5 = z.range(5)
 i (z.len(range5) == 5) { o("PASS:range_fn") }
-x "stdlib/math.abc"
+x "../../../stdlib/math.abc"
 i (true) { o("PASS:import") }
 5 nsum = 0
 5 ni = 0

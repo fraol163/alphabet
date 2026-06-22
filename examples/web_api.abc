@@ -33,7 +33,7 @@ z.o("\n--- JSON Processing ---")
 ]
 
 z.o("Users:")
-l (5 user : users) {
+l (user : users) {
   z.o("  " + user["name"] + " (age " + z.tostr(user["age"]) + ") - " + user["lang"])
 }
 

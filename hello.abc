@@ -1,0 +1,8 @@
+#alphabet<en>
+# bad comment
+12 greeting = "Hello, Alphabet!"
+z.o(greeting)
+
+5 x = 10
+5 y = 20
+z.o("Sum: " + (x + y))

@@ -3,10 +3,10 @@
 /// Demonstrates: classes, inheritance, methods, this keyword
 
 c Animal {
-  string name
-  string sound
+  12 name = ""
+  12 sound = ""
 
-  m Animal(string n, string s) {
+  m Animal(12 n, 12 s) {
     this.name = n
     this.sound = s
   }
@@ -17,18 +17,18 @@ c Animal {
 }
 
 c Dog ^ Animal {
-  m Dog(string n) {
+  m Dog(12 n) {
     this.name = n
     this.sound = "Woof!"
   }
 
-  m fetch(string item) {
+  m fetch(12 item) {
     z.o(this.name + " fetches the " + item)
   }
 }
 
 c Cat ^ Animal {
-  m Cat(string n) {
+  m Cat(12 n) {
     this.name = n
     this.sound = "Meow!"
   }

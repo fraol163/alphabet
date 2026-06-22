@@ -29,7 +29,7 @@ si (name_a == "hello") { z.o("PASS:if_s11") }
 13 lst_a = [1, 2, 3]
 si (z.len(lst_a) == 3) { z.o("PASS:if_s12") }
 // S13: map key
-14 map_a = {{"k": 100}}
+14 map_a = {"k": 100}}
 si (z.has(map_a, "k")) { z.o("PASS:if_s13") }
 // S14: function as condition
 método 11 is_positive(11 num_a) { r num_a > 0 }

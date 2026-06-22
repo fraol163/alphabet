@@ -1,5 +1,5 @@
-#!/usr/bin/env alphabet
-#alphabet<en>
+//!/usr/bin/env alphabet
+//alphabet<en>
 /// Shebang support — make this file executable with:
 ///   chmod +x hello.abc
 ///   ./hello.abc

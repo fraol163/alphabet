@@ -26,14 +26,14 @@
     "wasm",
     "nl-to-code"
   ],
-  "homepage": "https://github.com/yourusername/Alphabet_Language",
+  "homepage": "https://github.com/fraol163/alphabet",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/Alphabet_Language.git",
+    "url": "https://github.com/fraol163/alphabet.git",
     "directory": "editors/vscode-alphabet"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/Alphabet_Language/issues"
+    "url": "https://github.com/fraol163/alphabet/issues"
   },
   "license": "MIT",
   "icon": "resources/icon.png",

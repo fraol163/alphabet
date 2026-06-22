@@ -128,10 +128,16 @@ static std::string parse_string(const std::string& s, size_t& pos) {
                         for (int k = 0; k < 4; ++k) {
                             char h = s[pos + 1 + k];
                             code <<= 4;
-                            if (h >= '0' && h <= '9') code |= (unsigned)(h - '0');
-                            else if (h >= 'a' && h <= 'f') code |= (unsigned)(h - 'a' + 10);
-                            else if (h >= 'A' && h <= 'F') code |= (unsigned)(h - 'A' + 10);
-                            else { bad = true; break; }
+                            if (h >= '0' && h <= '9')
+                                code |= (unsigned)(h - '0');
+                            else if (h >= 'a' && h <= 'f')
+                                code |= (unsigned)(h - 'a' + 10);
+                            else if (h >= 'A' && h <= 'F')
+                                code |= (unsigned)(h - 'A' + 10);
+                            else {
+                                bad = true;
+                                break;
+                            }
                         }
                         if (!bad) {
                             pos += 4;
@@ -275,7 +281,7 @@ void LanguageServer::run() {
     std::cerr << "Alphabet LSP Server v" << ALPHABET_VERSION << " started\n";
     std::cerr << "Waiting for editor connection...\n";
     std::cerr << "Capabilities: hover, completion, definition, references, rename, "
-              "symbols, formatting, rangeFormatting, signatureHelp, codeAction\n\n";
+                 "symbols, formatting, rangeFormatting, signatureHelp, codeAction\n\n";
     std::string line;
     while (std::getline(std::cin, line)) {
         int content_length = 0;
@@ -470,8 +476,8 @@ void LanguageServer::publish_diagnostics(const std::string& uri, const std::stri
         return range;
     };
 
-    auto push_diag = [&](int line, int col, int end_col, int severity,
-                         const std::string& code, const std::string& message) {
+    auto push_diag = [&](int line, int col, int end_col, int severity, const std::string& code,
+                         const std::string& message) {
         JsonValue d = JsonValue::object();
         d.set("range", line_range(line, col, end_col));
         d.set("severity", JsonValue::integer(severity));
@@ -526,16 +532,22 @@ void LanguageServer::publish_diagnostics(const std::string& uri, const std::stri
                 if (lp != std::string::npos) {
                     try {
                         err_line = std::stoi(err.substr(lp + 5)) - 1;
-                    } catch (...) { err_line = 0; }
+                    } catch (...) {
+                        err_line = 0;
+                    }
                 }
                 size_t cp = err.find("column ");
                 if (cp != std::string::npos) {
                     try {
                         err_col = std::stoi(err.substr(cp + 7)) - 1;
-                    } catch (...) { err_col = 0; }
+                    } catch (...) {
+                        err_col = 0;
+                    }
                 }
-                if (err_line < 0) err_line = 0;
-                if (err_col < 0) err_col = 0;
+                if (err_line < 0)
+                    err_line = 0;
+                if (err_col < 0)
+                    err_col = 0;
 
                 size_t newline = err.find('\n');
                 std::string clean_msg = (newline != std::string::npos) ? err.substr(0, newline) : err;
@@ -552,7 +564,8 @@ void LanguageServer::publish_diagnostics(const std::string& uri, const std::stri
                             while (end < (int)l.size() && (std::isalnum(l[end]) || l[end] == '_'))
                                 ++end;
                             end_col = std::max(end, err_col + 1);
-                            if (end_col > (int)l.size()) end_col = (int)l.size();
+                            if (end_col > (int)l.size())
+                                end_col = (int)l.size();
                             break;
                         }
                         ++ln;
@@ -735,9 +748,9 @@ std::string LanguageServer::get_hover_doc(const std::string& word) {
 // now; cross-file symbols would need a project/index model.
 
 struct DocSymbol {
-    std::string kind;       // "function" | "method" | "class" | "interface" | "variable" | "constant" | "field"
-    std::string signature;  // raw declaration text (one line)
-    int line = 0;            // 0-based line where declared
+    std::string kind;      // "function" | "method" | "class" | "interface" | "variable" | "constant" | "field"
+    std::string signature; // raw declaration text (one line)
+    int line = 0;          // 0-based line where declared
 };
 
 static std::unordered_map<std::string, std::string> scan_user_symbols(const std::string& source) {
@@ -747,8 +760,7 @@ static std::unordered_map<std::string, std::string> scan_user_symbols(const std:
     int line_num = 0;
     std::string current_class;
 
-    auto capture_signature = [&](const std::string& kind, const std::string& name,
-                                  const std::string& line_text) {
+    auto capture_signature = [&](const std::string& kind, const std::string& name, const std::string& line_text) {
         std::string md = "```alphabet\n";
         md += line_text;
         md += "\n```\n\n*";
@@ -765,16 +777,24 @@ static std::unordered_map<std::string, std::string> scan_user_symbols(const std:
 
     while (std::getline(stream, line)) {
         size_t first_ns = line.find_first_not_of(" \t");
-        if (first_ns == std::string::npos) { ++line_num; continue; }
+        if (first_ns == std::string::npos) {
+            ++line_num;
+            continue;
+        }
         char fc = line[first_ns];
-        if (fc == '/' || fc == '#') { ++line_num; continue; }
+        if (fc == '/' || fc == '#') {
+            ++line_num;
+            continue;
+        }
 
         // class Name
         if (fc == 'c' && first_ns + 1 < line.size() && line[first_ns + 1] == ' ') {
             size_t p = first_ns + 2;
-            while (p < line.size() && line[p] == ' ') ++p;
+            while (p < line.size() && line[p] == ' ')
+                ++p;
             size_t s = p;
-            while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_')) ++p;
+            while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_'))
+                ++p;
             if (p > s) {
                 std::string name = line.substr(s, p - s);
                 current_class = name;
@@ -784,9 +804,11 @@ static std::unordered_map<std::string, std::string> scan_user_symbols(const std:
         // interface Name
         else if (fc == 'j' && first_ns + 1 < line.size() && line[first_ns + 1] == ' ') {
             size_t p = first_ns + 2;
-            while (p < line.size() && line[p] == ' ') ++p;
+            while (p < line.size() && line[p] == ' ')
+                ++p;
             size_t s = p;
-            while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_')) ++p;
+            while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_'))
+                ++p;
             if (p > s) {
                 std::string name = line.substr(s, p - s);
                 capture_signature("interface", name, line);
@@ -798,11 +820,15 @@ static std::unordered_map<std::string, std::string> scan_user_symbols(const std:
             bool anchored = (mp == first_ns) || (mp > 0 && (line[mp - 1] == ' ' || line[mp - 1] == '\t'));
             if (anchored) {
                 size_t p = mp + 2;
-                while (p < line.size() && line[p] == ' ') ++p;
-                while (p < line.size() && std::isdigit(line[p])) ++p;
-                while (p < line.size() && line[p] == ' ') ++p;
+                while (p < line.size() && line[p] == ' ')
+                    ++p;
+                while (p < line.size() && std::isdigit(line[p]))
+                    ++p;
+                while (p < line.size() && line[p] == ' ')
+                    ++p;
                 size_t s = p;
-                while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_')) ++p;
+                while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_'))
+                    ++p;
                 if (p > s) {
                     std::string name = line.substr(s, p - s);
                     std::string kind = current_class.empty() ? "function" : "method";
@@ -811,12 +837,13 @@ static std::unordered_map<std::string, std::string> scan_user_symbols(const std:
             }
         }
         // const name = ...
-        else if (line.substr(first_ns, 5) == "const" &&
-                 (first_ns + 5 >= line.size() || line[first_ns + 5] == ' ')) {
+        else if (line.substr(first_ns, 5) == "const" && (first_ns + 5 >= line.size() || line[first_ns + 5] == ' ')) {
             size_t p = first_ns + 5;
-            while (p < line.size() && line[p] == ' ') ++p;
+            while (p < line.size() && line[p] == ' ')
+                ++p;
             size_t s = p;
-            while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_')) ++p;
+            while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_'))
+                ++p;
             if (p > s) {
                 std::string name = line.substr(s, p - s);
                 capture_signature("constant", name, line);
@@ -825,13 +852,17 @@ static std::unordered_map<std::string, std::string> scan_user_symbols(const std:
         // <digit type> name = expr   (variable/field)
         else if (std::isdigit(fc)) {
             size_t p = first_ns;
-            while (p < line.size() && std::isdigit(line[p])) ++p;
-            while (p < line.size() && line[p] == ' ') ++p;
+            while (p < line.size() && std::isdigit(line[p]))
+                ++p;
+            while (p < line.size() && line[p] == ' ')
+                ++p;
             size_t s = p;
-            while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_')) ++p;
+            while (p < line.size() && (std::isalnum(line[p]) || line[p] == '_'))
+                ++p;
             if (p > s) {
                 size_t after = p;
-                while (after < line.size() && line[after] == ' ') ++after;
+                while (after < line.size() && line[after] == ' ')
+                    ++after;
                 if (after < line.size() && line[after] == '=') {
                     std::string name = line.substr(s, p - s);
                     std::string kind = current_class.empty() ? "variable" : "field";
@@ -840,7 +871,8 @@ static std::unordered_map<std::string, std::string> scan_user_symbols(const std:
             }
         }
 
-        if (fc == '}' && !current_class.empty()) current_class.clear();
+        if (fc == '}' && !current_class.empty())
+            current_class.clear();
         ++line_num;
     }
     return out;
@@ -1451,17 +1483,20 @@ JsonValue LanguageServer::handle_formatting(int, const JsonValue& params) {
     }
 
     int tab_size = params.get("options").get_int("tabSize", 4);
-    if (tab_size <= 0) tab_size = 4;
+    if (tab_size <= 0)
+        tab_size = 4;
 
     std::string source = it->second;
     std::string formatted = format_text(source);
 
     int orig_lines = 1;
     for (char c : source)
-        if (c == '\n') ++orig_lines;
+        if (c == '\n')
+            ++orig_lines;
     int new_lines = 1;
     for (char c : formatted)
-        if (c == '\n') ++new_lines;
+        if (c == '\n')
+            ++new_lines;
 
     JsonValue range = JsonValue::object();
     JsonValue start = JsonValue::object();
@@ -1502,8 +1537,10 @@ JsonValue LanguageServer::handle_range_formatting(int, const JsonValue& params) 
     while (std::getline(stream, line))
         lines.push_back(line);
 
-    if (start_line < 0) start_line = 0;
-    if (end_line >= (int)lines.size()) end_line = (int)lines.size() - 1;
+    if (start_line < 0)
+        start_line = 0;
+    if (end_line >= (int)lines.size())
+        end_line = (int)lines.size() - 1;
     if (start_line > end_line) {
         JsonValue empty = JsonValue::array();
         return empty;
@@ -1512,7 +1549,8 @@ JsonValue LanguageServer::handle_range_formatting(int, const JsonValue& params) 
     std::string block;
     for (int i = start_line; i <= end_line; ++i) {
         block += lines[i];
-        if (i < end_line) block += '\n';
+        if (i < end_line)
+            block += '\n';
     }
 
     std::string formatted = format_text(block);
@@ -1535,7 +1573,8 @@ JsonValue LanguageServer::handle_range_formatting(int, const JsonValue& params) 
     JsonValue edits = JsonValue::array();
     for (size_t i = 0; i < out_lines.size(); ++i) {
         int ln = start_line + (int)i;
-        if (ln >= (int)lines.size()) break;
+        if (ln >= (int)lines.size())
+            break;
         JsonValue edit_range = JsonValue::object();
         JsonValue edit_start = JsonValue::object();
         edit_start.set("line", JsonValue::integer(ln));
@@ -1573,7 +1612,8 @@ JsonValue LanguageServer::handle_signature_help(int, const JsonValue& params) {
     std::string cur_line;
     int ln = 0;
     while (std::getline(stream, cur_line)) {
-        if (ln == line) break;
+        if (ln == line)
+            break;
         ++ln;
     }
 
@@ -1594,8 +1634,7 @@ JsonValue LanguageServer::handle_signature_help(int, const JsonValue& params) {
         return JsonValue::null();
 
     int start = paren_pos;
-    while (start > 0 && (std::isalnum(cur_line[start - 1]) || cur_line[start - 1] == '_' ||
-                         cur_line[start - 1] == '.'))
+    while (start > 0 && (std::isalnum(cur_line[start - 1]) || cur_line[start - 1] == '_' || cur_line[start - 1] == '.'))
         --start;
     std::string call_name = cur_line.substr(start, paren_pos - start);
 
@@ -1604,28 +1643,28 @@ JsonValue LanguageServer::handle_signature_help(int, const JsonValue& params) {
         const char* sig;
         const char* doc;
     } sigs[] = {
-        {"z.o",      "z.o(value)",                 "Print value to stdout"},
-        {"z.i",      "z.i()",                       "Read a line from stdin"},
-        {"z.sqrt",   "z.sqrt(x: number): number",   "Square root"},
-        {"z.abs",    "z.abs(x: number): number",    "Absolute value"},
-        {"z.sin",    "z.sin(x: number): number",    "Sine (radians)"},
-        {"z.cos",    "z.cos(x: number): number",    "Cosine (radians)"},
-        {"z.pow",    "z.pow(base, exp): number",    "Power"},
-        {"z.floor",  "z.floor(x: number): number",  "Floor"},
-        {"z.ceil",   "z.ceil(x: number): number",   "Ceiling"},
-        {"z.len",    "z.len(x): number",            "Length of string or list"},
-        {"z.type",   "z.type(x): string",          "Type name"},
-        {"z.tostr",  "z.tostr(x): string",          "Convert to string"},
-        {"z.tonum",  "z.tonum(x): number",          "Convert to number"},
-        {"z.t",      "z.t(message)",                "Throw an exception"},
-        {"z.f",      "z.f(path): string",           "Read file"},
-        {"z.split",  "z.split(s, delim): list",     "Split string"},
-        {"z.join",   "z.join(list, sep): string",   "Join list"},
-        {"z.replace","z.replace(s, old, new): str", "Replace substring"},
-        {"z.trim",   "z.trim(s): string",           "Trim whitespace"},
-        {"z.upper",  "z.upper(s): string",          "Uppercase"},
-        {"z.lower",  "z.lower(s): string",          "Lowercase"},
-        {"z.dyn",    "z.dyn(lib, fn, ...args)",     "FFI call"},
+        {"z.o", "z.o(value)", "Print value to stdout"},
+        {"z.i", "z.i()", "Read a line from stdin"},
+        {"z.sqrt", "z.sqrt(x: number): number", "Square root"},
+        {"z.abs", "z.abs(x: number): number", "Absolute value"},
+        {"z.sin", "z.sin(x: number): number", "Sine (radians)"},
+        {"z.cos", "z.cos(x: number): number", "Cosine (radians)"},
+        {"z.pow", "z.pow(base, exp): number", "Power"},
+        {"z.floor", "z.floor(x: number): number", "Floor"},
+        {"z.ceil", "z.ceil(x: number): number", "Ceiling"},
+        {"z.len", "z.len(x): number", "Length of string or list"},
+        {"z.type", "z.type(x): string", "Type name"},
+        {"z.tostr", "z.tostr(x): string", "Convert to string"},
+        {"z.tonum", "z.tonum(x): number", "Convert to number"},
+        {"z.t", "z.t(message)", "Throw an exception"},
+        {"z.f", "z.f(path): string", "Read file"},
+        {"z.split", "z.split(s, delim): list", "Split string"},
+        {"z.join", "z.join(list, sep): string", "Join list"},
+        {"z.replace", "z.replace(s, old, new): str", "Replace substring"},
+        {"z.trim", "z.trim(s): string", "Trim whitespace"},
+        {"z.upper", "z.upper(s): string", "Uppercase"},
+        {"z.lower", "z.lower(s): string", "Lowercase"},
+        {"z.dyn", "z.dyn(lib, fn, ...args)", "FFI call"},
     };
 
     JsonValue signatures = JsonValue::array();
@@ -1667,7 +1706,8 @@ JsonValue LanguageServer::handle_references(int, const JsonValue& params) {
     std::string current_line;
     int ln = 0;
     while (std::getline(stream, current_line)) {
-        if (ln == line) break;
+        if (ln == line)
+            break;
         ++ln;
     }
     if (character > (int)current_line.size())
@@ -1678,10 +1718,12 @@ JsonValue LanguageServer::handle_references(int, const JsonValue& params) {
         --s;
     while (e < (int)current_line.size() && (std::isalnum(current_line[e]) || current_line[e] == '_'))
         ++e;
-    if (s == e) return JsonValue::array();
+    if (s == e)
+        return JsonValue::array();
 
     std::string needle = current_line.substr(s, e - s);
-    if (needle.empty()) return JsonValue::array();
+    if (needle.empty())
+        return JsonValue::array();
 
     JsonValue refs = JsonValue::array();
     std::istringstream s2(it->second);
@@ -1691,11 +1733,11 @@ JsonValue LanguageServer::handle_references(int, const JsonValue& params) {
         size_t search_from = 0;
         while (search_from < line_str.size()) {
             size_t pos2 = line_str.find(needle, search_from);
-            if (pos2 == std::string::npos) break;
+            if (pos2 == std::string::npos)
+                break;
             bool word_left = pos2 > 0 && (std::isalnum(line_str[pos2 - 1]) || line_str[pos2 - 1] == '_');
-            bool word_right =
-                pos2 + needle.size() < line_str.size() &&
-                (std::isalnum(line_str[pos2 + needle.size()]) || line_str[pos2 + needle.size()] == '_');
+            bool word_right = pos2 + needle.size() < line_str.size() &&
+                              (std::isalnum(line_str[pos2 + needle.size()]) || line_str[pos2 + needle.size()] == '_');
             if (!word_left && !word_right) {
                 JsonValue loc = JsonValue::object();
                 loc.set("uri", JsonValue::string(uri));
@@ -1712,7 +1754,8 @@ JsonValue LanguageServer::handle_references(int, const JsonValue& params) {
                 refs.push(loc);
             }
             search_from = pos2 + needle.size();
-            if (search_from == 0) break;
+            if (search_from == 0)
+                break;
         }
         ++line_num;
     }
@@ -1733,26 +1776,31 @@ JsonValue LanguageServer::handle_rename(int, const JsonValue& params) {
     int line = pos.get_int("line");
     int character = pos.get_int("character");
     std::string new_name = params.get("newName").str_val;
-    if (new_name.empty()) return JsonValue::null();
+    if (new_name.empty())
+        return JsonValue::null();
 
     std::istringstream stream(it->second);
     std::string current_line;
     int ln = 0;
     while (std::getline(stream, current_line)) {
-        if (ln == line) break;
+        if (ln == line)
+            break;
         ++ln;
     }
-    if (character > (int)current_line.size()) return JsonValue::null();
+    if (character > (int)current_line.size())
+        return JsonValue::null();
 
     int s = character, e = character;
     while (s > 0 && (std::isalnum(current_line[s - 1]) || current_line[s - 1] == '_'))
         --s;
     while (e < (int)current_line.size() && (std::isalnum(current_line[e]) || current_line[e] == '_'))
         ++e;
-    if (s == e) return JsonValue::null();
+    if (s == e)
+        return JsonValue::null();
 
     std::string old_name = current_line.substr(s, e - s);
-    if (old_name == new_name) return JsonValue::null();
+    if (old_name == new_name)
+        return JsonValue::null();
 
     JsonValue edits = JsonValue::array();
     std::istringstream s2(it->second);
@@ -1762,7 +1810,8 @@ JsonValue LanguageServer::handle_rename(int, const JsonValue& params) {
         size_t search_from = 0;
         while (search_from < line_str.size()) {
             size_t pos2 = line_str.find(old_name, search_from);
-            if (pos2 == std::string::npos) break;
+            if (pos2 == std::string::npos)
+                break;
             bool word_left = pos2 > 0 && (std::isalnum(line_str[pos2 - 1]) || line_str[pos2 - 1] == '_');
             bool word_right =
                 pos2 + old_name.size() < line_str.size() &&
@@ -1783,7 +1832,8 @@ JsonValue LanguageServer::handle_rename(int, const JsonValue& params) {
                 edits.push(edit);
             }
             search_from = pos2 + old_name.size();
-            if (search_from == 0) break;
+            if (search_from == 0)
+                break;
         }
         ++line_num;
     }
@@ -1808,13 +1858,12 @@ JsonValue LanguageServer::handle_code_action(int, const JsonValue& params) {
     const JsonValue& td = params.get("textDocument");
     std::string uri = td.get_str("uri");
     auto doc_it = documents_.find(uri);
-    if (doc_it == documents_.end()) return result;
+    if (doc_it == documents_.end())
+        return result;
 
     // Walk diagnostics we already published for this URI and offer a
     // generic "Suppress" quickfix that comments out the line.
-    JsonValue diagnostics = last_diagnostics_.count(uri)
-        ? last_diagnostics_[uri]
-        : JsonValue::array();
+    JsonValue diagnostics = last_diagnostics_.count(uri) ? last_diagnostics_[uri] : JsonValue::array();
     for (size_t i = 0; i < diagnostics.arr_val.size(); ++i) {
         const JsonValue& d = diagnostics.arr_val[i];
         int line = d.get("range").get("start").get_int("line", 0);
@@ -1853,10 +1902,11 @@ JsonValue LanguageServer::handle_document_highlight(int, const JsonValue& params
     const JsonValue& td = params.get("textDocument");
     std::string uri = td.get_str("uri");
     auto doc_it = documents_.find(uri);
-    if (doc_it == documents_.end()) return result;
+    if (doc_it == documents_.end())
+        return result;
 
     int line = params.get("position").get_int("line", 0);
-    int col  = params.get("position").get_int("character", 0);
+    int col = params.get("position").get_int("character", 0);
     const std::string& src = doc_it->second;
 
     // Find the identifier at (line, col) by scanning backwards for a word
@@ -1865,32 +1915,41 @@ JsonValue LanguageServer::handle_document_highlight(int, const JsonValue& params
         std::vector<std::string> ls;
         std::string cur;
         for (char c : src) {
-            if (c == '\n') { ls.push_back(cur); cur.clear(); }
-            else cur.push_back(c);
+            if (c == '\n') {
+                ls.push_back(cur);
+                cur.clear();
+            } else
+                cur.push_back(c);
         }
         ls.push_back(cur);
         return ls;
     };
     std::vector<std::string> ls = lines();
-    if (line < 0 || line >= (int)ls.size()) return result;
+    if (line < 0 || line >= (int)ls.size())
+        return result;
     const std::string& target_line = ls[line];
-    if (col < 0 || col > (int)target_line.size()) return result;
+    if (col < 0 || col > (int)target_line.size())
+        return result;
 
     // Expand left/right to find identifier boundaries (alnum + _).
     int l = col, r = col;
     auto is_id = [](char c) { return std::isalnum((unsigned char)c) || c == '_'; };
-    while (l > 0 && is_id(target_line[l - 1])) --l;
-    while (r < (int)target_line.size() && is_id(target_line[r])) ++r;
-    if (l >= r) return result;
+    while (l > 0 && is_id(target_line[l - 1]))
+        --l;
+    while (r < (int)target_line.size() && is_id(target_line[r]))
+        ++r;
+    if (l >= r)
+        return result;
     std::string word = target_line.substr(l, r - l);
-    if (word.empty()) return result;
+    if (word.empty())
+        return result;
 
     // Search every line for occurrences.
     for (int i = 0; i < (int)ls.size(); ++i) {
         size_t pos = 0;
         while ((pos = ls[i].find(word, pos)) != std::string::npos) {
             // Word boundary check (the position must not be inside another word)
-            bool left_ok  = (pos == 0) || !is_id(ls[i][pos - 1]);
+            bool left_ok = (pos == 0) || !is_id(ls[i][pos - 1]);
             bool right_ok = (pos + word.size() >= ls[i].size()) || !is_id(ls[i][pos + word.size()]);
             if (left_ok && right_ok) {
                 JsonValue hl = JsonValue::object();
@@ -1944,67 +2003,78 @@ JsonValue make_semantic_tokens_legend() {
 // Token type IDs MUST match `legend.tokenTypes` order. Keep in sync.
 enum SemanticTokenType {
     STT_NAMESPACE = 0,
-    STT_TYPE      = 1,
-    STT_FUNCTION  = 2,
+    STT_TYPE = 1,
+    STT_FUNCTION = 2,
     STT_PARAMETER = 3,
-    STT_VARIABLE  = 4,
-    STT_STRING    = 5,
-    STT_NUMBER    = 6,
-    STT_COMMENT   = 7,
-    STT_KEYWORD   = 8,
-    STT_OPERATOR  = 9,
+    STT_VARIABLE = 4,
+    STT_STRING = 5,
+    STT_NUMBER = 6,
+    STT_COMMENT = 7,
+    STT_KEYWORD = 8,
+    STT_OPERATOR = 9,
 };
 enum SemanticTokenModifier {
-    STM_NONE       = 0,
+    STM_NONE = 0,
     STM_DECLARATION = 1,
-    STM_READONLY   = 2,
+    STM_READONLY = 2,
 };
 
 namespace {
 
 // Tokenize one line into [startChar, length, tokenType, tokenModifiers].
 // Heuristic-only (no real parser integration); uses Alphabet keyword set.
-std::vector<std::tuple<int,int,int,int>> tokenize_line(const std::string& line) {
+std::vector<std::tuple<int, int, int, int>> tokenize_line(const std::string& line) {
     static const std::unordered_set<std::string> keywords = {
-        "i","e","l","r","c","m","n","v","p","s","o","x","t","q","h",
-        "if","else","loop","return","class","method","new","public",
-        "private","static","abstract","try","handle","throw","this",
-        "import","from","const","let","val","break","continue",
-        "while","do","for","each","in","true","false","null","nil",
-        "match","case","default",
+        "i",      "e",    "l",      "r",       "c",      "m",        "n",        "v",      "p",       "s",
+        "o",      "x",    "t",      "q",       "h",      "if",       "else",     "loop",   "return",  "class",
+        "method", "new",  "public", "private", "static", "abstract", "try",      "handle", "throw",   "this",
+        "import", "from", "const",  "let",     "val",    "break",    "continue", "while",  "do",      "for",
+        "each",   "in",   "true",   "false",   "null",   "nil",      "match",    "case",   "default",
     };
-    std::vector<std::tuple<int,int,int,int>> out;
+    std::vector<std::tuple<int, int, int, int>> out;
     int n = (int)line.size();
     int i = 0;
     while (i < n) {
         char c = line[i];
         // Skip whitespace
-        if (std::isspace((unsigned char)c)) { ++i; continue; }
+        if (std::isspace((unsigned char)c)) {
+            ++i;
+            continue;
+        }
         // Line comment // ...
-        if (c == '/' && i + 1 < n && line[i + 1] == '/') break;
+        if (c == '/' && i + 1 < n && line[i + 1] == '/')
+            break;
         // String literal
         if (c == '"') {
             int s = i;
             ++i;
-            while (i < n && line[i] != '"') { if (line[i] == '\\' && i + 1 < n) ++i; ++i; }
-            if (i < n) ++i;
+            while (i < n && line[i] != '"') {
+                if (line[i] == '\\' && i + 1 < n)
+                    ++i;
+                ++i;
+            }
+            if (i < n)
+                ++i;
             out.emplace_back(s, i - s, STT_STRING, STM_NONE);
             continue;
         }
         // Number
         if (std::isdigit((unsigned char)c)) {
             int s = i;
-            while (i < n && (std::isdigit((unsigned char)line[i]) || line[i] == '.')) ++i;
+            while (i < n && (std::isdigit((unsigned char)line[i]) || line[i] == '.'))
+                ++i;
             out.emplace_back(s, i - s, STT_NUMBER, STM_NONE);
             continue;
         }
         // Identifier / keyword
         if (std::isalpha((unsigned char)c) || c == '_') {
             int s = i;
-            while (i < n && (std::isalnum((unsigned char)line[i]) || line[i] == '_')) ++i;
+            while (i < n && (std::isalnum((unsigned char)line[i]) || line[i] == '_'))
+                ++i;
             std::string word = line.substr(s, i - s);
             int type = STT_VARIABLE;
-            if (keywords.count(word)) type = STT_KEYWORD;
+            if (keywords.count(word))
+                type = STT_KEYWORD;
             out.emplace_back(s, i - s, type, STM_NONE);
             continue;
         }
@@ -2013,7 +2083,8 @@ std::vector<std::tuple<int,int,int,int>> tokenize_line(const std::string& line) 
             int s = i;
             // Two-char: ==, !=, <=, >=, ->, =>, ::, ?.
             if (i + 1 < n && std::ispunct((unsigned char)line[i + 1])) {
-                ++i; ++i;
+                ++i;
+                ++i;
             } else {
                 ++i;
             }
@@ -2033,7 +2104,10 @@ JsonValue LanguageServer::handle_semantic_tokens_full(int, const JsonValue& para
     const JsonValue& td = params.get("textDocument");
     std::string uri = td.get_str("uri");
     auto doc_it = documents_.find(uri);
-    if (doc_it == documents_.end()) { result.set("data", data); return result; }
+    if (doc_it == documents_.end()) {
+        result.set("data", data);
+        return result;
+    }
     const std::string& src = doc_it->second;
 
     int prev_line = 0, prev_start = 0;
@@ -2056,10 +2130,13 @@ JsonValue LanguageServer::handle_semantic_tokens_full(int, const JsonValue& para
         line.clear();
     };
     for (char c : src) {
-        if (c == '\n') { flush_line(); }
-        else line.push_back(c);
+        if (c == '\n') {
+            flush_line();
+        } else
+            line.push_back(c);
     }
-    if (!line.empty()) flush_line();
+    if (!line.empty())
+        flush_line();
 
     result.set("data", data);
     return result;
@@ -2081,7 +2158,8 @@ JsonValue LanguageServer::handle_inlay_hint(int, const JsonValue& params) {
     const JsonValue& td = params.get("textDocument");
     std::string uri = td.get_str("uri");
     auto doc_it = documents_.find(uri);
-    if (doc_it == documents_.end()) return result;
+    if (doc_it == documents_.end())
+        return result;
 
     // Scan for `name(` and look up the method's first param name from
     // BuiltinDoc via the hover-doc helper.
@@ -2090,8 +2168,11 @@ JsonValue LanguageServer::handle_inlay_hint(int, const JsonValue& params) {
         std::vector<std::string> ls;
         std::string cur;
         for (char c : src) {
-            if (c == '\n') { ls.push_back(cur); cur.clear(); }
-            else cur.push_back(c);
+            if (c == '\n') {
+                ls.push_back(cur);
+                cur.clear();
+            } else
+                cur.push_back(c);
         }
         ls.push_back(cur);
         return ls;
@@ -2103,12 +2184,15 @@ JsonValue LanguageServer::handle_inlay_hint(int, const JsonValue& params) {
             if (l[j] == '(' && j > 0 && std::isalpha((unsigned char)l[j - 1])) {
                 // Find identifier immediately before `(`.
                 int e = j - 1;
-                while (e >= 0 && (std::isalnum((unsigned char)l[e]) || l[e] == '_')) --e;
+                while (e >= 0 && (std::isalnum((unsigned char)l[e]) || l[e] == '_'))
+                    --e;
                 std::string name = l.substr(e + 1, j - 1 - e);
-                if (name.empty()) continue;
+                if (name.empty())
+                    continue;
                 // Heuristic: only show for builtins and class method calls.
                 std::string doc = get_hover_doc(name);
-                if (doc.empty()) continue;
+                if (doc.empty())
+                    continue;
                 JsonValue hint = JsonValue::object();
                 JsonValue pos = JsonValue::object();
                 pos.set("line", JsonValue::integer(i));

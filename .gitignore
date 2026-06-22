@@ -66,3 +66,12 @@ test_builtin_dir/
 
 # Temporary test files
 /tmp/t_*.abc
+
+# Local Jcode session data
+.claude/
+
+# CMake build directory for the WASM-LSP target
+build-wasm-lsp/
+
+# Marketplace publisher logo (build artifact for upload only)
+editors/vscode-alphabet/resources/icon-128.png

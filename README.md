@@ -23,33 +23,18 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
 
 ## Table of Contents
 
+- [Installation](#installation)
+  - [Quick install (Linux, macOS)](#quick-install-linux-macos)
+  - [Windows](#windows)
+  - [From source (any platform)](#from-source-any-platform)
+  - [VS Code extension](#vs-code-extension)
+  - [Editor support](#editor-support)
+  - [Verify](#verify)
 - [What is Alphabet?](#what-is-alphabet)
   - [Why Alphabet?](#why-alphabet)
   - [Key Features](#key-features)
   - [Who Is Alphabet For?](#who-is-alphabet-for)
-- [Installation](#installation)
-- [Hello World](#hello-world)
 - [Language Comparison](#language-comparison)
-- [Language Features](#language-features)
-  - [Variables and Types](#variables-and-types)
-  - [Control Flow](#control-flow)
-  - [For Loop](#for-loop)
-  - [Break and Continue](#break-and-continue)
-  - [Functions](#functions)
-  - [Classes](#classes)
-  - [Pattern Matching](#pattern-matching)
-  - [Exception Handling](#exception-handling)
-  - [Import Modules](#import-modules)
-  - [String Escapes and Concatenation](#string-escapes-and-concatenation)
-  - [String Interpolation](#string-interpolation)
-  - [FFI - Call Native C Functions](#ffi---call-native-c-functions)
-  - [Built-In Functions](#built-in-functions)
-  - [Multilingual Keywords](#multilingual-keywords)
-- [Standard Library](#standard-library)
-  - [Stdlib Modules](#stdlib-modules)
-- [Examples](#examples)
-  - [Example Programs](#example-programs)
-- [Learning Curriculum](#learning-curriculum)
 - [Command Line](#command-line)
   - [CLI Flags](#cli-flags)
   - [CLI Subcommands](#cli-subcommands)
@@ -63,13 +48,75 @@ d8P' ?88  ?88  `?88'  ?88  88P `?8bd8P' ?88    88P `?8bd8b_,dP  88P
   - [Community](#community)
 - [Testing](#testing)
 - [Project Statistics](#project-statistics)
+- [Standard Library](#standard-library)
+  - [Stdlib Modules](#stdlib-modules)
+- [Examples](#examples)
+  - [Example Programs](#example-programs)
+- [Learning Curriculum](#learning-curriculum)
 - [v2.3.4 vs v2.3.5](#v234-vs-v235)
   - [What v2.3.4 Had](#what-v234-had)
   - [What's New in v2.3.5](#whats-new-in-v235)
+    - [Genuinely New in v2.3.5](#genuinely-new-in-v235)
+    - [Features New in v2.3.5 (Not in v2.3.4)](#features-new-in-v235-not-in-v234)
+    - [Features Already in v2.3.4 (Not New in v2.3.5)](#features-already-in-v234-not-new-in-v235)
 - [What Problem Does Alphabet Solve?](#what-problem-does-alphabet-solve)
+  - [1. Education Overload](#1-education-overload)
+  - [2. Rapid Prototyping](#2-rapid-prototyping)
+  - [3. Multilingual Programming](#3-multilingual-programming)
+  - [4. Tooling Integration](#4-tooling-integration)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
+
+---
+
+## Installation
+
+### Quick install (Linux, macOS)
+
+```bash
+git clone https://github.com/fraol163/alphabet.git
+cd alphabet
+./install.sh
+```
+
+The installer builds the C++ VM and places `alphabet` on your `PATH`.
+
+### Windows
+
+```powershell
+git clone https://github.com/fraol163/alphabet.git
+cd alphabet
+.\install.ps1
+```
+
+### From source (any platform)
+
+Prerequisites: CMake 3.16+, a C++17 compiler (GCC 9+, Clang 10+, MSVC 19.20+).
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+./build/alphabet --version
+```
+
+### VS Code extension
+
+Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=fraolteshome.alphabet) — bundles a WASM LSP, no system install required for editor features.
+
+### Editor support
+
+- **VS Code** — official extension (LSP via WASM or native binary)
+- **Any LSP client** — `alphabet --lsp` speaks Language Server Protocol on stdio
+- **Syntax highlighting** — TextMate grammar at `editors/vscode-alphabet/syntaxes/alphabet.tmLanguage.json`
+
+### Verify
+
+```bash
+alphabet --version
+```
+
+Should print: `Alphabet 2.3.5 (Native C++)`.
 
 ---
 

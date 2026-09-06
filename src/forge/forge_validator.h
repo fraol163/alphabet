@@ -6,13 +6,17 @@
 #include <vector>
 #include <ostream>
 
+#ifdef ERROR
+#undef ERROR
+#endif
+
 namespace alphabet {
 namespace forge {
 
 enum class IssueSeverity {
     INFO,
     WARNING,
-    ERROR
+    ERR
 };
 
 struct ValidationIssue {
@@ -33,7 +37,7 @@ struct ValidationResult {
     void add_issue(IssueSeverity sev, const std::string& cat, const std::string& item,
                    const std::string& msg, const std::string& sug = "") {
         issues.push_back({sev, cat, item, msg, sug});
-        if (sev == IssueSeverity::ERROR) {
+        if (sev == IssueSeverity::ERR) {
             error_count++;
             valid = false;
         } else if (sev == IssueSeverity::WARNING) {

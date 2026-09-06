@@ -269,7 +269,7 @@ language Recur {
 // ============================================================================
 
 TEST_CASE("ForgeEcosystem initializes new language project", "[forge][ecosystem]") {
-    std::string temp_dir = "/tmp/test_init_lang";
+    std::string temp_dir = (std::filesystem::temp_directory_path() / "test_init_lang").string();
     std::string err;
     bool ok = ForgeEcosystem::init_project("TestLang", temp_dir, "shebang", err);
     REQUIRE(ok);
@@ -294,7 +294,7 @@ TEST_CASE("ForgeEcosystem creates complete distribution bundle", "[forge][ecosys
     std::string err;
     REQUIRE(ForgeSpec::load_from_file(find_spec("zen.forge"), spec, err));
 
-    std::string temp_bundle = "/tmp/test_zen_bundle";
+    std::string temp_bundle = (std::filesystem::temp_directory_path() / "test_zen_bundle").string();
     bool ok = ForgeEcosystem::bundle_distribution(spec, temp_bundle, err);
     REQUIRE(ok);
     REQUIRE(std::filesystem::exists(temp_bundle + "/bin/zen"));

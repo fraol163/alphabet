@@ -5,6 +5,10 @@
 #include <queue>
 #include <regex>
 
+#ifdef ERROR
+#undef ERROR
+#endif
+
 namespace alphabet {
 namespace forge {
 
@@ -80,7 +84,7 @@ ValidationResult ForgeValidator::validate(const ForgeSpec& spec) {
 
     // 1. Metadata Validation
     if (spec.name.empty()) {
-        result.add_issue(IssueSeverity::ERROR, "metadata", "name",
+        result.add_issue(IssueSeverity::ERR, "metadata", "name",
                          "Language name is empty.", "Specify 'language <Name> { ... }'");
     } else {
         bool valid_ident = true;
@@ -92,7 +96,7 @@ ValidationResult ForgeValidator::validate(const ForgeSpec& spec) {
             }
         }
         if (!valid_ident) {
-            result.add_issue(IssueSeverity::ERROR, "metadata", "name",
+            result.add_issue(IssueSeverity::ERR, "metadata", "name",
                              "Language name '" + spec.name + "' contains invalid characters.",
                              "Use alphanumeric characters and underscores only.");
         }
@@ -111,10 +115,10 @@ ValidationResult ForgeValidator::validate(const ForgeSpec& spec) {
     }
 
     if (spec.extension.empty()) {
-        result.add_issue(IssueSeverity::ERROR, "metadata", "extension",
+        result.add_issue(IssueSeverity::ERR, "metadata", "extension",
                          "File extension is empty.", "Specify extension: \".lang\"");
     } else if (spec.extension[0] != '.') {
-        result.add_issue(IssueSeverity::ERROR, "metadata", "extension",
+        result.add_issue(IssueSeverity::ERR, "metadata", "extension",
                          "File extension '" + spec.extension + "' must start with a leading dot ('.').",
                          "Change extension to '." + spec.extension + "'");
     }
@@ -134,7 +138,7 @@ ValidationResult ForgeValidator::validate(const ForgeSpec& spec) {
     // 2. Header Configuration Validation
     if (spec.header.style == HeaderStyle::PREFIX) {
         if (spec.header.prefix.empty()) {
-            result.add_issue(IssueSeverity::ERROR, "header", "prefix",
+            result.add_issue(IssueSeverity::ERR, "header", "prefix",
                              "Header prefix is empty for PREFIX style.",
                              "Specify prefix like '#" + spec.name + "'");
         } else if (spec.header.prefix[0] != '#') {
@@ -144,7 +148,7 @@ ValidationResult ForgeValidator::validate(const ForgeSpec& spec) {
         }
     } else if (spec.header.style == HeaderStyle::PRAGMA) {
         if (spec.header.prefix.empty()) {
-            result.add_issue(IssueSeverity::ERROR, "header", "prefix",
+            result.add_issue(IssueSeverity::ERR, "header", "prefix",
                              "Header prefix is empty for PRAGMA style.",
                              "Specify prefix like '@" + spec.name + "'");
         } else if (spec.header.prefix[0] != '@') {
@@ -169,7 +173,7 @@ ValidationResult ForgeValidator::validate(const ForgeSpec& spec) {
     std::unordered_map<std::string, std::string> seen_keywords;
     for (const auto& [kw, target] : spec.tokens.keywords) {
         if (kw.empty()) {
-            result.add_issue(IssueSeverity::ERROR, "tokens", "keyword",
+            result.add_issue(IssueSeverity::ERR, "tokens", "keyword",
                              "Empty keyword definition found in token config.");
             continue;
         }
@@ -194,10 +198,10 @@ ValidationResult ForgeValidator::validate(const ForgeSpec& spec) {
     }
 
     if (!spec.tokens.block_comment_start.empty() && spec.tokens.block_comment_end.empty()) {
-        result.add_issue(IssueSeverity::ERROR, "tokens", "block_comment",
+        result.add_issue(IssueSeverity::ERR, "tokens", "block_comment",
                          "block_comment_start defined without matching block_comment_end.");
     } else if (spec.tokens.block_comment_start.empty() && !spec.tokens.block_comment_end.empty()) {
-        result.add_issue(IssueSeverity::ERROR, "tokens", "block_comment",
+        result.add_issue(IssueSeverity::ERR, "tokens", "block_comment",
                          "block_comment_end defined without matching block_comment_start.");
     }
 
@@ -234,7 +238,7 @@ ValidationResult ForgeValidator::validate(const ForgeSpec& spec) {
 
         for (const auto& ref : refs) {
             if (!defined_rules.count(ref) && !builtin_non_terminals.count(ref)) {
-                result.add_issue(IssueSeverity::ERROR, "grammar", rule.name,
+                result.add_issue(IssueSeverity::ERR, "grammar", rule.name,
                                  "Rule '" + rule.name + "' references undefined non-terminal '" + ref + "'.",
                                  "Define 'rule " + ref + " = ...' or correct rule name spelling.");
             }
@@ -290,7 +294,7 @@ ValidationResult ForgeValidator::validate_file(const std::string& path, ForgeSpe
     std::string err;
     if (!ForgeSpec::load_from_file(path, out_spec, err)) {
         ValidationResult res;
-        res.add_issue(IssueSeverity::ERROR, "syntax", path,
+        res.add_issue(IssueSeverity::ERR, "syntax", path,
                       "Failed to parse specification file: " + err,
                       "Check .forge syntax, braces, quotes, and rule declarations.");
         return res;
@@ -312,7 +316,7 @@ void ForgeValidator::print_report(const ValidationResult& result, const ForgeSpe
 
     for (const auto& issue : result.issues) {
         switch (issue.severity) {
-            case IssueSeverity::ERROR:
+            case IssueSeverity::ERR:
                 out << "  \033[1;31m[ERROR]\033[0m ";
                 break;
             case IssueSeverity::WARNING:

@@ -361,7 +361,7 @@ TestSummary ForgeEcosystem::run_tests(const ForgeSpec& spec, const std::string& 
     std::sort(test_files.begin(), test_files.end());
 
     std::cout << "\n\033[1mRunning " << spec.name << " Test Suite (" << test_files.size() << " test files)\033[0m\n";
-    std::cout << "──────────────────────────────────────────────────────\n";
+    std::cout << "------------------------------------------------------\n";
 
     auto total_start = std::chrono::high_resolution_clock::now();
 
@@ -376,12 +376,12 @@ TestSummary ForgeEcosystem::run_tests(const ForgeSpec& spec, const std::string& 
 
         if (ok) {
             summary.passed++;
-            std::cout << "  \033[32m✔ PASS\033[0m  " << file 
+            std::cout << "  \033[32mPASS\033[0m  " << file 
                       << " \033[90m(" << std::fixed << std::setprecision(1) << ms << "ms)\033[0m\n";
         } else {
             summary.failed++;
             summary.failures.push_back(file);
-            std::cout << "  \033[31m✘ FAIL\033[0m  " << file 
+            std::cout << "  \033[31mFAIL\033[0m  " << file 
                       << " \033[90m(" << std::fixed << std::setprecision(1) << ms << "ms)\033[0m\n";
         }
     }
@@ -389,7 +389,7 @@ TestSummary ForgeEcosystem::run_tests(const ForgeSpec& spec, const std::string& 
     auto total_end = std::chrono::high_resolution_clock::now();
     summary.duration_ms = std::chrono::duration<double, std::milli>(total_end - total_start).count();
 
-    std::cout << "──────────────────────────────────────────────────────\n";
+    std::cout << "------------------------------------------------------\n";
     if (summary.failed == 0) {
         std::cout << "\033[1;32mTEST SUITE PASSED\033[0m: " << summary.passed << "/" << summary.total 
                   << " passed in " << std::fixed << std::setprecision(2) << summary.duration_ms << "ms\n\n";
@@ -536,7 +536,7 @@ bool ForgeEcosystem::pkg_list(const ForgeSpec& spec, const std::string& project_
     std::cout << "Installed packages:\n";
     for (const auto& entry : std::filesystem::directory_iterator(mod_dir)) {
         if (entry.is_directory()) {
-            std::cout << "  • " << entry.path().filename().string() << "\n";
+            std::cout << "  - " << entry.path().filename().string() << "\n";
         }
     }
     return true;
@@ -686,12 +686,21 @@ bool ForgeEcosystem::init_project(const std::string& lang_name,
     std::cout << "\033[1;32mInitialised new " << lang_name << " project in:\033[0m " 
               << std::filesystem::absolute(dir).string() << "\n\n";
     std::cout << "Project structure:\n";
+#ifdef _WIN32
+    std::cout << "  |-- " << lang_name << ".forge        (Language specification)\n";
+    std::cout << "  |-- README.md           (Documentation & usage instructions)\n";
+    std::cout << "  |-- examples/\n";
+    std::cout << "  |   +-- hello" << ext << "       (Starter program)\n";
+    std::cout << "  +-- tests/\n";
+    std::cout << "      +-- test_basic" << ext << "  (Unit test)\n\n";
+#else
     std::cout << "  ├── " << lang_name << ".forge        (Language specification)\n";
     std::cout << "  ├── README.md           (Documentation & usage instructions)\n";
     std::cout << "  ├── examples/\n";
     std::cout << "  │   └── hello" << ext << "       (Starter program)\n";
     std::cout << "  └── tests/\n";
     std::cout << "      └── test_basic" << ext << "  (Unit test)\n\n";
+#endif
     std::cout << "Next steps:\n";
     std::cout << "  alphabet forge " << (dir / (lang_name + ".forge")).string() << " -o " << (dir / "bin" / lower_name).string() << "\n\n";
 
@@ -721,7 +730,7 @@ bool ForgeEcosystem::bundle_distribution(const ForgeSpec& spec,
         out_error = "Failed to export standalone toolchain binary";
         return false;
     }
-    std::cout << "  ✓ Standalone CLI toolchain: " << bin_path << "\n";
+    std::cout << "  - Standalone CLI toolchain: " << bin_path << "\n";
 
     // 2. Copy specification
     std::filesystem::path dest_spec = out_path / (spec.name + ".forge");
@@ -733,25 +742,25 @@ bool ForgeEcosystem::bundle_distribution(const ForgeSpec& spec,
             sf << "// " << spec.name << " language specification\n";
         }
     }
-    std::cout << "  ✓ Language specification: " << dest_spec.string() << "\n";
+    std::cout << "  - Language specification: " << dest_spec.string() << "\n";
 
     // 3. Export VS Code extension
     std::filesystem::path vscode_dir = out_path / "vscode";
     std::string err;
     if (export_vscode_extension(spec, vscode_dir.string(), err)) {
-        std::cout << "  ✓ VS Code extension: " << vscode_dir.string() << "\n";
+        std::cout << "  - VS Code extension: " << vscode_dir.string() << "\n";
     }
 
     // 4. Export documentation
     std::filesystem::path doc_dir = out_path / "docs";
     if (ForgeDocGenerator::generate_html_docs(spec, doc_dir.string(), err)) {
-        std::cout << "  ✓ HTML Documentation: " << doc_dir.string() << "\n";
+        std::cout << "  - HTML Documentation: " << doc_dir.string() << "\n";
     }
 
     // 5. Export interactive playground
     std::filesystem::path play_dir = out_path / "playground";
     if (ForgePlayground::export_playground(spec, play_dir.string(), err)) {
-        std::cout << "  ✓ Web Playground: " << play_dir.string() << "\n";
+        std::cout << "  - Web Playground: " << play_dir.string() << "\n";
     }
 
     // 6. Generate Bundle README
@@ -776,9 +785,9 @@ bool ForgeEcosystem::bundle_distribution(const ForgeSpec& spec,
     std::string tar_cmd = "tar -czf \"" + out_path.string() + ".tar.gz\" -C \"" + 
                           out_path.parent_path().string() + "\" \"" + out_path.filename().string() + "\" 2>/dev/null";
     if (std::system(tar_cmd.c_str()) == 0) {
-        std::cout << "\n\033[1;32m✓ Created distribution archive:\033[0m " << out_path.string() << ".tar.gz\n\n";
+        std::cout << "\n\033[1;32mCreated distribution archive:\033[0m " << out_path.string() << ".tar.gz\n\n";
     } else {
-        std::cout << "\n\033[1;32m✓ Created distribution bundle directory:\033[0m " << out_path.string() << "\n\n";
+        std::cout << "\n\033[1;32mCreated distribution bundle directory:\033[0m " << out_path.string() << "\n\n";
     }
 
     return true;

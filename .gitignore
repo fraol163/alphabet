@@ -73,3 +73,7 @@ build-wasm-lsp/
 
 # Marketplace publisher logo (build artifact for upload only)
 editors/vscode-alphabet/resources/icon-128.png
+
+# Session recovery and scratch databases
+recovered-state*
+hermes-*

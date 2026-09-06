@@ -163,7 +163,7 @@ bool ForgePlayground::export_playground(const ForgeSpec& spec, const std::string
     out << "        <option value=\"calc\">Variables & Math</option>\n";
     out << "        <option value=\"flow\">Control Flow</option>\n";
     out << "      </select>\n";
-    out << "      <button class=\"run-btn\" onclick=\"executeCode()\">▶ Run</button>\n";
+    out << "      <button class=\"run-btn\" onclick=\"executeCode()\">Run</button>\n";
     out << "    </div>\n";
     out << "  </header>\n\n";
     out << "  <div class=\"workspace\">\n";
@@ -173,7 +173,7 @@ bool ForgePlayground::export_playground(const ForgeSpec& spec, const std::string
     out << "    </div>\n";
     out << "    <div class=\"output-pane\">\n";
     out << "      <div class=\"pane-header\">Console Output</div>\n";
-    out << "      <pre id=\"output\" class=\"terminal\">Click '▶ Run' to execute your program...</pre>\n";
+    out << "      <pre id=\"output\" class=\"terminal\">Click 'Run' to execute your program...</pre>\n";
     out << "    </div>\n";
     out << "  </div>\n\n";
 

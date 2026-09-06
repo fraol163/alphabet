@@ -80,6 +80,34 @@
 #define RESET "\033[0m"
 #endif
 
+#ifdef _WIN32
+#define UI_BOX_TOKENIZING CYAN("+-- Tokenizing ---------------------------------+\n")
+#define UI_BOX_PARSING    CYAN("+-- Parsing ------------------------------------+\n")
+#define UI_BOX_COMPILING  CYAN("+-- Compiling ----------------------------------+\n")
+#define UI_BOX_EXECUTING  CYAN("+-- Executing ----------------------------------+\n")
+#define UI_BOX_ERRORS     RED("+-- Errors -------------------------------------+\n")
+#define UI_BOX_BOTTOM     CYAN("+-----------------------------------------------+\n")
+#define UI_BOX_ERR_BOTTOM RED("+-----------------------------------------------+\n")
+#define UI_BOX_SIDE       CYAN("| ")
+#define UI_BOX_ERR_SIDE   RED("| ")
+#define UI_ARROW          "-> "
+#define UI_PROMPT_TOP     "[>>>] "
+#define UI_PROMPT_CONT    "[...] "
+#else
+#define UI_BOX_TOKENIZING CYAN("┌─ Tokenizing ─────────────────────────────┐\n")
+#define UI_BOX_PARSING    CYAN("┌─ Parsing ────────────────────────────────┐\n")
+#define UI_BOX_COMPILING  CYAN("┌─ Compiling ──────────────────────────────┐\n")
+#define UI_BOX_EXECUTING  CYAN("┌─ Executing ──────────────────────────────┐\n")
+#define UI_BOX_ERRORS     RED("┌─ Errors ─────────────────────────────────┐\n")
+#define UI_BOX_BOTTOM     CYAN("└──────────────────────────────────────────┘\n")
+#define UI_BOX_ERR_BOTTOM RED("└──────────────────────────────────────────┘\n")
+#define UI_BOX_SIDE       CYAN("│ ")
+#define UI_BOX_ERR_SIDE   RED("│ ")
+#define UI_ARROW          "→ "
+#define UI_PROMPT_TOP     "\u256d\u2500[>>>] "
+#define UI_PROMPT_CONT    "\u2570\u2500[...]"
+#endif
+
 namespace {
 
 constexpr const char* VERSION = ALPHABET_VERSION;
@@ -411,10 +439,10 @@ void start_repl() {
         }
 
         if (buffer.empty()) {
-            std::cout << "\u256d\u2500[>>>] ";
+            std::cout << UI_PROMPT_TOP;
         } else {
             std::string indent(brace_depth * 2, ' ');
-            std::cout << "\u2570\u2500[...]" << indent;
+            std::cout << UI_PROMPT_CONT << indent;
         }
         std::cout.flush();
 
@@ -636,7 +664,11 @@ void start_repl() {
                 categories.push_back(misc);
 
             std::cout << "Keywords: " << display_name << " (current: " << repl_lang << ")\n";
+#ifdef _WIN32
+            std::cout << "-------------------------------------\n";
+#else
             std::cout << "─────────────────────────────────────\n";
+#endif
 
             for (const auto& cat : categories) {
                 std::cout << "\n  " << cat.label << ":\n";
@@ -649,11 +681,15 @@ void start_repl() {
                     if (char_count < 16) {
                         padded += std::string(16 - char_count, ' ');
                     }
-                    std::cout << "    " << padded << "→ " << letter << "\n";
+                    std::cout << "    " << padded << UI_ARROW << letter << "\n";
                 }
             }
 
+#ifdef _WIN32
+            std::cout << "\n-------------------------------------\n";
+#else
             std::cout << "\n─────────────────────────────────────\n";
+#endif
             std::cout << "  Special: @ = export, ^ = extends\n";
             std::cout << "  Type \"#alphabet<lang>\" to switch language.\n";
             continue;
@@ -661,7 +697,11 @@ void start_repl() {
 
         if (buffer.empty() && line == "builtins") {
             std::cout << "Builtins (work with or without z. prefix):\n";
+#ifdef _WIN32
+            std::cout << "-----------------------------------------\n";
+#else
             std::cout << "─────────────────────────────────────────\n";
+#endif
             std::cout << "  I/O:        o, i, f, fw, fa, exists, file_size, exec, system, exit, args\n";
             std::cout << "  Math:       sqrt, sin, cos, tan, abs, floor, ceil, round, pow, min, max\n";
             std::cout << "  String:     len, tostr, tonum, type, split, join, replace, trim, upper, lower\n";
@@ -677,7 +717,11 @@ void start_repl() {
             std::cout << "  System:     sleep, timestamp, env, rand, randint\n";
             std::cout << "  Assert:     assert, assert_eq\n";
             std::cout << "  Builder:    builder, append_str, build\n";
+#ifdef _WIN32
+            std::cout << "-----------------------------------------\n";
+#else
             std::cout << "─────────────────────────────────────────\n";
+#endif
             std::cout << "  Use 'alphabet doc <name>' for details.\n";
             continue;
         }
@@ -696,11 +740,11 @@ void start_repl() {
             if (!has_stt || !has_audio) {
                 std::cout << "Voice input dependencies not found.\n\n";
                 std::cout << "Status:\n";
-                std::cout << "  " << (has_vosk ? "✅" : "❌") << " Vosk (STT for en/es/fr/de)\n";
-                std::cout << "  " << (has_whisper ? "✅" : "❌") << " Whisper (STT for Amharic)\n";
-                std::cout << "  " << (has_pyaudio ? "✅" : "❌") << " PyAudio (microphone)\n";
-                std::cout << "  " << (has_arecord ? "✅" : "❌") << " arecord (Linux fallback)\n";
-                std::cout << "  " << (has_sox ? "✅" : "❌") << " sox (cross-platform fallback)\n\n";
+                std::cout << "  " << (has_vosk ? "[OK]" : "[MISSING]") << " Vosk (STT for en/es/fr/de)\n";
+                std::cout << "  " << (has_whisper ? "[OK]" : "[MISSING]") << " Whisper (STT for Amharic)\n";
+                std::cout << "  " << (has_pyaudio ? "[OK]" : "[MISSING]") << " PyAudio (microphone)\n";
+                std::cout << "  " << (has_arecord ? "[OK]" : "[MISSING]") << " arecord (Linux fallback)\n";
+                std::cout << "  " << (has_sox ? "[OK]" : "[MISSING]") << " sox (cross-platform fallback)\n\n";
                 std::cout << "Run 'setup-voice' to install dependencies.\n";
                 continue;
             }
@@ -845,7 +889,7 @@ void start_repl() {
                 if (trace_mode && !new_input.empty()) {
                     alphabet::Lexer new_lexer(new_input, true);
                     auto new_tokens = new_lexer.scan_tokens();
-                    std::cout << CYAN("┌─ Tokenizing ─────────────────────────────┐\n");
+                    std::cout << UI_BOX_TOKENIZING;
                     std::cout.flush();
                     slow_delay_long(trace_slow);
                     std::string line_buf;
@@ -855,7 +899,7 @@ void start_repl() {
                             break;
                         std::string formatted = std::string(tok.lexeme);
                         if (col + (int)formatted.size() + 1 > 56) {
-                            std::cout << CYAN("│ ") << line_buf << "\n";
+                            std::cout << UI_BOX_SIDE << line_buf << "\n";
                             std::cout.flush();
                             slow_delay(trace_slow);
                             line_buf.clear();
@@ -870,11 +914,11 @@ void start_repl() {
                         slow_delay(trace_slow);
                     }
                     if (!line_buf.empty()) {
-                        std::cout << CYAN("│ ") << line_buf << "\n";
+                        std::cout << UI_BOX_SIDE << line_buf << "\n";
                         std::cout.flush();
                     }
                     slow_delay_long(trace_slow);
-                    std::cout << CYAN("└──────────────────────────────────────────┘\n");
+                    std::cout << UI_BOX_BOTTOM;
                     std::cout.flush();
                 }
 
@@ -886,14 +930,14 @@ void start_repl() {
 
                 if (parser.had_errors()) {
                     if (trace_mode) {
-                        std::cout << RED("┌─ Errors ─────────────────────────────────┐\n");
+                        std::cout << UI_BOX_ERRORS;
                         for (const auto& err : parser.errors()) {
-                            std::cout << RED("│ ") << err << "\n";
+                            std::cout << UI_BOX_ERR_SIDE << err << "\n";
                         }
                         if (parser.errors().empty()) {
-                            std::cout << RED("│ ") << "Syntax errors in source code\n";
+                            std::cout << UI_BOX_ERR_SIDE << "Syntax errors in source code\n";
                         }
-                        std::cout << RED("└──────────────────────────────────────────┘\n");
+                        std::cout << UI_BOX_ERR_BOTTOM;
                     } else {
                         for (const auto& err : parser.errors()) {
                             std::cerr << err << "\n";
@@ -905,16 +949,16 @@ void start_repl() {
                     rollback_last_line();
                 } else {
                     if (trace_mode) {
-                        std::cout << CYAN("┌─ Parsing ────────────────────────────────┐\n");
+                        std::cout << UI_BOX_PARSING;
                         std::cout.flush();
                         slow_delay_long(trace_slow);
                         for (size_t i = 0; i < statements.size(); ++i) {
-                            std::cout << CYAN("│ ") << alphabet::stmt_to_string(statements[i]) << "\n";
+                            std::cout << UI_BOX_SIDE << alphabet::stmt_to_string(statements[i]) << "\n";
                             std::cout.flush();
                             slow_delay(trace_slow);
                         }
                         slow_delay_long(trace_slow);
-                        std::cout << CYAN("└──────────────────────────────────────────┘\n");
+                        std::cout << UI_BOX_BOTTOM;
                         std::cout.flush();
                     }
 
@@ -922,34 +966,34 @@ void start_repl() {
                     alphabet::Program program = compiler.compile(statements);
 
                     if (trace_mode) {
-                        std::cout << CYAN("┌─ Compiling ──────────────────────────────┐\n");
+                        std::cout << UI_BOX_COMPILING;
                         std::cout.flush();
                         slow_delay_long(trace_slow);
                         size_t start = prev_bytecode_size;
                         for (size_t i = start; i < program.main.size(); ++i) {
-                            std::cout << CYAN("│ ") << format_instruction(program.main[i], i - start) << "\n";
+                            std::cout << UI_BOX_SIDE << format_instruction(program.main[i], i - start) << "\n";
                             std::cout.flush();
                             slow_delay(trace_slow);
                         }
                         for (const auto& [id, cls] : program.classes) {
-                            std::cout << CYAN("│ ") << "CLASS " << cls.name << "\n";
+                            std::cout << UI_BOX_SIDE << "CLASS " << cls.name << "\n";
                             std::cout.flush();
                             slow_delay(trace_slow);
                             for (const auto& [mname, m] : cls.methods) {
-                                std::cout << CYAN("│ ") << "  METHOD " << mname << " (" << m.bytecode.size()
+                                std::cout << UI_BOX_SIDE << "  METHOD " << mname << " (" << m.bytecode.size()
                                           << " instructions)\n";
                                 std::cout.flush();
                                 slow_delay(trace_slow);
                             }
                         }
                         for (const auto& [fname, fn] : program.functions) {
-                            std::cout << CYAN("│ ") << "FUNC " << fname << " (" << fn.bytecode.size()
+                            std::cout << UI_BOX_SIDE << "FUNC " << fname << " (" << fn.bytecode.size()
                                       << " instructions)\n";
                             std::cout.flush();
                             slow_delay(trace_slow);
                         }
                         slow_delay_long(trace_slow);
-                        std::cout << CYAN("└──────────────────────────────────────────┘\n");
+                        std::cout << UI_BOX_BOTTOM;
                         std::cout.flush();
                     }
 
@@ -967,7 +1011,7 @@ void start_repl() {
                         saved_stderr = dup(STDERR_FILENO);
                         [[maybe_unused]] FILE* _f2 = freopen("/dev/null", "w", stderr);
 #endif
-                        std::cout << CYAN("┌─ Executing ──────────────────────────────┐\n");
+                        std::cout << UI_BOX_EXECUTING;
                         std::cout.flush();
                         size_t exec_idx = 0;
                         size_t skip_up_to = prev_bytecode_size;
@@ -976,7 +1020,7 @@ void start_repl() {
                                                                         const std::string&) mutable {
                             std::string output = vm.consume_output_buffer();
                             if (!output.empty()) {
-                                std::cout << CYAN("│ ") << "→ " << output << "\n";
+                                std::cout << UI_BOX_SIDE << UI_ARROW << output << "\n";
                                 std::cout.flush();
                                 slow_delay(trace_slow);
                             }
@@ -985,7 +1029,11 @@ void start_repl() {
                                 std::string padding;
                                 if (line.size() < 56)
                                     padding = std::string(56 - line.size(), ' ');
-                                std::cout << CYAN("│ ") << line << padding << CYAN("│ depth:") << stack_depth << "\n";
+#ifdef _WIN32
+                                std::cout << UI_BOX_SIDE << line << padding << CYAN("| depth:") << stack_depth << "\n";
+#else
+                                std::cout << UI_BOX_SIDE << line << padding << CYAN("│ depth:") << stack_depth << "\n";
+#endif
                                 std::cout.flush();
                                 slow_delay(trace_slow);
                             }
@@ -997,7 +1045,7 @@ void start_repl() {
 
                     if (trace_mode) {
                         vm.set_trace_callback(nullptr);
-                        std::cout << CYAN("└──────────────────────────────────────────┘\n");
+                        std::cout << UI_BOX_BOTTOM;
                         std::cout.flush();
                     }
 
@@ -1015,8 +1063,8 @@ void start_repl() {
 
                     if (!vm.get_unhandled_error().empty()) {
                         if (trace_mode) {
-                            std::cout << RED("┌─ Errors ─────────────────────────────────┐\n");
-                            std::cout << RED("│ ") << vm.get_unhandled_error() << "\n";
+                            std::cout << UI_BOX_ERRORS;
+                            std::cout << UI_BOX_ERR_SIDE << vm.get_unhandled_error() << "\n";
                             int err_line = vm.get_last_line();
                             if (err_line > 0) {
                                 std::istringstream iss(all_source);
@@ -1024,10 +1072,10 @@ void start_repl() {
                                 for (int i = 0; i < err_line && std::getline(iss, src_line); ++i) {
                                 }
                                 if (!src_line.empty()) {
-                                    std::cout << RED("│ ") << "  " << err_line << " | " << src_line << "\n";
+                                    std::cout << UI_BOX_ERR_SIDE << "  " << err_line << " | " << src_line << "\n";
                                 }
                             }
-                            std::cout << RED("└──────────────────────────────────────────┘\n");
+                            std::cout << UI_BOX_ERR_BOTTOM;
                         } else {
                             std::cerr << RED("Runtime Error: ") << vm.get_unhandled_error() << "\n";
                             int err_line = vm.get_last_line();
@@ -1047,35 +1095,35 @@ void start_repl() {
                 }
             } catch (const alphabet::MissingLanguageHeader&) {
                 if (trace_mode) {
-                    std::cout << RED("┌─ Errors ─────────────────────────────────┐\n");
-                    std::cout << RED("│ ") << "Missing language header\n";
-                    std::cout << RED("└──────────────────────────────────────────┘\n");
+                    std::cout << UI_BOX_ERRORS;
+                    std::cout << UI_BOX_ERR_SIDE << "Missing language header\n";
+                    std::cout << UI_BOX_ERR_BOTTOM;
                 } else {
                     std::cerr << RED("Error: Missing header") << "\n";
                 }
                 rollback_last_line();
             } catch (const alphabet::ParseError& e) {
                 if (trace_mode) {
-                    std::cout << RED("┌─ Errors ─────────────────────────────────┐\n");
-                    std::cout << RED("│ ") << e.what() << "\n";
-                    std::cout << RED("└──────────────────────────────────────────┘\n");
+                    std::cout << UI_BOX_ERRORS;
+                    std::cout << UI_BOX_ERR_SIDE << e.what() << "\n";
+                    std::cout << UI_BOX_ERR_BOTTOM;
                 } else {
                     std::cerr << RED("Parse Error: ") << e.what() << "\n";
                 }
                 rollback_last_line();
             } catch (const alphabet::CompileError& e) {
                 if (trace_mode) {
-                    std::cout << RED("┌─ Errors ─────────────────────────────────┐\n");
-                    std::cout << RED("│ ") << e.what() << "\n";
-                    std::cout << RED("└──────────────────────────────────────────┘\n");
+                    std::cout << UI_BOX_ERRORS;
+                    std::cout << UI_BOX_ERR_SIDE << e.what() << "\n";
+                    std::cout << UI_BOX_ERR_BOTTOM;
                 } else {
                     std::cerr << RED("Compile Error: ") << e.what() << "\n";
                 }
                 rollback_last_line();
             } catch (const alphabet::RuntimeError& e) {
                 if (trace_mode) {
-                    std::cout << RED("┌─ Errors ─────────────────────────────────┐\n");
-                    std::cout << RED("│ ") << e.what() << "\n";
+                    std::cout << UI_BOX_ERRORS;
+                    std::cout << UI_BOX_ERR_SIDE << e.what() << "\n";
                     int err_line = vm.get_last_line();
                     if (err_line > 0) {
                         std::istringstream iss(all_source);
@@ -1083,10 +1131,10 @@ void start_repl() {
                         for (int i = 0; i < err_line && std::getline(iss, src_line); ++i) {
                         }
                         if (!src_line.empty()) {
-                            std::cout << RED("│ ") << "  " << err_line << " | " << src_line << "\n";
+                            std::cout << UI_BOX_ERR_SIDE << "  " << err_line << " | " << src_line << "\n";
                         }
                     }
-                    std::cout << RED("└──────────────────────────────────────────┘\n");
+                    std::cout << UI_BOX_ERR_BOTTOM;
                 } else {
                     std::cerr << RED("Runtime Error: ") << e.what() << "\n";
                     int err_line = vm.get_last_line();
@@ -1102,9 +1150,9 @@ void start_repl() {
                 }
             } catch (const std::exception& e) {
                 if (trace_mode) {
-                    std::cout << RED("┌─ Errors ─────────────────────────────────┐\n");
-                    std::cout << RED("│ ") << e.what() << "\n";
-                    std::cout << RED("└──────────────────────────────────────────┘\n");
+                    std::cout << UI_BOX_ERRORS;
+                    std::cout << UI_BOX_ERR_SIDE << e.what() << "\n";
+                    std::cout << UI_BOX_ERR_BOTTOM;
                 } else {
                     std::cerr << "Error: " << e.what() << "\n";
                 }
@@ -1388,6 +1436,24 @@ std::string read_input(const std::string& path) {
 } // namespace
 
 int main(int argc, char* argv[]) {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut != INVALID_HANDLE_VALUE) {
+        DWORD dwMode = 0;
+        if (GetConsoleMode(hOut, &dwMode)) {
+            SetConsoleMode(hOut, dwMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+        }
+    }
+    HANDLE hErr = GetStdHandle(STD_ERROR_HANDLE);
+    if (hErr != INVALID_HANDLE_VALUE) {
+        DWORD dwMode = 0;
+        if (GetConsoleMode(hErr, &dwMode)) {
+            SetConsoleMode(hErr, dwMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+        }
+    }
+#endif
     bool compile_only = false;
     bool repl_mode = false;
     bool lsp_mode = false;
@@ -1478,9 +1544,9 @@ int main(int argc, char* argv[]) {
         }
 
         if (arg == "setup-voice") {
-            std::cout << "╔══════════════════════════════════════════════════════╗\n";
-            std::cout << "║  ALPHABET VOICE INPUT SETUP                          ║\n";
-            std::cout << "╚══════════════════════════════════════════════════════╝\n\n";
+            std::cout << "======================================================\n";
+            std::cout << "  ALPHABET VOICE INPUT SETUP                          \n";
+            std::cout << "======================================================\n\n";
 
             // Detect OS
             std::string os_name = "unknown";
@@ -1502,21 +1568,21 @@ int main(int argc, char* argv[]) {
             std::string python_cmd = has_python ? "python3" : "python";
 
             if (!has_python) {
-                std::cerr << "❌ Python not found.\n";
+                std::cerr << "[ERROR] Python not found.\n";
                 std::cerr << "   Voice input requires Python 3.8+\n";
                 std::cerr << "   Install: https://www.python.org/downloads/\n";
                 return 1;
             }
-            std::cout << "✅ Python found\n";
+            std::cout << "[OK] Python found\n";
 
             // Check pip
             bool has_pip = system((python_cmd + " -m pip --version >/dev/null 2>&1").c_str()) == 0;
             if (!has_pip) {
-                std::cerr << "❌ pip not found.\n";
+                std::cerr << "[ERROR] pip not found.\n";
                 std::cerr << "   Install: " << python_cmd << " -m ensurepip\n";
                 return 1;
             }
-            std::cout << "✅ pip found\n";
+            std::cout << "[OK] pip found\n";
 
             // Check audio
             bool has_audio = false;
@@ -1540,21 +1606,21 @@ int main(int argc, char* argv[]) {
                 audio_backend = "pyaudio";
 
             if (has_audio || has_pyaudio) {
-                std::cout << "✅ Audio: " << audio_backend << "\n";
+                std::cout << "[OK] Audio: " << audio_backend << "\n";
             } else {
-                std::cout << "❌ Audio: not found\n";
+                std::cout << "[ERROR] Audio: not found\n";
             }
 
             // Check Vosk
             bool has_vosk = system((python_cmd + " -c 'import vosk' >/dev/null 2>&1").c_str()) == 0;
-            std::cout << (has_vosk ? "✅" : "❌") << " Vosk (STT for en/es/fr/de)\n";
+            std::cout << "  " << (has_vosk ? "[OK]" : "[MISSING]") << " Vosk (STT for en/es/fr/de)\n";
 
             // Check Whisper
             bool has_whisper = system((python_cmd + " -c 'import whisper' >/dev/null 2>&1").c_str()) == 0;
-            std::cout << (has_whisper ? "✅" : "❌") << " Whisper (STT for Amharic)\n";
+            std::cout << "  " << (has_whisper ? "[OK]" : "[MISSING]") << " Whisper (STT for Amharic)\n";
 
             // Check PyAudio
-            std::cout << (has_pyaudio ? "✅" : "❌") << " PyAudio (microphone capture)\n";
+            std::cout << "  " << (has_pyaudio ? "[OK]" : "[MISSING]") << " PyAudio (microphone capture)\n";
 
             std::cout << "\n";
 
@@ -1562,7 +1628,7 @@ int main(int argc, char* argv[]) {
             bool needs_install = !has_vosk || !has_whisper || !has_pyaudio;
 
             if (!needs_install) {
-                std::cout << "✅ All voice dependencies installed!\n";
+                std::cout << "[OK] All voice dependencies installed!\n";
                 std::cout << "   Use 'voice' in REPL to start voice input.\n";
                 return 0;
             }
@@ -1570,11 +1636,11 @@ int main(int argc, char* argv[]) {
             // Show what's missing
             std::cout << "Missing packages:\n";
             if (!has_pyaudio)
-                std::cout << "  • pyaudio — microphone capture\n";
+                std::cout << "  - pyaudio: microphone capture\n";
             if (!has_vosk)
-                std::cout << "  • vosk — speech-to-text (en/es/fr/de)\n";
+                std::cout << "  - vosk: speech-to-text (en/es/fr/de)\n";
             if (!has_whisper)
-                std::cout << "  • whisper — speech-to-text (Amharic)\n";
+                std::cout << "  - whisper: speech-to-text (Amharic)\n";
             std::cout << "\n";
 
             // Ask user
@@ -1606,10 +1672,10 @@ int main(int argc, char* argv[]) {
                 std::cout << "Installing pyaudio...\n";
                 int ret = system((python_cmd + " -m pip install pyaudio 2>&1").c_str());
                 if (ret != 0) {
-                    std::cerr << "❌ Failed to install pyaudio\n";
+                    std::cerr << "[ERROR] Failed to install pyaudio\n";
                     std::cerr << "   Try manually: " << python_cmd << " -m pip install pyaudio\n";
                 } else {
-                    std::cout << "✅ pyaudio installed\n";
+                    std::cout << "[OK] pyaudio installed\n";
                 }
             }
 
@@ -1618,9 +1684,9 @@ int main(int argc, char* argv[]) {
                 std::cout << "Installing vosk...\n";
                 int ret = system((python_cmd + " -m pip install vosk 2>&1").c_str());
                 if (ret != 0) {
-                    std::cerr << "❌ Failed to install vosk\n";
+                    std::cerr << "[ERROR] Failed to install vosk\n";
                 } else {
-                    std::cout << "✅ vosk installed\n";
+                    std::cout << "[OK] vosk installed\n";
                 }
             }
 
@@ -1629,23 +1695,23 @@ int main(int argc, char* argv[]) {
                 std::cout << "Installing openai-whisper (may take a few minutes)...\n";
                 int ret = system((python_cmd + " -m pip install openai-whisper 2>&1").c_str());
                 if (ret != 0) {
-                    std::cerr << "❌ Failed to install whisper\n";
+                    std::cerr << "[ERROR] Failed to install whisper\n";
                 } else {
-                    std::cout << "✅ whisper installed\n";
+                    std::cout << "[OK] whisper installed\n";
                 }
             }
 
             // Final check
-            std::cout << "\n══════════════════════════════════════════════════════\n";
+            std::cout << "\n======================================================\n";
             std::cout << "Setup complete!\n\n";
             std::cout << "Voice input status:\n";
             bool vosk_ok = system((python_cmd + " -c 'import vosk' >/dev/null 2>&1").c_str()) == 0;
             bool pyaudio_ok = system((python_cmd + " -c 'import pyaudio' >/dev/null 2>&1").c_str()) == 0;
             bool whisper_ok = system((python_cmd + " -c 'import whisper' >/dev/null 2>&1").c_str()) == 0;
 
-            std::cout << "  " << (vosk_ok ? "✅" : "❌") << " Vosk (en/es/fr/de)\n";
-            std::cout << "  " << (whisper_ok ? "✅" : "❌") << " Whisper (Amharic)\n";
-            std::cout << "  " << (pyaudio_ok ? "✅" : "❌") << " PyAudio (microphone)\n\n";
+            std::cout << "  " << (vosk_ok ? "[OK]" : "[MISSING]") << " Vosk (en/es/fr/de)\n";
+            std::cout << "  " << (whisper_ok ? "[OK]" : "[MISSING]") << " Whisper (Amharic)\n";
+            std::cout << "  " << (pyaudio_ok ? "[OK]" : "[MISSING]") << " PyAudio (microphone)\n\n";
 
             if (vosk_ok || whisper_ok) {
                 std::cout << "Use 'voice' in REPL to start voice input.\n";
@@ -1917,7 +1983,7 @@ int main(int argc, char* argv[]) {
             std::ofstream main_file(main_path);
             if (main_file.good()) {
                 main_file << "#alphabet<en>\n";
-                main_file << "/// " << project_name << " — Alphabet project\n";
+                main_file << "/// " << project_name << " - Alphabet project\n";
                 main_file << "\n";
                 main_file << "z.o(\"Hello from " << project_name << "!\")\n";
                 main_file.close();
@@ -1950,10 +2016,17 @@ int main(int argc, char* argv[]) {
             std::cout << "Created project: " << project_name << "\n";
             std::cout << "\n";
             std::cout << "  " << project_name << "/\n";
+#ifdef _WIN32
+            std::cout << "  |-- main.abc          Entry point\n";
+            std::cout << "  |-- alphabet.toml     Project config\n";
+            std::cout << "  |-- src/              Source files\n";
+            std::cout << "  +-- tests/            Test files\n";
+#else
             std::cout << "  ├── main.abc          Entry point\n";
             std::cout << "  ├── alphabet.toml     Project config\n";
             std::cout << "  ├── src/              Source files\n";
             std::cout << "  └── tests/            Test files\n";
+#endif
             std::cout << "\n";
             std::cout << "Next steps:\n";
             std::cout << "  cd " << project_name << "\n";
@@ -2515,7 +2588,7 @@ int main(int argc, char* argv[]) {
                     std::cerr << w.format();
                 }
                 if (rep.error_count == 0 && rep.warning_count == 0) {
-                    std::cout << "\033[1;32m✓ No lint errors or warnings found in " << lint_file << "!\033[0m\n";
+                    std::cout << "\033[1;32mNo lint errors or warnings found in " << lint_file << "!\033[0m\n";
                 } else {
                     std::cout << "\nFound " << rep.error_count << " error(s), " << rep.warning_count << " warning(s).\n";
                 }

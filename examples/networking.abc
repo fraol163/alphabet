@@ -40,7 +40,7 @@ i (!z.is_null(data)) {
 }
 
 z.o("\n--- HTTP POST ---")
-5 payload = {"name": "Alphabet", "version": "2.3.5"}
+5 payload = {"name": "Alphabet", "version": "2.3.6"}
 5 post_data = http_post_json("https://httpbin.org/post", payload)
 i (!z.is_null(post_data)) {
   z.o("Status: OK")

@@ -206,16 +206,22 @@ class VM {
 
     void set_debug_mode(bool enabled) { debug_mode_ = enabled; }
     void set_sandbox_mode(bool enabled) { sandbox_mode_ = enabled; }
+    void set_program_args(std::vector<std::string> args) { program_args_ = std::move(args); }
     int get_last_line() const { return last_line_; }
     void set_executed_up_to(size_t offset) { executed_up_to_ = offset; }
     void add_breakpoint(int line) { breakpoints_.insert(line); }
     void remove_breakpoint(int line) { breakpoints_.erase(line); }
+    void set_source(const std::string& source);
+    void set_debugger_prompt(const std::string& prompt) { debugger_prompt_ = prompt; }
+    void set_pause_on_start(bool pause) { step_line_ = pause; }
 
     void push(const Value& value);
     Value pop();
     Value& peek(size_t distance = 0);
 
     bool sandbox_mode() const { return sandbox_mode_; }
+    int get_exit_code() const { return exit_code_; }
+    bool had_runtime_error() const { return had_runtime_error_; }
 
     void throw_exception(const Value& value);
     void mark_const(const std::string& name);
@@ -234,7 +240,6 @@ class VM {
   private:
     static constexpr size_t STACK_MAX = 65536;
     std::unique_ptr<Value[]> stack_;
-    size_t stack_capacity_ = STACK_MAX;
     Value* stack_ptr_;
 
     std::unordered_map<std::string, Value> globals_;
@@ -248,8 +253,13 @@ class VM {
     bool sandbox_mode_ = false;
     std::unordered_set<int> breakpoints_;
     bool step_over_ = false;
+    bool step_line_ = false;
+    int step_from_line_ = 0;
+    std::string debugger_prompt_ = "dbg";
+    std::vector<std::string> source_lines_;
     std::vector<std::string> program_args_;
     int exit_code_ = 0;
+    bool had_runtime_error_ = false;
     std::vector<Operand> constant_pool_;
     int last_line_ = 0;
     size_t executed_up_to_ = 0;

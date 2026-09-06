@@ -30,7 +30,7 @@ import {
 import { NLToCodeProvider } from './nl-to-code';
 import { tryStartWasmLsp } from '../server/wasm/lsp-transport';
 
-const MIN_BINARY_VERSION = '2.3.5';
+const MIN_BINARY_VERSION = '2.3.6';
 const CLIENT_ID = 'alphabet';
 const CLIENT_NAME = 'Alphabet Language Server';
 const LSP_DOC_SELECTOR: LspDocumentSelector = [{ scheme: 'file', language: 'alphabet' }];

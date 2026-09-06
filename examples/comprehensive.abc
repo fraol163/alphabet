@@ -2,7 +2,7 @@
 /// Comprehensive feature test
 /// Tests all major features in one file
 
-z.o("=== ALPHABET v2.3.5 FEATURE TEST ===")
+z.o("=== ALPHABET v2.3.6 FEATURE TEST ===")
 
 z.o("\n--- Variables ---")
 5 x = 42

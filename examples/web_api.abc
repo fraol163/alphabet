@@ -15,7 +15,7 @@ i (response != "") {
 }
 
 z.o("\n--- POST Request ---")
-5 payload = z.json_stringify({"name": "Alphabet", "version": "2.3.5"})
+5 payload = z.json_stringify({"name": "Alphabet", "version": "2.3.6"})
 5 post_response = z.http_post("https://httpbin.org/post", payload)
 i (post_response != "") {
   5 post_data = z.json_parse(post_response)

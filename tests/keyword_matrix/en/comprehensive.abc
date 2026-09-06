@@ -55,26 +55,26 @@ l (idx < 5) { loop_sum = loop_sum + idx idx = idx + 1 }
 i (loop_sum == 10) { z.o("PASS:loop") }
 
 // === LOOP WITH BREAK ===
-5 brk = 0
-l (true) { brk = brk + 1 i (brk == 5) { b } }
-i (brk == 5) { z.o("PASS:break") }
+5 bv = 0
+l (true) { bv = bv + 1 i (bv == 5) { b } }
+i (bv == 5) { z.o("PASS:break") }
 
 // === LOOP WITH CONTINUE ===
 13 evens = []
 5 ci = 0
-l (ci < 10) { ci = ci + 1 i (ci % 2 != 0) { k } z.append(evens, ci) }
+l (ci < 10) { ci = ci + 1 i (ci % 2 != 0) { kk } z.append(evens, ci) }
 i (z.len(evens) == 5) { z.o("PASS:continue") }
 
 // === FOR-EACH LOOP ===
 13 items = ["a", "b", "c"]
-5 cnt = 0
-l (5 item : items) { cnt = cnt + 1 }
-i (cnt == 3) { z.o("PASS:for_each") }
+5 kk = 0
+l (item : items) { kk = kk + 1 }
+i (kk == 3) { z.o("PASS:for_each") }
 
 // === FUNCTION ===
-m 11 factorial(11 num) {
-  i (num <= 1) { r 1 }
-  r num * factorial(num - 1)
+m 11 factorial(11 num_val) {
+  i (num_val <= 1) { r 1 }
+  r num_val * factorial(num_val - 1)
 }
 i (factorial(5) == 120) { z.o("PASS:function") }
 
@@ -174,13 +174,12 @@ l (ni < 3) { 5 nj = 0 l (nj < 3) { nsum = nsum + 1 nj = nj + 1 } ni = ni + 1 }
 i (nsum == 9) { z.o("PASS:nested_loop") }
 
 // === RECURSION ===
-m 11 fib(11 n) { i (n <= 1) { r n } r fib(n - 1) + fib(n - 2) }
+m 11 fib(11 num_val) { i (num_val <= 1) { r num_val } r fib(num_val - 1) + fib(num_val - 2) }
 i (fib(10) == 55) { z.o("PASS:recursion") }
 
 // === CLOSURE ===
 m 11 make_adder(11 base) {
-  m 11 adder(11 x) { r base + x }
-  r adder
+  r m(11 x) { r base + x }
 }
 11 add10 = make_adder(10)
 i (add10(5) == 15) { z.o("PASS:closure") }

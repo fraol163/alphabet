@@ -1,0 +1,45 @@
+language Lisp {
+    version: "1.0.0"
+    extension: ".lsp"
+    paradigm: "bytecode"
+    types: "dynamic"
+    author: "Alphabet Forge"
+
+    header {
+        style: "pragma"
+        prefix: "@lisp"
+        required: false
+        syntax: "(version={version})"
+        default: "(version=1.0)"
+    }
+
+    banner {
+        art: """
+ _     ___ ____  ____  
+| |   |_ _/ ___||  _ \ 
+| |    | |\___ \| |_) |
+| |___ | | ___) |  __/ 
+|_____|___|____/|_|    
+"""
+        color: "magenta"
+        tagline: "Pragmatic Functional Language"
+        show_on: ["repl", "version", "help"]
+    }
+
+    tokens {
+        keyword "def"     => VAR
+        keyword "write"   => PRINT
+        keyword "when"    => IF
+        keyword "else"    => ELSE
+        keyword "while"   => WHILE
+        keyword "fn"      => FUNCTION
+        keyword "return"  => RETURN
+    }
+
+    grammar {
+        rule Program   = Statement*
+        rule Statement = VarDecl | PrintStmt | IfStmt | ExprStmt
+        rule VarDecl   = "def" Identifier "=" Expr ";"
+        rule PrintStmt = "write" "(" Expr ")" ";"
+    }
+}

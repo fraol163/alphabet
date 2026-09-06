@@ -1,0 +1,14 @@
+#!/usr/bin/env zen
+
+let title = "Welcome to Zen Language!";
+echo(title);
+
+let base = 5;
+let multiplier = 8;
+let result = base * multiplier;
+echo("Computed Result:");
+echo(result);
+
+when (result > 30) {
+    echo("Result is greater than 30 - Zen condition verified!");
+}

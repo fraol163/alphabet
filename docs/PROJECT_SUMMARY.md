@@ -27,7 +27,7 @@ Alphabet is a **multilingual programming language** that lets you code in Englis
 
 | Metric | Value |
 |--------|-------|
-| Version | v2.3.5 |
+| Version | v2.3.6 |
 | Tests | 34/34 ctest passing |
 | LOC | 14,073 |
 | Builtins | 90+ |

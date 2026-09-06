@@ -167,10 +167,13 @@ void Lexer::validate_header() {
     size_t newline_pos = header_source.find('\n', close_pos);
     if (newline_pos != std::string_view::npos) {
         current_ = current_ + newline_pos + 1;
-        start_ = current_;
-        line_ = 2;
-        column_ = 0;
+    } else {
+        // No trailing newline: skip past the '>' so the header is not re-tokenized.
+        current_ = current_ + close_pos + 1;
     }
+    start_ = current_;
+    line_ = 2;
+    column_ = 0;
 }
 
 bool Lexer::is_at_end() const {
@@ -520,9 +523,9 @@ void Lexer::multi_line_string() {
                 break;
             }
         } else {
+            // advance() already increments line_ on '\n' and resets column_.
+            // Don't double-count.
             char c = advance();
-            if (c == '\n')
-                ++line_;
             processed += c;
         }
     }
@@ -567,6 +570,15 @@ void Lexer::identifier() {
         return;
     }
 
+    if (text == "null") {
+        // null is a special identifier that the parser turns into a
+        // Literal with monostate value. We use a unique string token
+        // (so the parser matches it without colliding with user
+        // identifiers) and let primary() synthesize the literal.
+        tokens_.emplace_back(TokenType::IDENTIFIER, text, 0, line_, start_column_);
+        return;
+    }
+
     if (text == "const") {
         add_token(TokenType::TOK_CONST);
         return;
@@ -594,13 +606,15 @@ void Lexer::identifier() {
                 tokens_.emplace_back(TokenType::SYSTEM, std::string_view("z"), 0, line_);
                 return;
             }
-            if (translated == "\x80") {
-                add_token(TokenType::TOK_CONST);
-                return;
-            }
 
             if (translated.size() == 1 && is_keyword_char(translated[0])) {
                 add_token(keyword_type(translated[0]));
+                return;
+            }
+            // Multi-character translation that isn't a recognized z.*
+            // expansion: if it's "d", treat as the match-default keyword.
+            if (translated == "d") {
+                add_token(TokenType::DEFAULT);
                 return;
             }
         }
@@ -667,6 +681,12 @@ bool Lexer::is_keyword_char(char c) const {
     case 'z':
     case 'x':
     case 'q':
+    // '^' is the single-char translation of extends (étend/étend/ወራሽ/estende
+    // /erweitert). The keyword map at keywords.h maps those to "^", but
+    // ^ was missing from is_keyword_char, so the lexer dropped the
+    // translation to a plain IDENTIFIER. Add it so the parser's
+    // `match({TokenType::EXTENDS})` finds it.
+    case '^':
         return true;
     default:
         return false;
@@ -713,6 +733,19 @@ TokenType Lexer::keyword_type(char c) const {
         return TokenType::IMPORT;
     case 'q':
         return TokenType::MATCH;
+    case '^':
+        // '^' is the single-char translation of `extends` in
+        // en/am/de/es/fr/it — see the comment above is_keyword_char.
+        // Without this case, `keyword_type('^')` returned IDENTIFIER
+        // and the parser's class-declaration `match({TokenType::EXTENDS})`
+        // never fired for translated source (`ክፍል Dog ወራሽ Animal { ... }`).
+        return TokenType::EXTENDS;
+    case '@':
+        // Same story for `export` (`@`). Translated forms like
+        // `ላክ` (am) and `exportar` (es) collapse to `@`, but without
+        // this case the lexer emitted IDENTIFIER and the parser's
+        // `match({TokenType::EXPORT})` failed silently.
+        return TokenType::EXPORT;
     default:
         return TokenType::IDENTIFIER;
     }

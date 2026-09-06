@@ -151,8 +151,4 @@ std::string NLToCode::wrap_body(const std::string& body) const {
     return body;
 }
 
-std::string NLToCode::extract_string(const std::string& text, size_t& pos) const {
-    return "";
-}
-
 } // namespace alphabet

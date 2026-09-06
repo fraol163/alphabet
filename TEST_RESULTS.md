@@ -1,6 +1,6 @@
 # Alphabet Language - Test Results
 
-**Version:** 2.3.5
+**Version:** 2.3.6
 **Status:** All tests passing
 
 ---

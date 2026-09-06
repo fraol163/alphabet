@@ -1,6 +1,6 @@
-# Phase 1 Audit: VS Code Extension for Alphabet Language v2.3.5
+# Phase 1 Audit: VS Code Extension for Alphabet Language v2.3.6
 
-**Goal:** `alphabet-vscode-v1` — Fully-featured VS Code extension for Alphabet Language v2.3.5 with zero-install WASM LSP
+**Goal:** `alphabet-vscode-v1` — Fully-featured VS Code extension for Alphabet Language v2.3.6 with zero-install WASM LSP
 **Audit Date:** 2026-06-21
 **Audited:** `editors/vscode-alphabet/` v0.1.0 + WASM build artifacts
 
@@ -50,7 +50,7 @@ The extension **exists and works for users who already have `alphabet` on PATH**
 
 | LSP method | Client registers | Backend (alphabet binary) confirms |
 |---|---|---|
-| `completion` | ✅ via client | ⚠️ need to verify against binary v2.3.5 |
+| `completion` | ✅ via client | ⚠️ need to verify against binary v2.3.6 |
 | `hover` | ✅ with Markdown middleware | ⚠️ need to verify |
 | `gotoDefinition` | ✅ via client | ⚠️ need to verify |
 | `diagnostics` | ✅ via client | ⚠️ need to verify |
@@ -66,9 +66,9 @@ The extension **exists and works for users who already have `alphabet` on PATH**
 
 ---
 
-## 2. v2.3.5 Feature Surface vs Extension Coverage
+## 2. v2.3.6 Feature Surface vs Extension Coverage
 
-| v2.3.5 feature | In extension | Gap |
+| v2.3.6 feature | In extension | Gap |
 |---|---|---|
 | 81 builtins (`z.o`, `z.i`, `z.sqrt`, …) | ⚠️ partial — depends on LSP backend coverage | Need to grep server-side completion list |
 | 45 opcodes | n/a (internal) | — |
@@ -117,7 +117,7 @@ const run: Executable = {
 4. Update `resolveServerBinary()` to prefer WASM before binary
 5. **Critical:** the current C++ LSP server (alphabet binary `--lsp` mode) is **separate from the WASM build** (alphabet.wasm runs the VM, not the LSP). The WASM build is a program-runner; the LSP server is C++-only. Need to either (a) port the LSP server to run inside WASM and bridge stdio, or (b) build a JS LSP frontend that compiles + analyzes using a JS port of the parser.
 
-The skill notes (`alphabet-language-debugging` pitfall #28): *"JS interpreter CANNOT match native binary: Missing lambdas, threading, FFI, type enforcement, const enforcement, ternary, super(), constant folding. WASM is the ONLY way for full v2.3.5 in browser."*
+The skill notes (`alphabet-language-debugging` pitfall #28): *"JS interpreter CANNOT match native binary: Missing lambdas, threading, FFI, type enforcement, const enforcement, ternary, super(), constant folding. WASM is the ONLY way for full v2.3.6 in browser."*
 
 So the path is: **bundle WASM + build an LSP-in-WASM bridge** (work not yet done in the repo).
 

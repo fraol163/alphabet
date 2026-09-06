@@ -1,14 +1,19 @@
 # Maintainer: Fraol Teshome <fraolteshome444@gmail.com>
 pkgname=alphabet-lang
-pkgver=2.3.5
+pkgver=2.3.6
 pkgrel=1
 pkgdesc="Multilingual programming language — code in English, Amharic, Spanish, French, or German"
 arch=('x86_64')
-url="https://github.com/alphabet-lang/alphabet"
+url="https://github.com/fraol163/alphabet"
 license=('MIT')
 depends=('gcc-libs')
-makedepends=('cmake' 'nlohmann-json')
+# No third-party dependencies — alphabet ships its own JSON parser.
+makedepends=('cmake')
 source=("$url/archive/v$pkgver.tar.gz")
+# sha256sums is updated by the release pipeline. For local builds, run:
+#   updpkgsums
+# or compute manually:
+#   curl -fsSL https://github.com/fraol163/alphabet/archive/v2.3.6.tar.gz | sha256sum
 sha256sums=('SKIP')
 
 build() {

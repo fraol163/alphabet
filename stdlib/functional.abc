@@ -20,9 +20,23 @@ m 5 compose(5 f, 5 g) {
 m 5 pipe(5 fns) {
   r m(5 x) {
     5 result = x
-    l (5 fn : fns) {
+    l (fn : fns) {
       result = fn(result)
     }
     r result
   }
+}
+
+// partial(fn, arg1) — pre-fill the first argument of a 2-arg function.
+// NOTE: requires the named function `fn` to be a top-level definition.
+// Inner lambdas cannot capture the outer function parameter due to the
+// VM's closure model (call_lambda_public only copies globals, not the
+// enclosing lambda's locals). Pattern matches existing compose() above.
+m 5 partial(5 fn, 5 a) {
+  r m(5 b) { r fn(a, b) }
+}
+
+// flip(fn) — swap argument order of a 2-arg function. Same caveat.
+m 5 flip(5 fn) {
+  r m(5 a, 5 b) { r fn(b, a) }
 }

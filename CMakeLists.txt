@@ -84,6 +84,19 @@ set(ALPHABET_LIB_SOURCES
     src/voice.cpp
     src/nl_to_code.cpp
     src/project.cpp
+    src/forge/header_engine.cpp
+    src/forge/forge_spec.cpp
+    src/forge/banner_engine.cpp
+    src/forge/peg_engine.cpp
+    src/forge/forge.cpp
+    src/forge/forge_ecosystem.cpp
+    src/forge/c_emitter.cpp
+    src/forge/forge_doc.cpp
+    src/forge/forge_bench.cpp
+    src/forge/forge_linter.cpp
+    src/forge/forge_lsp.cpp
+    src/forge/forge_playground.cpp
+    src/forge/forge_validator.cpp
 )
 
 set(ALPHABET_HEADERS
@@ -101,6 +114,12 @@ set(ALPHABET_HEADERS
     src/include/voice.h
     src/include/nl_to_code.h
     src/include/project.h
+    src/forge/header_engine.h
+    src/forge/forge_spec.h
+    src/forge/banner_engine.h
+    src/forge/peg_engine.h
+    src/forge/forge.h
+    src/forge/forge_validator.h
 )
 
 # ============================================================================
@@ -112,6 +131,7 @@ target_link_libraries(alphabet PRIVATE alphabet_lib)
 
 target_include_directories(alphabet PRIVATE
     ${CMAKE_SOURCE_DIR}/src/include
+    ${CMAKE_SOURCE_DIR}/src/forge
     ${CMAKE_SOURCE_DIR}/third_party
     ${CMAKE_BINARY_DIR}/generated
 )
@@ -124,6 +144,7 @@ add_library(alphabet_lib STATIC ${ALPHABET_LIB_SOURCES} ${ALPHABET_HEADERS})
 
 target_include_directories(alphabet_lib PUBLIC
     ${CMAKE_SOURCE_DIR}/src/include
+    ${CMAKE_SOURCE_DIR}/src/forge
     ${CMAKE_SOURCE_DIR}/third_party
     ${CMAKE_BINARY_DIR}/generated
 )
@@ -181,10 +202,19 @@ if(BUILD_TESTS)
         set_target_properties(test_vm PROPERTIES WIN32_EXECUTABLE FALSE)
     endif()
 
+    # Test executable for Forge
+    add_executable(test_forge tests/test_forge.cpp)
+    target_link_libraries(test_forge PRIVATE alphabet_lib)
+    target_compile_definitions(test_forge PRIVATE UNIT_TEST)
+    if(WIN32)
+        set_target_properties(test_forge PROPERTIES WIN32_EXECUTABLE FALSE)
+    endif()
+
     # Add tests
     add_test(NAME LexerTests COMMAND test_lexer)
     add_test(NAME ParserTests COMMAND test_parser)
     add_test(NAME VMTests COMMAND test_vm)
+    add_test(NAME ForgeTests COMMAND test_forge)
 
     # Golden file tests - compare output against .expected files
     file(GLOB GOLDEN_TESTS "${CMAKE_SOURCE_DIR}/tests/golden_files/*.abc")

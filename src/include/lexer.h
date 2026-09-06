@@ -33,7 +33,8 @@ enum class TokenType : int {
     SYSTEM = 116,
     IMPORT = 117,
     MATCH = 118,
-    TOK_CONST = 119,
+    DEFAULT = 119,
+    TOK_CONST = 120,
     QUESTION = '?',
 
     EXTENDS = '^',
@@ -63,7 +64,7 @@ enum class TokenType : int {
     DOT = '.',
     DOTDOT = 307,
     QUESTION_DOT = 308,
-    AT = '@',
+    AT = 309,                  // distinct from EXPORT ('@'); used as unary op
     LBRACE = '{',
     RBRACE = '}',
     LPAREN = '(',

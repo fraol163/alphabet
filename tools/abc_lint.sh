@@ -22,14 +22,18 @@ lint_file() {
         return
     fi
 
+    # Strip line comments before counting braces so braces inside
+    # `// ... } ...` don't break the depth tracking. Use '#' as a
+    # sentinel for stripped content.
     while IFS= read -r line || [ -n "$line" ]; do
         line_num=$((line_num + 1))
-        trimmed="$(echo "$line" | sed 's/^[[:space:]]*//')"
+        trimmed="${line#"${line%%[![:space:]]*}"}"  # bash-native trim
 
         if [ $line_num -eq 1 ]; then
-            if echo "$trimmed" | grep -qE '^#alphabet<'; then
+            if [[ "$trimmed" =~ ^#alphabet\< ]]; then
                 has_header=true
-                lang="$(echo "$trimmed" | sed 's/#alphabet<\([^>]*\)>.*/\1/')"
+                lang="${trimmed#\#alphabet<}"
+                lang="${lang%%>*}"
                 case "$lang" in
                     en|am|es|fr|de) ;;
                     *)
@@ -43,22 +47,24 @@ lint_file() {
             fi
         fi
 
-        for (( i=0; i<${#line}; i++ )); do
-            c="${line:$i:1}"
+        # Strip comments (`// ...` to end-of-line) before brace counting.
+        # The lexer recognizes `//` and `///` (docstring) as line comments.
+        brace_line="${line%%//*}"
+        for (( i=0; i<${#brace_line}; i++ )); do
+            c="${brace_line:$i:1}"
             case "$c" in
                 '{') brace_depth=$((brace_depth + 1)) ;;
                 '}') brace_depth=$((brace_depth - 1)) ;;
             esac
         done
 
-        if echo "$trimmed" | grep -qE '^\*'; then
-            echo "ERROR: $file:$line_num: Use 'x' for import, not '*'"
+        # Detect non-English import keywords. The single-letter `x`
+        # is the canonical form, but each language also accepts its
+        # full keyword (import/importar/importer/importieren/አስገባ).
+        # Only flag `*` which is genuinely not an import syntax.
+        if [[ "$trimmed" =~ ^\* ]]; then
+            echo "ERROR: $file:$line_num: Use 'x' (or import/importar/etc.) not '*'"
             ERRORS=$((ERRORS + 1))
-        fi
-
-        if echo "$trimmed" | grep -qE '^\s*//'; then
-            echo "WARNING: $file:$line_num: Comments not supported in .abc files"
-            WARNINGS=$((WARNINGS + 1))
         fi
 
     done < "$file"

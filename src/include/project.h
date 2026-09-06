@@ -37,9 +37,6 @@ class ProjectManager {
     static void print_info(const ProjectConfig& config);
 
   private:
-    // Simple TOML parser (key = "value" format)
-    static std::map<std::string, std::string> parse_toml(const std::string& content);
-
     // Parse section [name]
     static std::string parse_section(const std::string& line);
 };

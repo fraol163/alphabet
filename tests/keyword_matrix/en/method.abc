@@ -26,7 +26,7 @@ i (with_locals() == 30) { z.o("PASS:method_s7") }
 m 5 max2(11 num_a, 11 num_b) { i (num_a > num_b) { r num_a } e { r num_b } }
 i (max2(5, 10) == 10 && max2(10, 5) == 10) { z.o("PASS:method_s8") }
 // S9: with loop
-m 5 sum_to(11 num_a) { 5 s = 0 5 idx_a = 0 l (idx_a < num_a) { s = s + idx_a idx_a = idx_a + 1 } r s }
+m 5 sum_to(11 num_a) { 5 sv = 0 5 idx_a = 0 l (idx_a < num_a) { sv = sv + idx_a idx_a = idx_a + 1 } r sv }
 i (sum_to(5) == 10) { z.o("PASS:method_s9") }
 // S10: with try/handle
 m 5 safe_div(11 num_a, 11 num_b) { t { r num_a / num_b } h (error) { r 0 } }

@@ -1,13 +1,17 @@
 class Alphabet < Formula
   desc "Multilingual programming language — code in English, Amharic, Spanish, French, or German"
-  homepage "https://github.com/alphabet-lang/alphabet"
-  url "https://github.com/alphabet-lang/alphabet/archive/v2.3.5.tar.gz"
-  sha256 "PLACEHOLDER"
+  homepage "https://github.com/fraol163/alphabet"
+  url "https://github.com/fraol163/alphabet/archive/v2.3.6.tar.gz"
+  # To compute the real sha256:
+  #   curl -fsSL https://github.com/fraol163/alphabet/archive/v2.3.6.tar.gz | shasum -a 256
+  # Then replace the placeholder below with the real digest.
+  # CI in .github/workflows/release.yml uploads the .tar.gz artifact; mirror
+  # its sha256 here so brew audit and bottle builds pass.
+  sha256 "REPLACE_WITH_REAL_SHA256_FROM_GITHUB_RELEASE_v2.3.6"
   license "MIT"
-  head "https://github.com/alphabet-lang/alphabet.git", branch: "main"
+  head "https://github.com/fraol163/alphabet.git", branch: "main"
 
   depends_on "cmake" => :build
-  depends_on "nlohmann-json" => :build
 
   def install
     system "cmake", "-S", ".", "-B", "build", *std_cmake_args

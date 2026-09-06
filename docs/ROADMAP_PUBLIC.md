@@ -1,6 +1,6 @@
 # Alphabet Language — Public Roadmap
 
-## Current: v2.3.5 (May 2026)
+## Current: v2.3.6 (May 2026)
 
 ### ✅ Completed
 - Core language (19 keywords, 5 languages)

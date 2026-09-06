@@ -1,6 +1,15 @@
 #alphabet<en>
 @ env, cwd, sleep_ms, timestamp_ms, platform, arch
 
+m cwd() {
+  // `c` is the `class` keyword, so we use `dir` instead.
+  5 dir = z.env("PWD")
+  i (z.is_null(dir)) {
+    dir = z.exec("pwd")
+  }
+  r dir
+}
+
 m env(5 name) {
   r z.env(name)
 }
@@ -15,11 +24,11 @@ m timestamp_ms() {
 
 m platform() {
   5 os = z.env("OS")
-  i (os != null && len(os) > 0) {
+  i (os != null && z.len(os) > 0) {
     r "windows"
   }
   5 uname = z.exec("uname -s")
-  i (len(uname) > 0) {
+  i (z.len(uname) > 0) {
     r lower(trim(uname))
   }
   r "unknown"
@@ -27,7 +36,7 @@ m platform() {
 
 m arch() {
   5 machine = z.exec("uname -m")
-  i (len(machine) > 0) {
+  i (z.len(machine) > 0) {
     r lower(trim(machine))
   }
   r "unknown"

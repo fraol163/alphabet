@@ -206,7 +206,8 @@ def record_audio(duration=10):
 
 def record_audio_fallback(duration=10):
     """Record audio using system tools (arecord/sox)."""
-    tmp_path = tempfile.mktemp(suffix=".wav")
+    fd, tmp_path = tempfile.mkstemp(suffix=".wav")
+    os.close(fd)  # mkstemp returns an open fd; close so tools can write.
 
     # Try arecord (Linux/ALSA)
     if subprocess.run(["which", "arecord"], capture_output=True).returncode == 0:
@@ -322,10 +323,11 @@ def handle_listen(timeout=10):
     except Exception as e:
         send({"status": "error", "msg": f"Transcription failed: {e}"})
     finally:
-        # Cleanup temp file
+        # Cleanup temp file. Use specific exception (FileNotFoundError
+        # if arecord/sox never created it) instead of bare except.
         try:
             os.remove(wav_path)
-        except:
+        except FileNotFoundError:
             pass
 
 

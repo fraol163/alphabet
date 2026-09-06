@@ -49,7 +49,7 @@ m 12 reverse(12 s) {
 }
 
 m 5 length(12 s) {
-  r z.len(s)
+  r z.z.len(s)
 }
 
 m 12 chr(5 code) {

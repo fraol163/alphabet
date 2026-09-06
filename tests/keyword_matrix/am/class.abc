@@ -21,7 +21,7 @@ pt.py = 20
 ክፍል MathUtil { ግልጽ ቋሚ 11 add(11 num_a, 11 num_b) { r num_a + num_b } }
 ከሆነ (MathUtil.add(3, 4) == 7) { z.o("PASS:class_s5") }
 // S6: method calling method
-ክፍል Counter { ግልጽ 5 cnt = 0 ግልጽ ዘዴ 11 increment() { cnt = cnt + 1 } ግልጽ ዘዴ 11 get_count() { r cnt } }
+ክፍል Counter { ግልጽ 5 kk = 0 ግልጽ ዘዴ 11 increment() { kk = kk + 1 } ግልጽ ዘዴ 11 get_count() { r kk } }
 15 cn = n Counter()
 cn.increment()
 cn.increment()

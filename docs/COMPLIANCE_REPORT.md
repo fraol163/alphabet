@@ -433,7 +433,7 @@ $ ./alphabet --lsp
 
 # Version
 $ ./alphabet --version
-Alphabet 2.3.5 (Native C++)
+Alphabet 2.3.6 (Native C++)
 Developer: Fraol Teshome
 Compiled with C++17
 ```

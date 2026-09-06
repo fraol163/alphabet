@@ -15,7 +15,7 @@ si (nm == "hello") { o("P:if9") }
 si (z.len(lt) == 3) { o("P:if10") }
 14 mp = {"k":100}
 si (z.has(mp,"k")) { o("P:if11") }
-método 5 ispos(5 num) { r num > 0 }
+método 5 ispos(5 num) { r num_val > 0 }
 si (ispos(5)) { o("P:if12") }
 si (v1 == 10) { o(f"P:if13 v={v1}") }
 si (v1 == 10) o("P:if14")
@@ -202,10 +202,10 @@ si (ccc2.get()==3) { o("P:c5") }
 clase Cfg { público 12 cn="default" público 5 cv2=42 }
 15 cfgg = num Cfg()
 si (cfgg.cn=="default" && cfgg.cv2==42) { o("P:c6") }
-clase Bsk { público 13 items=[] público método 5 add(5 it) { z.append(items,it) } público método 5 cnt() { retornar z.len(items) } }
+clase Bsk { público 13 items=[] público método 5 add(5 it) { z.append(items,it) } público método 5 k() { retornar z.len(items) } }
 15 bsk = num Bsk()
 bsk.add(10) bsk.add(20)
-si (bsk.cnt()==2) { o("P:c7") }
+si (bsk.k()==2) { o("P:c7") }
 clase Str { público 14 sd={"k":"v"} }
 15 stt = num Str()
 si (stt.sd["k"]=="v") { o("P:c8") }

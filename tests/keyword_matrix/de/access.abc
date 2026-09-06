@@ -7,7 +7,7 @@ wenn (pub_fn() == 1) { z.o("PASS:access_s1") }
 öffentlich 5 pub_var = 42
 wenn (pub_var == 42) { z.o("PASS:access_s2") }
 // S3: class with public method
-klasse AccessCls { öffentlich methode 11 greet() { r "hi" } }
+klasse AccessCls { öffentlich methode 12 greet() { r "hi" } }
 15 ac = n AccessCls()
 wenn (ac.greet() == "hi") { z.o("PASS:access_s3") }
 // S4: class with public field

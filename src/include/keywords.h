@@ -14,7 +14,7 @@ static const std::unordered_map<std::string, std::unordered_map<std::string, std
       {"loop", "l"},   {"while", "l"},    {"return", "r"},    {"break", "b"},  {"continue", "k"}, {"new", "n"},
       {"public", "v"}, {"private", "p"},  {"static", "s"},    {"try", "t"},    {"catch", "h"},    {"handle", "h"},
       {"print", "z"},  {"output", "z"},   {"input", "z.i"},   {"import", "x"}, {"match", "q"},    {"extends", "^"},
-      {"export", "@"}, {"const", "\x80"}}},
+      {"default", "d"}, {"export", "@"}, {"const", "\x80"}}},
 
     {"am", {{"ክፍል", "c"},    {"ሥር", "a"},    {"በይነገጽ", "j"}, {"ዘዴ", "m"},  {"ከሆነ", "i"}, {"ያለበለዚያ", "e"},
             {"ሉፕ", "l"},     {"እስከሆነ", "l"}, {"ተመለስ", "r"},  {"ስበር", "b"}, {"ቀጥል", "k"}, {"አዲስ", "n"},

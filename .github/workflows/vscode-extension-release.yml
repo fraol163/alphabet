@@ -72,6 +72,7 @@ jobs:
           cmake --build build-${{ matrix.target }} --config Release -j 4 --target alphabet
 
       - name: Stage binary
+        shell: bash
         run: |
           mkdir -p editors/vscode-alphabet/server/bin
           if [ "${{ runner.os }}" = "Windows" ]; then

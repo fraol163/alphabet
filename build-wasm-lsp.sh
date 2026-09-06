@@ -32,10 +32,11 @@ echo "Building Alphabet LSP WASM (version $VERSION)"
 # the path in emsdk >= 4, so we resolve it from the known emsdk layout.
 EMSDK_TOOLCHAIN=""
 for candidate in \
+    "${EMSDK:-}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" \
     "$HOME/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" \
     "/opt/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" \
     "/usr/local/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"; do
-    if [ -f "$candidate" ]; then
+    if [ -n "$candidate" ] && [ -f "$candidate" ]; then
         EMSDK_TOOLCHAIN="$candidate"
         break
     fi

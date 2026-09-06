@@ -6,8 +6,12 @@
 #include <sstream>
 #ifdef _WIN32
 #include <windows.h>
+#include <io.h>
+#define isatty _isatty
+#define STDIN_FILENO 0
 #else
 #include <dlfcn.h>
+#include <unistd.h>
 #endif
 
 namespace alphabet {
@@ -138,6 +142,9 @@ Value VM::call_lambda(const std::string& lambda_name, const std::vector<Value>& 
     while (!frames_.empty() && frames_.size() > saved_frames) {
         auto& current_frame = frames_.back();
         if (current_frame.ip >= current_frame.bytecode->size()) {
+            // Bug #6: pop the dead frame so frames_ doesn't grow unboundedly
+            // on repeated calls.
+            frames_.pop_back();
             break;
         }
         execute_instruction(current_frame);
@@ -184,6 +191,8 @@ Value VM::call_lambda_public(const std::string& lambda_name, const std::vector<V
     while (!frames_.empty() && frames_.size() > saved_frames) {
         auto& current_frame = frames_.back();
         if (current_frame.ip >= current_frame.bytecode->size()) {
+            // Bug #6: see call_lambda above.
+            frames_.pop_back();
             break;
         }
         execute_instruction(current_frame);
@@ -294,7 +303,15 @@ void VM::run_loop() {
         CallFrame& frame = frames_.back();
 
         if (frame.ip >= frame.bytecode->size()) {
-            push(Value(nullptr));
+            // Frame ran out of bytecode without executing RET. This is the
+            // only place a null return is synthesized — and only when this
+            // is the OUTERMOST frame (top-level entry). Nested calls are
+            // expected to RET explicitly; if they fall off the end, they
+            // leave the caller's stack untouched (the caller will see the
+            // same stack depth as before the call and skip the pop).
+            if (frames_.size() == start_frame_count) {
+                push(Value(nullptr));
+            }
             frames_.pop_back();
             if (frames_.size() < start_frame_count) {
                 break;
@@ -322,7 +339,7 @@ void VM::execute_instruction(CallFrame& frame) {
         trace_callback_(instr, depth, "");
     }
 
-    size_t current_offset = frame.ip;
+    [[maybe_unused]] size_t current_offset = frame.ip;
     frame.ip++;
     if (instr.line > 0)
         last_line_ = instr.line;
@@ -509,6 +526,8 @@ void VM::execute_instruction(CallFrame& frame) {
         } else if ((a.is_number() || a.is_bool()) && b.is_string()) {
             push(Value(value_to_string(a) + b.as_string()));
         } else if (a.is_null() || b.is_null()) {
+            // null + non-null arithmetic propagates null as "no value" pass-through
+            // (defensible design choice: Python: TypeError, JS: numeric coercion, C: undefined).
             push(Value(nullptr));
         } else {
             throw RuntimeError("Type error: cannot add " + value_type_name(a) + " and " + value_type_name(b));
@@ -541,6 +560,35 @@ void VM::execute_instruction(CallFrame& frame) {
             push(Value(a.as_number() * b.as_number()));
         } else if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
+        } else if (a.is_string() && (b.is_integer() || b.is_number())) {
+            // String repetition: `"ab" * 3` → `"ababab"`. The integer
+            // literal `3` is pushed to the stack as a double (see
+            // OpCode::PUSH_CONST in this file, which widens int64_t
+            // to double), so accept either an integer or any number
+            // for the repeat count.
+            const std::string& s = a.as_string();
+            int64_t n = b.as_integer();
+            if (n < 0) {
+                throw RuntimeError("Type error: cannot repeat string negative times.");
+            }
+            std::string out;
+            out.reserve(s.size() * static_cast<size_t>(n));
+            for (int64_t i = 0; i < n; ++i) {
+                out.append(s);
+            }
+            push(Value(out));
+        } else if (b.is_string() && (a.is_integer() || a.is_number())) {
+            const std::string& s = b.as_string();
+            int64_t n = a.as_integer();
+            if (n < 0) {
+                throw RuntimeError("Type error: cannot repeat string negative times.");
+            }
+            std::string out;
+            out.reserve(s.size() * static_cast<size_t>(n));
+            for (int64_t i = 0; i < n; ++i) {
+                out.append(s);
+            }
+            push(Value(out));
         } else {
             throw RuntimeError("Type error: cannot multiply " + value_type_name(a) + " and " + value_type_name(b) +
                                " (both must be numbers)");
@@ -551,14 +599,14 @@ void VM::execute_instruction(CallFrame& frame) {
     case OpCode::DIV: {
         Value b = pop();
         Value a = pop();
-        if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
+        if (a.is_null() || b.is_null()) {
+            push(Value(nullptr));
+        } else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             if (b.as_number() != 0) {
                 push(Value(a.as_number() / b.as_number()));
             } else {
                 throw RuntimeError("Division by zero");
             }
-        } else if (a.is_null() || b.is_null()) {
-            push(Value(nullptr));
         } else {
             throw RuntimeError("Type error: cannot divide " + value_type_name(a) + " by " + value_type_name(b) +
                                " (both must be numbers)");
@@ -569,10 +617,10 @@ void VM::execute_instruction(CallFrame& frame) {
     case OpCode::PERCENT: {
         Value b = pop();
         Value a = pop();
-        if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
-            push(Value(std::fmod(a.as_number(), b.as_number())));
-        } else if (a.is_null() || b.is_null()) {
+        if (a.is_null() || b.is_null()) {
             push(Value(nullptr));
+        } else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
+            push(Value(std::fmod(a.as_number(), b.as_number())));
         } else {
             throw RuntimeError("Type error: cannot modulo " + value_type_name(a) + " by " + value_type_name(b) +
                                " (both must be numbers)");
@@ -590,12 +638,14 @@ void VM::execute_instruction(CallFrame& frame) {
     case OpCode::GT: {
         Value b = pop();
         Value a = pop();
-        if (a.is_integer() && b.is_integer()) {
+        if (a.is_null() || b.is_null()) {
+            // null comparisons yield false (not null) — matches JS,
+            // makes `i (x > 5)` a usable guard for nullable values.
+            push(Value(false));
+        } else if (a.is_integer() && b.is_integer()) {
             push(Value(a.as_integer() > b.as_integer()));
         } else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(a.as_number() > b.as_number()));
-        } else if (a.is_null() || b.is_null()) {
-            push(Value(nullptr));
         } else {
             throw RuntimeError("Type error: cannot compare " + value_type_name(a) + " > " + value_type_name(b) +
                                " (both must be numbers)");
@@ -606,12 +656,12 @@ void VM::execute_instruction(CallFrame& frame) {
     case OpCode::LT: {
         Value b = pop();
         Value a = pop();
-        if (a.is_integer() && b.is_integer()) {
+        if (a.is_null() || b.is_null()) {
+            push(Value(false));
+        } else if (a.is_integer() && b.is_integer()) {
             push(Value(a.as_integer() < b.as_integer()));
         } else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(a.as_number() < b.as_number()));
-        } else if (a.is_null() || b.is_null()) {
-            push(Value(nullptr));
         } else {
             throw RuntimeError("Type error: cannot compare " + value_type_name(a) + " < " + value_type_name(b) +
                                " (both must be numbers)");
@@ -629,12 +679,12 @@ void VM::execute_instruction(CallFrame& frame) {
     case OpCode::GE: {
         Value b = pop();
         Value a = pop();
-        if (a.is_integer() && b.is_integer()) {
+        if (a.is_null() || b.is_null()) {
+            push(Value(false));
+        } else if (a.is_integer() && b.is_integer()) {
             push(Value(a.as_integer() >= b.as_integer()));
         } else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(a.as_number() >= b.as_number()));
-        } else if (a.is_null() || b.is_null()) {
-            push(Value(nullptr));
         } else {
             throw RuntimeError("Type error: cannot compare " + value_type_name(a) + " >= " + value_type_name(b) +
                                " (both must be numbers)");
@@ -645,12 +695,12 @@ void VM::execute_instruction(CallFrame& frame) {
     case OpCode::LE: {
         Value b = pop();
         Value a = pop();
-        if (a.is_integer() && b.is_integer()) {
+        if (a.is_null() || b.is_null()) {
+            push(Value(false));
+        } else if (a.is_integer() && b.is_integer()) {
             push(Value(a.as_integer() <= b.as_integer()));
         } else if ((a.is_number() || a.is_bool()) && (b.is_number() || b.is_bool())) {
             push(Value(a.as_number() <= b.as_number()));
-        } else if (a.is_null() || b.is_null()) {
-            push(Value(nullptr));
         } else {
             throw RuntimeError("Type error: cannot compare " + value_type_name(a) + " <= " + value_type_name(b) +
                                " (both must be numbers)");
@@ -777,26 +827,50 @@ void VM::execute_instruction(CallFrame& frame) {
                                 typedef int64_t (*Func0)();
                                 result = reinterpret_cast<Func0>(raw_func)();
                             } else if (ffi_arg_count == 1) {
+                                // Refuse to call with a non-numeric first argument:
+                                // many C functions (e.g. getenv) take a pointer
+                                // and will segfault if the pointer is NULL.
+                                if (!args[2].is_number()) {
+                                    throw RuntimeError(
+                                        "FFI: z.dyn argument 0 must be a number "
+                                        "(string/pointer args are not supported)");
+                                }
                                 typedef int64_t (*Func1)(int64_t);
-                                int64_t a0 = args[2].is_number() ? static_cast<int64_t>(args[2].as_number()) : 0;
+                                int64_t a0 = static_cast<int64_t>(args[2].as_number());
                                 result = reinterpret_cast<Func1>(raw_func)(a0);
                             } else if (ffi_arg_count == 2) {
+                                if (!args[2].is_number() || !args[3].is_number()) {
+                                    throw RuntimeError(
+                                        "FFI: z.dyn arguments must be numbers "
+                                        "(string/pointer args are not supported)");
+                                }
                                 typedef int64_t (*Func2)(int64_t, int64_t);
-                                int64_t a0 = args[2].is_number() ? static_cast<int64_t>(args[2].as_number()) : 0;
-                                int64_t a1 = args[3].is_number() ? static_cast<int64_t>(args[3].as_number()) : 0;
+                                int64_t a0 = static_cast<int64_t>(args[2].as_number());
+                                int64_t a1 = static_cast<int64_t>(args[3].as_number());
                                 result = reinterpret_cast<Func2>(raw_func)(a0, a1);
                             } else if (ffi_arg_count == 3) {
+                                if (!args[2].is_number() || !args[3].is_number() || !args[4].is_number()) {
+                                    throw RuntimeError(
+                                        "FFI: z.dyn arguments must be numbers "
+                                        "(string/pointer args are not supported)");
+                                }
                                 typedef int64_t (*Func3)(int64_t, int64_t, int64_t);
-                                int64_t a0 = args[2].is_number() ? static_cast<int64_t>(args[2].as_number()) : 0;
-                                int64_t a1 = args[3].is_number() ? static_cast<int64_t>(args[3].as_number()) : 0;
-                                int64_t a2 = args[4].is_number() ? static_cast<int64_t>(args[4].as_number()) : 0;
+                                int64_t a0 = static_cast<int64_t>(args[2].as_number());
+                                int64_t a1 = static_cast<int64_t>(args[3].as_number());
+                                int64_t a2 = static_cast<int64_t>(args[4].as_number());
                                 result = reinterpret_cast<Func3>(raw_func)(a0, a1, a2);
                             } else if (ffi_arg_count == 4) {
+                                if (!args[2].is_number() || !args[3].is_number() ||
+                                    !args[4].is_number() || !args[5].is_number()) {
+                                    throw RuntimeError(
+                                        "FFI: z.dyn arguments must be numbers "
+                                        "(string/pointer args are not supported)");
+                                }
                                 typedef int64_t (*Func4)(int64_t, int64_t, int64_t, int64_t);
-                                int64_t a0 = args[2].is_number() ? static_cast<int64_t>(args[2].as_number()) : 0;
-                                int64_t a1 = args[3].is_number() ? static_cast<int64_t>(args[3].as_number()) : 0;
-                                int64_t a2 = args[4].is_number() ? static_cast<int64_t>(args[4].as_number()) : 0;
-                                int64_t a3 = args[5].is_number() ? static_cast<int64_t>(args[5].as_number()) : 0;
+                                int64_t a0 = static_cast<int64_t>(args[2].as_number());
+                                int64_t a1 = static_cast<int64_t>(args[3].as_number());
+                                int64_t a2 = static_cast<int64_t>(args[4].as_number());
+                                int64_t a3 = static_cast<int64_t>(args[5].as_number());
                                 result = reinterpret_cast<Func4>(raw_func)(a0, a1, a2, a3);
                             } else {
                                 throw RuntimeError("FFI: z.dyn supports up to 4 arguments");
@@ -964,6 +1038,23 @@ void VM::execute_instruction(CallFrame& frame) {
                                 push(callee);
                                 return;
                             }
+                            // Fall through to check static methods too.
+                            // The class-body compiler may have placed
+                            // `s 11 add(...)` (static) into `static_methods`
+                            // rather than `methods`, so `sc.add(...)` (calling
+                            // a static method on an instance) needs to look
+                            // there as well.
+                            auto static_it = cls.static_methods.find(method_name);
+                            if (static_it != cls.static_methods.end()) {
+                                const CompiledMethod& method_info = static_it->second;
+                                check_call_depth();
+                                CallFrame new_frame(&method_info.bytecode);
+                                for (size_t i = 0; i < args.size() && i < method_info.param_names.size(); ++i) {
+                                    new_frame.locals[method_info.param_names[i]] = args[i];
+                                }
+                                frames_.push_back(std::move(new_frame));
+                                return;
+                            }
                             throw RuntimeError("Method '" + method_name + "' not found in class '" + cls.name + "'");
                         }
 
@@ -1054,6 +1145,13 @@ void VM::execute_instruction(CallFrame& frame) {
 
                     auto class_it = classes_.find(class_id);
                     if (class_it != classes_.end()) {
+                        // E218: Cannot instantiate abstract class.
+                        // An abstract class is one declared with the `a`
+                        // modifier, or any class that inherits an
+                        // unimplemented abstract method.
+                        if (class_it->second.is_abstract) {
+                            throw RuntimeError("Cannot instantiate abstract class '" + class_name + "'");
+                        }
                         run_field_init(obj, class_it->second);
 
                         const CompiledClass* init_cls = &class_it->second;
@@ -1248,6 +1346,7 @@ void VM::execute_instruction(CallFrame& frame) {
                         ObjectPtr obj = obj_val.as_object();
                         obj->fields[op] = std::make_shared<Value>(val);
                     }
+                    push(val);
                 }
             },
             instr.operand);
@@ -1356,87 +1455,208 @@ void VM::execute_instruction(CallFrame& frame) {
     }
 }
 
+void VM::set_source(const std::string& source) {
+    source_lines_.clear();
+    std::istringstream stream(source);
+    std::string l;
+    while (std::getline(stream, l)) {
+        if (!l.empty() && l.back() == '\r') l.pop_back();
+        source_lines_.push_back(l);
+    }
+}
+
 void VM::check_breakpoints(const Instruction& instr) {
-    if (step_over_ || (breakpoints_.find(instr.line) != breakpoints_.end())) {
-        std::cout << "{\"event\":\"stopped\",\"line\":" << instr.line << ",\"reason\":\""
-                  << (step_over_ ? "step" : "breakpoint") << "\"}" << std::endl;
+    bool is_bp = (breakpoints_.find(instr.line) != breakpoints_.end());
+    bool is_step = (step_over_ || (step_line_ && instr.line > 0 && instr.line != step_from_line_));
+
+    if (is_bp || is_step) {
         step_over_ = false;
+        step_line_ = false;
+        step_from_line_ = instr.line;
+
+        bool is_tty = isatty(STDIN_FILENO);
+        if (is_tty) {
+            std::cout << "\033[1;33m[Stopped]\033[0m line " << instr.line
+                      << " (" << (is_bp ? "breakpoint" : "step") << ")\n";
+            if (instr.line > 0 && static_cast<size_t>(instr.line) <= source_lines_.size()) {
+                std::cout << "  \033[1;36m-->\033[0m " << instr.line << ": "
+                          << source_lines_[instr.line - 1] << "\n";
+            }
+        } else {
+            std::cout << "{\"event\":\"stopped\",\"line\":" << instr.line << ",\"reason\":\""
+                      << (is_bp ? "breakpoint" : "step") << "\"}" << std::endl;
+        }
         wait_for_debugger_command();
     }
 }
 
 void VM::wait_for_debugger_command() {
+    bool is_tty = isatty(STDIN_FILENO);
     std::string line;
-    while (std::getline(std::cin, line)) {
+    while (true) {
+        if (is_tty) {
+            std::cout << "(" << debugger_prompt_ << ") " << std::flush;
+        }
+        if (!std::getline(std::cin, line)) {
+            break;
+        }
+        size_t first = line.find_first_not_of(" \t\r\n");
+        if (first == std::string::npos) continue;
+        size_t last = line.find_last_not_of(" \t\r\n");
+        line = line.substr(first, (last - first + 1));
+
         if (line == "continue" || line == "c") {
             break;
-        } else if (line == "step" || line == "s") {
+        } else if (line == "step" || line == "s" || line == "next" || line == "n") {
+            step_line_ = true;
+            step_from_line_ = last_line_;
+            break;
+        } else if (line == "si") {
             step_over_ = true;
             break;
+        } else if (line == "quit" || line == "q") {
+            exit(0);
         } else if (line == "locals" || line == "l") {
-            if (!frames_.empty()) {
-                std::cout << get_locals_json(frames_.back()) << std::endl;
+            if (is_tty) {
+                if (!frames_.empty()) {
+                    std::cout << "Locals:\n";
+                    for (const auto& [name, val] : frames_.back().locals) {
+                        std::cout << "  " << name << " = " << value_to_string(val) << "\n";
+                    }
+                } else {
+                    std::cout << "  (no active frame)\n";
+                }
             } else {
-                std::cout << "{}" << std::endl;
+                if (!frames_.empty()) {
+                    std::cout << get_locals_json(frames_.back()) << std::endl;
+                } else {
+                    std::cout << "{}" << std::endl;
+                }
+            }
+        } else if (line == "globals" || line == "g") {
+            if (is_tty) {
+                std::cout << "Globals:\n";
+                for (const auto& [name, val] : globals_) {
+                    std::cout << "  " << name << " = " << value_to_string(val) << "\n";
+                }
+            } else {
+                std::ostringstream oss;
+                oss << "{";
+                bool first_g = true;
+                for (const auto& [name, val] : globals_) {
+                    if (!first_g) oss << ",";
+                    oss << "\"" << name << "\": \"" << value_to_string(val) << "\"";
+                    first_g = false;
+                }
+                oss << "}";
+                std::cout << oss.str() << std::endl;
             }
         } else if (line == "stack" || line == "bt") {
-            std::cout << get_stack_trace() << std::endl;
-        } else if (line == "globals" || line == "g") {
-            std::ostringstream oss;
-            oss << "{";
-            bool first = true;
-            for (const auto& [name, val] : globals_) {
-                if (!first)
-                    oss << ",";
-                oss << "\"" << name << "\": \"" << value_to_string(val) << "\"";
-                first = false;
+            if (is_tty) {
+                std::cout << "Call Stack (depth " << frames_.size() << "):\n";
+                for (size_t i = 0; i < frames_.size(); ++i) {
+                    std::cout << "  #" << i << " IP: " << frames_[i].ip << "\n";
+                }
+            } else {
+                std::cout << get_stack_trace() << std::endl;
             }
-            oss << "}";
-            std::cout << oss.str() << std::endl;
+        } else if (line.rfind("print ", 0) == 0 || line.rfind("p ", 0) == 0) {
+            size_t sp = line.find(' ');
+            std::string var_name = line.substr(sp + 1);
+            first = var_name.find_first_not_of(" \t");
+            if (first != std::string::npos) var_name = var_name.substr(first);
+            bool found = false;
+            if (!frames_.empty()) {
+                auto it = frames_.back().locals.find(var_name);
+                if (it != frames_.back().locals.end()) {
+                    std::cout << var_name << " = " << value_to_string(it->second) << "\n";
+                    found = true;
+                }
+            }
+            if (!found) {
+                auto it = globals_.find(var_name);
+                if (it != globals_.end()) {
+                    std::cout << var_name << " = " << value_to_string(it->second) << "\n";
+                    found = true;
+                }
+            }
+            if (!found) {
+                std::cout << "Variable '" << var_name << "' not found in scope\n";
+            }
         } else if (line == "print" || line == "p") {
             std::ostringstream oss;
             oss << "[";
             for (size_t i = 0; i < static_cast<size_t>(stack_ptr_ - stack_.get()); ++i) {
-                if (i > 0)
-                    oss << ", ";
+                if (i > 0) oss << ", ";
                 oss << "\"" << value_to_string(stack_[i]) << "\"";
             }
             oss << "]";
             std::cout << oss.str() << std::endl;
-        } else if (line.find("add_break ") == 0 || line.find("b ") == 0) {
+        } else if (line.rfind("add_break ", 0) == 0 || line.rfind("b ", 0) == 0 || line.rfind("break ", 0) == 0) {
             size_t space_pos = line.find(' ');
-            int l = std::stoi(line.substr(space_pos + 1));
-            add_breakpoint(l);
-            std::cout << "{\"ok\":true,\"breakpoint\":" << l << "}" << std::endl;
-        } else if (line.find("del_break ") == 0 || line.find("db ") == 0) {
-            size_t space_pos = line.find(' ');
-            int l = std::stoi(line.substr(space_pos + 1));
-            remove_breakpoint(l);
-            std::cout << "{\"ok\":true,\"removed\":" << l << "}" << std::endl;
-        } else if (line == "breakpoints" || line == "bl") {
-            std::ostringstream oss;
-            oss << "[";
-            bool first = true;
-            for (int bp : breakpoints_) {
-                if (!first)
-                    oss << ",";
-                oss << bp;
-                first = false;
+            try {
+                int l = std::stoi(line.substr(space_pos + 1));
+                add_breakpoint(l);
+                if (is_tty) {
+                    std::cout << "Breakpoint set at line " << l << "\n";
+                } else {
+                    std::cout << "{\"ok\":true,\"breakpoint\":" << l << "}" << std::endl;
+                }
+            } catch (...) {
+                std::cout << "Invalid line number\n";
             }
-            oss << "]";
-            std::cout << oss.str() << std::endl;
-        } else if (line == "help" || line == "?") {
+        } else if (line.rfind("del_break ", 0) == 0 || line.rfind("db ", 0) == 0) {
+            size_t space_pos = line.find(' ');
+            try {
+                int l = std::stoi(line.substr(space_pos + 1));
+                remove_breakpoint(l);
+                if (is_tty) {
+                    std::cout << "Breakpoint removed at line " << l << "\n";
+                } else {
+                    std::cout << "{\"ok\":true,\"removed\":" << l << "}" << std::endl;
+                }
+            } catch (...) {
+                std::cout << "Invalid line number\n";
+            }
+        } else if (line == "breakpoints" || line == "bl") {
+            if (is_tty) {
+                std::cout << "Breakpoints:\n";
+                if (breakpoints_.empty()) {
+                    std::cout << "  (none)\n";
+                } else {
+                    for (int bp : breakpoints_) {
+                        std::cout << "  Line " << bp << "\n";
+                    }
+                }
+            } else {
+                std::ostringstream oss;
+                oss << "[";
+                bool first_bp = true;
+                for (int bp : breakpoints_) {
+                    if (!first_bp) oss << ",";
+                    oss << bp;
+                    first_bp = false;
+                }
+                oss << "]";
+                std::cout << oss.str() << std::endl;
+            }
+        } else if (line == "help" || line == "h" || line == "?") {
             std::cout << "Debugger commands:\n"
-                      << "  continue (c)      Resume execution\n"
-                      << "  step (s)          Step to next line\n"
-                      << "  locals (l)        Show local variables\n"
-                      << "  globals (g)       Show global variables\n"
-                      << "  stack (bt)        Show call stack trace\n"
-                      << "  print (p)         Show stack contents\n"
-                      << "  add_break N (b N) Set breakpoint at line N\n"
-                      << "  del_break N (db)  Remove breakpoint at line N\n"
-                      << "  breakpoints (bl)  List all breakpoints\n"
-                      << "  help (?)          Show this help\n";
+                      << "  continue (c)          Resume execution\n"
+                      << "  step (s) / next (n)   Step to next line\n"
+                      << "  si                    Step one instruction\n"
+                      << "  print <var> (p <var>) Print variable value\n"
+                      << "  print (p)             Show operand stack\n"
+                      << "  locals (l)            Show local variables\n"
+                      << "  globals (g)           Show global variables\n"
+                      << "  stack (bt)            Show call stack trace\n"
+                      << "  add_break N (b N)     Set breakpoint at line N\n"
+                      << "  del_break N (db N)    Remove breakpoint at line N\n"
+                      << "  breakpoints (bl)      List all breakpoints\n"
+                      << "  quit (q)              Exit debugger\n"
+                      << "  help (h, ?)           Show this help\n";
+        } else {
+            std::cout << "Unknown command: " << line << ". Type 'help' for available commands.\n";
         }
     }
 }
@@ -1541,6 +1761,40 @@ void VM::run_field_init(ObjectPtr obj, const CompiledClass& cls) {
                 push(val);
             } else if (instr.op == OpCode::POP) {
                 pop();
+            } else if (instr.op == OpCode::BUILD_LIST) {
+                // The empty list `[]` is emitted as BUILD_LIST with
+                // count=0. Mirror the main-loop implementation: pop
+                // `count` elements and build a list. For count=0
+                // (the common case for field initializers like `[]`)
+                // this just pushes an empty list.
+                int64_t count = 0;
+                if (auto* i = std::get_if<int64_t>(&instr.operand)) {
+                    count = *i;
+                }
+                Value::List items;
+                for (int64_t i = 0; i < count; ++i) {
+                    items.push_back(pop());
+                }
+                std::reverse(items.begin(), items.end());
+                push(Value(std::move(items)));
+            } else if (instr.op == OpCode::BUILD_MAP) {
+                // Mirror the main-loop implementation: pop
+                // `count * 2` values (alternating value, key) and
+                // build a map. For an empty map (count=0) this just
+                // pushes an empty map.
+                int64_t count = 0;
+                if (auto* i = std::get_if<int64_t>(&instr.operand)) {
+                    count = *i;
+                }
+                Value::Map map;
+                for (int64_t i = 0; i < count; ++i) {
+                    Value v = pop();
+                    Value k = pop();
+                    if (k.is_string()) {
+                        map[k.as_string()] = std::move(v);
+                    }
+                }
+                push(Value(std::move(map)));
             }
             ip++;
         }
@@ -1572,6 +1826,10 @@ void VM::throw_exception(const Value& value) {
     }
 
     last_unhandled_error_ = value_to_string(value);
+    if (exit_code_ == 0) {
+        exit_code_ = 1;
+    }
+    had_runtime_error_ = true;
     std::cerr << "Unhandled exception: " << value_to_string(value) << std::endl;
 }
 

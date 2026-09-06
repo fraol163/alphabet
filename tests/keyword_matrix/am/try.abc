@@ -21,10 +21,10 @@ z.o("PASS:try_s7")
 ዘዴ 11 safe_op() { ሞክር { r 42 } ያዟ (error) { r 0 } }
 ከሆነ (safe_op() == 42) { z.o("PASS:try_s8") }
 // S9: in loop
-5 cnt = 0
+5 kk = 0
 5 idx_a = 0
-ሉፕ (idx_a < 3) { ሞክር { cnt = cnt + 1 } ያዟ (error) { } idx_a = idx_a + 1 }
-ከሆነ (cnt == 3) { z.o("PASS:try_s9") }
+ሉፕ (idx_a < 3) { ሞክር { kk = kk + 1 } ያዟ (error) { } idx_a = idx_a + 1 }
+ከሆነ (kk == 3) { z.o("PASS:try_s9") }
 // S10: in class method
 ክፍል TryCls { ግልጽ ዘዴ 11 safe() { ሞክር { r 100 } ያዟ (error) { r 0 } } }
 15 tc = n TryCls()

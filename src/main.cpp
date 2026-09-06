@@ -47,6 +47,15 @@
 #include "version.h"
 #include "vm.h"
 #include "voice.h"
+#include "forge.h"
+#include "forge_ecosystem.h"
+#include "c_emitter.h"
+#include "forge_doc.h"
+#include "forge_bench.h"
+#include "forge_linter.h"
+#include "forge_lsp.h"
+#include "forge_playground.h"
+#include "forge_validator.h"
 
 #ifdef _WIN32
 #define RED(x) x
@@ -68,6 +77,14 @@ namespace {
 
 constexpr const char* VERSION = ALPHABET_VERSION;
 constexpr const char* DEVELOPER = "Fraol Teshome (fraolteshome444@gmail.com)";
+
+// Captured exit code from the most recently run program. Default 0.
+// Set by run_source() and by VM runtime errors. main() returns this value.
+int g_program_exit_code = 0;
+
+// Command-line arguments after the script path; exposed to the script
+// via z.args().
+std::vector<std::string> g_program_args;
 
 static std::vector<std::string> list_dir_abc(const std::string& dir) {
     std::vector<std::string> files;
@@ -145,7 +162,8 @@ void print_help() {
     std::cout << "  alphabet setup-voice     Install voice dependencies\n";
     std::cout << "  alphabet init         Create new project\n";
     std::cout << "  alphabet test         Run test files\n";
-    std::cout << "  alphabet info         Show project info\n\n";
+    std::cout << "  alphabet info         Show project info\n";
+    std::cout << "  alphabet forge        Create custom languages & toolchains (alphabet forge <spec.forge>)\n\n";
     std::cout << "Examples:\n";
     std::cout << "  alphabet program.abc          Run a program\n";
     std::cout << "  alphabet -c program.abc       Compile only\n";
@@ -153,6 +171,7 @@ void print_help() {
     std::cout << "  alphabet --lsp                LSP server for VS Code\n";
     std::cout << "  alphabet --dump-bytecode prog.abc  Inspect bytecode\n";
     std::cout << "  alphabet --debug program.abc  Debug with breakpoints\n";
+    std::cout << "  alphabet forge lang.forge -o bin/lang  Forge standalone toolchain\n";
 }
 
 void run_source(const std::string& source, bool debug_mode = false, const std::string& source_dir = "",
@@ -185,23 +204,39 @@ void run_source(const std::string& source, bool debug_mode = false, const std::s
         alphabet::Program program = compiler.compile(statements);
 
         alphabet::VM vm(program);
+        vm.set_source(source);
+        vm.set_debugger_prompt("alphabet-dbg");
         vm.set_debug_mode(debug_mode);
         vm.set_sandbox_mode(sandbox_mode);
+        vm.set_program_args(g_program_args);
+        g_program_args.clear();
         if (debug_mode) {
-            std::cout << "DEBUG_READY" << std::endl;
+            vm.set_pause_on_start(true);
+            if (isatty(STDIN_FILENO)) {
+                std::cout << "\033[1;36m[Alphabet Interactive Debugger]\033[0m\n";
+                std::cout << "Type 'h' or 'help' for commands, 'c' to continue, 's' to step.\n\n";
+            } else {
+                std::cout << "DEBUG_READY" << std::endl;
+            }
         }
         vm.run();
+        g_program_exit_code = vm.get_exit_code();
     } catch (const alphabet::MissingLanguageHeader& e) {
         std::cerr << RED("Error: ") << e.what() << "\n";
         std::cerr << "  Add '#alphabet<lang>' as the first line of your source file.\n";
+        g_program_exit_code = 1;
     } catch (const alphabet::ParseError& e) {
         std::cerr << RED("Parse Error: ") << e.what() << "\n";
+        g_program_exit_code = 1;
     } catch (const alphabet::CompileError& e) {
         std::cerr << RED("Compile Error: ") << e.what() << "\n";
+        g_program_exit_code = 1;
     } catch (const alphabet::RuntimeError& e) {
         std::cerr << RED("Runtime Error: ") << e.what() << "\n";
+        g_program_exit_code = 1;
     } catch (const std::exception& e) {
         std::cerr << RED("Error: ") << e.what() << "\n";
+        g_program_exit_code = 1;
     }
 }
 
@@ -920,10 +955,10 @@ void start_repl() {
                     if (trace_mode) {
 #ifdef _WIN32
                         saved_stderr = _dup(STDERR_FILENO);
-                        freopen("NUL", "w", stderr);
+                        [[maybe_unused]] FILE* _f1 = freopen("NUL", "w", stderr);
 #else
                         saved_stderr = dup(STDERR_FILENO);
-                        freopen("/dev/null", "w", stderr);
+                        [[maybe_unused]] FILE* _f2 = freopen("/dev/null", "w", stderr);
 #endif
                         std::cout << CYAN("┌─ Executing ──────────────────────────────┐\n");
                         std::cout.flush();
@@ -1354,6 +1389,7 @@ int main(int argc, char* argv[]) {
     bool dump_bytecode = false;
     std::string output_file;
     std::string input_file;
+    std::string spec_file;
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -1403,6 +1439,16 @@ int main(int argc, char* argv[]) {
                 output_file = argv[++i];
             } else {
                 std::cerr << "Error: -o requires an output file argument\n";
+                return 1;
+            }
+            continue;
+        }
+
+        if (arg == "--spec") {
+            if (i + 1 < argc) {
+                spec_file = argv[++i];
+            } else {
+                std::cerr << "Error: --spec requires a file argument\n";
                 return 1;
             }
             continue;
@@ -1542,7 +1588,7 @@ int main(int argc, char* argv[]) {
             // Install system deps first
 #ifdef __linux__
             std::cout << "Installing system audio libraries...\n";
-            system("sudo apt-get update -qq && sudo apt-get install -y -qq portaudio19-dev libasound2-dev 2>/dev/null");
+            [[maybe_unused]] int _rc1 = system("sudo apt-get update -qq && sudo apt-get install -y -qq portaudio19-dev libasound2-dev 2>/dev/null");
 #elif __APPLE__
             std::cout << "Installing system audio libraries...\n";
             system("brew install portaudio 2>/dev/null");
@@ -1956,6 +2002,13 @@ int main(int argc, char* argv[]) {
 
                     if (!parser.had_errors()) {
                         alphabet::Compiler compiler;
+                        // Match run_source() behavior: tell the compiler the
+                        // file's directory so relative imports like
+                        // `x "../stdlib/math.abc"` resolve correctly.
+                        size_t last_sl = file.find_last_of("/\\");
+                        if (last_sl != std::string::npos) {
+                            compiler.set_source_dir(file.substr(0, last_sl));
+                        }
                         auto program = compiler.compile(stmts);
                         alphabet::VM vm(program);
                         vm.run();
@@ -2054,7 +2107,7 @@ int main(int argc, char* argv[]) {
                 }
                 {
                     std::string cmd = "mkdir -p " + pkg_dir;
-                    system(cmd.c_str());
+                    [[maybe_unused]] int _rc2 = system(cmd.c_str());
                 }
                 std::string dst = pkg_dir + "/" + pkg_name + ".abc";
                 std::ifstream in(src, std::ios::binary);
@@ -2101,6 +2154,19 @@ int main(int argc, char* argv[]) {
         if (arg == "run") {
             if (i + 1 < argc) {
                 input_file = argv[++i];
+                // Collect remaining arguments as program args for z.args().
+                std::vector<std::string> prog_args;
+                while (i + 1 < argc) {
+                    std::string next = argv[++i];
+                    if (next == "--spec" && i + 1 < argc) {
+                        spec_file = argv[++i];
+                    } else if (next == "--debug") {
+                        debug_mode = true;
+                    } else {
+                        prog_args.push_back(next);
+                    }
+                }
+                g_program_args = std::move(prog_args);
             } else {
                 std::cerr << "Error: 'alphabet run' requires a file argument\n";
                 std::cerr << "Usage: alphabet run <file.abc>\n";
@@ -2151,6 +2217,334 @@ int main(int argc, char* argv[]) {
             return 0;
         }
 
+        if (arg == "forge") {
+            std::string spec_file;
+            std::string output_bin;
+            std::string lang_name;
+            std::string target_mode = "bytecode";
+            bool forge_debug_mode = false;
+            std::string forge_debug_file;
+            bool repl_flag = false;
+            bool export_vscode = false;
+            std::string vscode_dir;
+            bool test_mode = false;
+            std::string test_path;
+            bool fmt_mode = false;
+            std::string fmt_file;
+            bool pkg_mode = false;
+            std::string pkg_subcmd;
+            std::string pkg_arg;
+            bool compile_native = false;
+            std::string native_input;
+            std::string native_output;
+            bool doc_mode = false;
+            std::string doc_dir;
+            bool bench_mode = false;
+            std::string bench_file;
+            int bench_iterations = 5;
+            bool lint_mode = false;
+            std::string lint_file;
+            bool lsp_mode_flag = false;
+            bool playground_mode = false;
+            std::string playground_dir;
+            bool check_mode = false;
+            bool init_mode = false;
+            std::string init_lang_name;
+            std::string init_dir;
+            std::string init_style = "prefix";
+            bool bundle_mode = false;
+            std::string bundle_output;
+
+            while (i + 1 < argc) {
+                std::string next_arg = argv[++i];
+                if (next_arg == "--output" || next_arg == "-o") {
+                    if (i + 1 < argc) {
+                        output_bin = argv[++i];
+                        native_output = output_bin;
+                    }
+                } else if (next_arg == "--name") {
+                    if (i + 1 < argc) lang_name = argv[++i];
+                } else if (next_arg == "--target") {
+                    if (i + 1 < argc) target_mode = argv[++i];
+                } else if (next_arg == "--style") {
+                    if (i + 1 < argc) init_style = argv[++i];
+                } else if (next_arg == "--init" || next_arg == "init") {
+                    init_mode = true;
+                    if (i + 1 < argc && argv[i + 1][0] != '-') init_lang_name = argv[++i];
+                    if (i + 1 < argc && argv[i + 1][0] != '-') init_dir = argv[++i];
+                } else if (next_arg == "--bundle" || next_arg == "bundle") {
+                    bundle_mode = true;
+                    if (i + 1 < argc && argv[i + 1][0] != '-') bundle_output = argv[++i];
+                } else if (next_arg == "--check" || next_arg == "check") {
+                    check_mode = true;
+                } else if (next_arg == "--debug" || next_arg == "debug") {
+                    forge_debug_mode = true;
+                    if (i + 1 < argc && argv[i + 1][0] != '-') forge_debug_file = argv[++i];
+                } else if (next_arg == "--repl" || next_arg == "repl") {
+                    repl_flag = true;
+                } else if (next_arg == "--export-vscode" || next_arg == "vscode") {
+                    export_vscode = true;
+                    if (i + 1 < argc && argv[i + 1][0] != '-') vscode_dir = argv[++i];
+                } else if (next_arg == "--test" || next_arg == "test") {
+                    test_mode = true;
+                    if (i + 1 < argc && argv[i + 1][0] != '-') test_path = argv[++i];
+                } else if (next_arg == "--fmt" || next_arg == "fmt") {
+                    fmt_mode = true;
+                    if (i + 1 < argc && argv[i + 1][0] != '-') fmt_file = argv[++i];
+                } else if (next_arg == "--compile" || next_arg == "compile") {
+                    compile_native = true;
+                    if (i + 1 < argc && argv[i + 1][0] != '-') native_input = argv[++i];
+                    if (i + 2 < argc && std::string(argv[i + 1]) == "-o") {
+                        i += 2;
+                        native_output = argv[i];
+                    }
+                } else if (next_arg == "--doc" || next_arg == "doc") {
+                    doc_mode = true;
+                    if (i + 1 < argc && argv[i + 1][0] != '-') doc_dir = argv[++i];
+                } else if (next_arg == "--bench" || next_arg == "bench") {
+                    bench_mode = true;
+                    if (i + 1 < argc && argv[i + 1][0] != '-') bench_file = argv[++i];
+                    if (i + 1 < argc && argv[i + 1][0] != '-') {
+                        try { bench_iterations = std::stoi(argv[++i]); } catch (...) {}
+                    }
+                } else if (next_arg == "--lint" || next_arg == "lint") {
+                    lint_mode = true;
+                    if (i + 1 < argc && argv[i + 1][0] != '-') lint_file = argv[++i];
+                } else if (next_arg == "--lsp" || next_arg == "lsp") {
+                    lsp_mode_flag = true;
+                } else if (next_arg == "--playground" || next_arg == "playground") {
+                    playground_mode = true;
+                    if (i + 1 < argc && argv[i + 1][0] != '-') playground_dir = argv[++i];
+                } else if (next_arg == "--pkg" || next_arg == "pkg") {
+                    pkg_mode = true;
+                    if (i + 1 < argc && argv[i + 1][0] != '-') pkg_subcmd = argv[++i];
+                    if (i + 1 < argc && argv[i + 1][0] != '-') pkg_arg = argv[++i];
+                } else if (next_arg == "--spec") {
+                    if (i + 1 < argc) spec_file = argv[++i];
+                } else if (spec_file.empty() && next_arg.find(".forge") != std::string::npos) {
+                    spec_file = next_arg;
+                }
+            }
+
+            if (init_mode) {
+                if (init_lang_name.empty()) init_lang_name = "MyLang";
+                std::string init_err;
+                if (!alphabet::forge::ForgeEcosystem::init_project(init_lang_name, init_dir, init_style, init_err)) {
+                    std::cerr << "Error initializing language project: " << init_err << "\n";
+                    return 1;
+                }
+                return 0;
+            }
+
+            if (spec_file.empty()) {
+                std::cout << "Alphabet Forge: Universal Meta-Compiler & Language Creation Platform\n\n";
+                std::cout << "Usage:\n";
+                std::cout << "  alphabet forge init <name> [dir] [--style <prefix|shebang|pragma|none>]\n";
+                std::cout << "  alphabet forge <spec.forge> [--output <path>] [--target <mode>] [--name <name>]\n";
+                std::cout << "  alphabet forge <spec.forge> --check\n";
+                std::cout << "  alphabet forge <spec.forge> --bundle [output_dir]\n";
+                std::cout << "  alphabet forge <spec.forge> --export-vscode [dir]\n";
+                std::cout << "  alphabet forge <spec.forge> --test [dir]\n";
+                std::cout << "  alphabet forge <spec.forge> --fmt <file>\n";
+                std::cout << "  alphabet forge <spec.forge> --pkg <init|install|list> [args]\n";
+                std::cout << "  alphabet forge --repl --spec <spec.forge>\n\n";
+                std::cout << "Options:\n";
+                std::cout << "  init <name> [dir]         Scaffold a new custom language project\n";
+                std::cout << "  --style <style>           Header style for init (prefix, shebang, pragma, none)\n";
+                std::cout << "  --output, -o <path>       Output binary path for standalone toolchain\n";
+                std::cout << "  --target <mode>           Target mode: bytecode, interpreted, or native (default: bytecode)\n";
+                std::cout << "  --check                   Validate language specification & grammar integrity\n";
+                std::cout << "  --bundle [dir]            Create complete standalone distribution archive\n";
+                std::cout << "  --name <name>             Override language name\n";
+                std::cout << "  --repl                    Start REPL for custom language\n";
+                std::cout << "  --export-vscode [dir]     Generate ready-to-use VS Code extension\n";
+                std::cout << "  --test [dir]              Run test suite for custom language\n";
+                std::cout << "  --fmt <file>              Format source file according to language syntax\n";
+                std::cout << "  --pkg <cmd> [args]        Package manager (init, install, list)\n";
+                return 0;
+            }
+
+            alphabet::forge::ForgeSpec spec;
+            std::string err;
+            if (!alphabet::forge::ForgeSpec::load_from_file(spec_file, spec, err)) {
+                std::cerr << "Error loading language specification: " << err << "\n";
+                return 1;
+            }
+
+            if (!lang_name.empty()) spec.name = lang_name;
+
+            if (check_mode) {
+                auto res = alphabet::forge::ForgeValidator::validate(spec);
+                alphabet::forge::ForgeValidator::print_report(res, spec, std::cout);
+                return res.valid ? 0 : 1;
+            }
+
+            if (bundle_mode) {
+                std::string bundle_err;
+                if (!alphabet::forge::ForgeEcosystem::bundle_distribution(spec, bundle_output, bundle_err)) {
+                    std::cerr << "Error creating distribution bundle: " << bundle_err << "\n";
+                    return 1;
+                }
+                return 0;
+            }
+
+            if (export_vscode) {
+                std::string exp_err;
+                if (!alphabet::forge::ForgeEcosystem::export_vscode_extension(spec, vscode_dir, exp_err)) {
+                    std::cerr << "Error exporting VS Code extension: " << exp_err << "\n";
+                    return 1;
+                }
+                std::string target_dir = vscode_dir.empty() ? (spec.name + "-vscode") : vscode_dir;
+                std::cout << "\033[1;32mSuccessfully exported VS Code extension for " << spec.name << " to " << target_dir << "!\033[0m\n";
+                return 0;
+            }
+
+            if (test_mode) {
+                alphabet::forge::BannerEngine::print_if_enabled(spec, "help", std::cout);
+                alphabet::forge::TestSummary res = alphabet::forge::ForgeEcosystem::run_tests(spec, test_path);
+                return res.failed == 0 ? 0 : 1;
+            }
+
+            if (fmt_mode) {
+                if (fmt_file.empty()) {
+                    std::cerr << "Error: --fmt requires a file argument\n";
+                    return 1;
+                }
+                std::string fmt_err;
+                if (!alphabet::forge::ForgeEcosystem::format_file(fmt_file, spec, fmt_err)) {
+                    std::cerr << "Error formatting file: " << fmt_err << "\n";
+                    return 1;
+                }
+                std::cout << "\033[1;32mFormatted:\033[0m " << fmt_file << "\n";
+                return 0;
+            }
+
+            if (pkg_mode) {
+                if (pkg_subcmd == "init") {
+                    std::string pkg_err;
+                    if (!alphabet::forge::ForgeEcosystem::pkg_init(spec, pkg_arg, pkg_err)) {
+                        std::cerr << "Error: " << pkg_err << "\n";
+                        return 1;
+                    }
+                    return 0;
+                } else if (pkg_subcmd == "install") {
+                    std::string pkg_err;
+                    if (!alphabet::forge::ForgeEcosystem::pkg_install(spec, pkg_arg, pkg_err)) {
+                        std::cerr << "Error: " << pkg_err << "\n";
+                        return 1;
+                    }
+                    return 0;
+                } else if (pkg_subcmd == "list" || pkg_subcmd.empty()) {
+                    alphabet::forge::ForgeEcosystem::pkg_list(spec, pkg_arg);
+                    return 0;
+                } else {
+                    std::cerr << "Unknown pkg command: " << pkg_subcmd << "\n";
+                    std::cerr << "Usage: pkg <init|install|list> [args]\n";
+                    return 1;
+                }
+            }
+
+            if (compile_native) {
+                if (native_input.empty()) {
+                    std::cerr << "Error: compile requires an input source file\n";
+                    return 1;
+                }
+                if (native_output.empty()) {
+                    native_output = native_input;
+                    size_t dot = native_output.find_last_of('.');
+                    if (dot != std::string::npos) native_output = native_output.substr(0, dot);
+                    native_output += "_bin";
+                }
+                std::string src = read_input(native_input);
+                if (src.empty()) {
+                    std::cerr << "Error: Cannot read source file: " << native_input << "\n";
+                    return 1;
+                }
+                std::string comp_err;
+                if (!alphabet::forge::ForgeCEmitter::compile_to_native(src, spec, native_output, comp_err, false, target_mode)) {
+                    std::cerr << "Error during native compilation: " << comp_err << "\n";
+                    return 1;
+                }
+                std::cout << "\033[1;32mSuccessfully compiled native machine executable:\033[0m " << native_output << "\n";
+                return 0;
+            }
+
+            if (forge_debug_mode) {
+                if (forge_debug_file.empty()) {
+                    std::cerr << "Error: --debug requires a source file to debug\n";
+                    return 1;
+                }
+                bool ok = alphabet::forge::ForgeRunner::run_file(forge_debug_file, spec_file, true);
+                return ok ? 0 : 1;
+            }
+
+            if (doc_mode) {
+                std::string doc_err;
+                if (!alphabet::forge::ForgeDocGenerator::generate_html_docs(spec, doc_dir, doc_err)) {
+                    std::cerr << "Error generating docs: " << doc_err << "\n";
+                    return 1;
+                }
+                return 0;
+            }
+
+            if (bench_mode) {
+                if (bench_file.empty()) {
+                    std::cerr << "Error: bench requires a file to benchmark\n";
+                    return 1;
+                }
+                alphabet::forge::BannerEngine::print_if_enabled(spec, "help", std::cout);
+                alphabet::forge::ForgeBenchmark::run(bench_file, spec, bench_iterations);
+                return 0;
+            }
+
+            if (lint_mode) {
+                if (lint_file.empty()) {
+                    std::cerr << "Error: lint requires a file argument\n";
+                    return 1;
+                }
+                alphabet::forge::BannerEngine::print_if_enabled(spec, "help", std::cout);
+                alphabet::forge::LintReport rep = alphabet::forge::ForgeLinter::lint_file(lint_file, spec);
+                for (const auto& w : rep.warnings) {
+                    std::cerr << w.format();
+                }
+                if (rep.error_count == 0 && rep.warning_count == 0) {
+                    std::cout << "\033[1;32m✓ No lint errors or warnings found in " << lint_file << "!\033[0m\n";
+                } else {
+                    std::cout << "\nFound " << rep.error_count << " error(s), " << rep.warning_count << " warning(s).\n";
+                }
+                return rep.error_count == 0 ? 0 : 1;
+            }
+
+            if (lsp_mode_flag) {
+                alphabet::forge::ForgeLanguageServer server(spec);
+                server.run();
+                return 0;
+            }
+
+            if (playground_mode) {
+                std::string play_err;
+                if (!alphabet::forge::ForgePlayground::export_playground(spec, playground_dir, play_err)) {
+                    std::cerr << "Error exporting playground: " << play_err << "\n";
+                    return 1;
+                }
+                return 0;
+            }
+
+            if (repl_flag) {
+                alphabet::forge::ForgeRunner::run_repl(spec);
+                return 0;
+            }
+
+            if (output_bin.empty()) {
+                output_bin = "./" + spec.name;
+            }
+
+            if (!alphabet::forge::ForgeRunner::export_toolchain(spec, output_bin, target_mode)) {
+                return 1;
+            }
+            return 0;
+        }
+
         input_file = arg;
     }
 
@@ -2169,6 +2563,31 @@ int main(int argc, char* argv[]) {
         std::cerr << "Error: No input file specified\n";
         std::cerr << "Use --help for usage information\n";
         return 1;
+    }
+
+    // Check if running a custom Forge language
+    if (spec_file.empty()) {
+        for (size_t a_idx = 0; a_idx < g_program_args.size(); ++a_idx) {
+            if (g_program_args[a_idx] == "--spec" && a_idx + 1 < g_program_args.size()) {
+                spec_file = g_program_args[a_idx + 1];
+            }
+        }
+    }
+
+    bool is_custom_lang = !spec_file.empty();
+    if (!is_custom_lang && !input_file.empty()) {
+        size_t dot = input_file.find_last_of('.');
+        if (dot != std::string::npos) {
+            std::string ext = input_file.substr(dot);
+            if (ext != ".abc" && ext != ".abcb") {
+                is_custom_lang = true;
+            }
+        }
+    }
+
+    if (is_custom_lang) {
+        bool ok = alphabet::forge::ForgeRunner::run_file(input_file, spec_file, debug_mode);
+        return ok ? 0 : 1;
     }
 
     try {
@@ -2195,62 +2614,21 @@ int main(int argc, char* argv[]) {
             alphabet::Program program = compiler.compile(statements);
 
             if (!output_file.empty()) {
-                std::ofstream out(output_file, std::ios::binary);
-                if (!out.is_open()) {
-                    std::cerr << "Error: Cannot write to " << output_file << "\n";
+                // Delegate to Program::save_to_file for the canonical
+                // format (magic 'ALPH', version, main, static_init,
+                // constant_pool, globals, classes, functions).
+                // Re-implementing the format inline here led to a
+                // version constant mismatch that load_from_file rejects.
+                if (!program.save_to_file(output_file)) {
+                    std::cerr << "Error: Failed to write bytecode to " << output_file << "\n";
                     return 1;
                 }
-
-                const char magic[] = "ALPH";
-                out.write(magic, 4);
-                uint32_t version = 2;
-                out.write(reinterpret_cast<const char*>(&version), sizeof(version));
-                uint32_t count = static_cast<uint32_t>(program.main.size());
-                out.write(reinterpret_cast<const char*>(&count), sizeof(count));
-
-                for (const auto& instr : program.main) {
-                    uint8_t op = static_cast<uint8_t>(instr.op);
-                    out.write(reinterpret_cast<const char*>(&op), sizeof(op));
-
-                    uint8_t tag;
-                    if (std::holds_alternative<std::monostate>(instr.operand)) {
-                        tag = 0;
-                        out.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
-                    } else if (auto* i = std::get_if<int64_t>(&instr.operand)) {
-                        tag = 1;
-                        out.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
-                        out.write(reinterpret_cast<const char*>(i), sizeof(*i));
-                    } else if (auto* d = std::get_if<double>(&instr.operand)) {
-                        tag = 2;
-                        out.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
-                        out.write(reinterpret_cast<const char*>(d), sizeof(*d));
-                    } else if (auto* s = std::get_if<std::string>(&instr.operand)) {
-                        tag = 3;
-                        out.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
-                        uint32_t len = static_cast<uint32_t>(s->size());
-                        out.write(reinterpret_cast<const char*>(&len), sizeof(len));
-                        out.write(s->data(), len);
-                    } else if (std::holds_alternative<std::nullptr_t>(instr.operand)) {
-                        tag = 4;
-                        out.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
-                    } else if (auto* p = std::get_if<std::pair<std::string, int>>(&instr.operand)) {
-                        tag = 5;
-                        out.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
-                        uint32_t len = static_cast<uint32_t>(p->first.size());
-                        out.write(reinterpret_cast<const char*>(&len), sizeof(len));
-                        out.write(p->first.data(), len);
-                        int32_t second = p->second;
-                        out.write(reinterpret_cast<const char*>(&second), sizeof(second));
-                    } else {
-                        tag = 0;
-                        out.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
-                    }
-                }
-
                 std::cout << "Compiled " << program.main.size() << " instructions to " << output_file << "\n";
-            } else {
-                std::cout << "Compilation successful: " << program.main.size() << " instructions\n";
+                return 0;
             }
+
+            std::cout << "Compilation successful: " << program.main.size() << " instructions\n";
+            return 0;
         } else if (dump_bytecode) {
             alphabet::Lexer lexer(source);
             std::vector<alphabet::Token> tokens = lexer.scan_tokens();
@@ -2283,5 +2661,5 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    return 0;
+    return g_program_exit_code;
 }

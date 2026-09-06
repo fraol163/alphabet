@@ -9,12 +9,12 @@ m 13 flatten(13 lst) {
 
 // chunk(lst, size) - split lst into chunks of given size
 m 13 chunk(13 lst, 11 size) {
-    m 13 result = []
-    m 11 idx = 0
-    m 11 len = z.len(lst)
+    13 result = []
+    11 idx = 0
+    11 len = z.z.len(lst)
     l (idx < len) {
-        m 13 chunk_list = []
-        m 11 inner = 0
+        13 chunk_list = []
+        11 inner = 0
         l (inner < size && idx + inner < len) {
             z.append(chunk_list, lst[idx + inner])
             inner = inner + 1
@@ -37,12 +37,12 @@ m 13 unique(13 lst) {
 
 // group_by(lst) - group elements into a map by value
 m 14 group_by(13 lst) {
-    m 14 result = {}
-    m 11 idx = 0
-    m 11 len = z.len(lst)
+    14 result = {}
+    11 idx = 0
+    11 len = z.z.len(lst)
     l (idx < len) {
-        m 11 val = lst[idx]
-        m 12 key = z.tostr(val)
+        11 val = lst[idx]
+        12 key = z.tostr(val)
         i (z.has(result, key)) {
             z.append(result[key], val)
         } e {
@@ -55,9 +55,9 @@ m 14 group_by(13 lst) {
 
 // take(lst, count) - take the first count elements from lst
 m 13 take(13 lst, 11 count) {
-    m 13 result = []
-    m 11 idx = 0
-    m 11 len = z.len(lst)
+    13 result = []
+    11 idx = 0
+    11 len = z.z.len(lst)
     l (idx < count && idx < len) {
         z.append(result, lst[idx])
         idx = idx + 1
@@ -67,9 +67,9 @@ m 13 take(13 lst, 11 count) {
 
 // drop(lst, count) - drop the first count elements from lst
 m 13 drop(13 lst, 11 count) {
-    m 13 result = []
-    m 11 idx = count
-    m 11 len = z.len(lst)
+    13 result = []
+    11 idx = count
+    11 len = z.z.len(lst)
     l (idx < len) {
         z.append(result, lst[idx])
         idx = idx + 1

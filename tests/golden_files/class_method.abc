@@ -1,4 +1,4 @@
-#alphabet<golden_test>
+#alphabet<en>
 
 c Calculator {
   v m 5 add(5 x, 5 y) {

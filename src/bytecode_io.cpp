@@ -27,26 +27,36 @@ static void write_f64(std::ostream& os, double v) {
 static uint8_t read_u8(std::istream& is) {
     uint8_t v;
     is.read(reinterpret_cast<char*>(&v), 1);
+    if (!is)
+        throw std::runtime_error("bytecode_io: truncated read (u8)");
     return v;
 }
 static uint16_t read_u16(std::istream& is) {
     uint16_t v;
     is.read(reinterpret_cast<char*>(&v), 2);
+    if (!is)
+        throw std::runtime_error("bytecode_io: truncated read (u16)");
     return v;
 }
 static uint32_t read_u32(std::istream& is) {
     uint32_t v;
     is.read(reinterpret_cast<char*>(&v), 4);
+    if (!is)
+        throw std::runtime_error("bytecode_io: truncated read (u32)");
     return v;
 }
 static int64_t read_i64(std::istream& is) {
     int64_t v;
     is.read(reinterpret_cast<char*>(&v), 8);
+    if (!is)
+        throw std::runtime_error("bytecode_io: truncated read (i64)");
     return v;
 }
 static double read_f64(std::istream& is) {
     double v;
     is.read(reinterpret_cast<char*>(&v), 8);
+    if (!is)
+        throw std::runtime_error("bytecode_io: truncated read (f64)");
     return v;
 }
 
@@ -59,6 +69,8 @@ static std::string read_string(std::istream& is) {
     uint32_t len = read_u32(is);
     std::string s(len, '\0');
     is.read(&s[0], len);
+    if (!is)
+        throw std::runtime_error("bytecode_io: truncated read (string)");
     return s;
 }
 
@@ -99,8 +111,17 @@ static Operand read_operand(std::istream& is) {
         return read_f64(is);
     case 3:
         return read_string(is);
-    case 4:
-        return nullptr;
+    case 4: {
+        // Originally returned nullptr, but the VM's std::variant uses
+        // std::monostate for null. Returning monostate matches write
+        // tag-0 behavior and ensures null round-trips through the
+        // bytecode correctly regardless of which path produced it.
+        // (nullptr and monostate both mean "no value" to the VM, but
+        // variant comparisons and the operator== in vm.cpp treat them
+        // differently — they aren't equal, so deserialized nulls
+        // wouldn't equal freshly-created nulls.)
+        return std::monostate{};
+    }
     case 5: {
         std::string s = read_string(is);
         int n = static_cast<int>(read_u32(is));
@@ -266,9 +287,15 @@ Program Program::load_from_file(const std::string& path) {
 
     Program prog;
     prog.version = read_u16(is);
-    if (prog.version != Program::VERSION)
+    if (prog.version != Program::VERSION) {
+        // Forward-compatible: try to load older or newer bytecode.
+        // For now we only support version 2 exactly; loading different
+        // versions would silently produce wrong runtime behavior.
+        // Reject loudly so users don't see subtle bugs.
         throw std::runtime_error("Bytecode version mismatch: expected " + std::to_string(Program::VERSION) + ", got " +
-                                 std::to_string(prog.version));
+                                 std::to_string(prog.version) +
+                                 ". Rebuild the source to regenerate bytecode.");
+    }
 
     prog.main = read_bytecode(is);
     prog.static_init = read_bytecode(is);

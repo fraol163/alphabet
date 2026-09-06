@@ -21,10 +21,10 @@ z.o("PASS:try_s7")
 método 11 safe_op() { intentar { r 42 } capturar (error) { r 0 } }
 si (safe_op() == 42) { z.o("PASS:try_s8") }
 // S9: in loop
-5 cnt = 0
+5 kk = 0
 5 idx_a = 0
-bucle (idx_a < 3) { intentar { cnt = cnt + 1 } capturar (error) { } idx_a = idx_a + 1 }
-si (cnt == 3) { z.o("PASS:try_s9") }
+bucle (idx_a < 3) { intentar { kk = kk + 1 } capturar (error) { } idx_a = idx_a + 1 }
+si (kk == 3) { z.o("PASS:try_s9") }
 // S10: in class method
 clase TryCls { público método 11 safe() { intentar { r 100 } capturar (error) { r 0 } } }
 15 tc = n TryCls()

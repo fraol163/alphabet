@@ -1,6 +1,6 @@
 #alphabet<de>
 // === EXPORT TESTS ===
-exportieren exported_fn()
+exportieren exported_fn
 methode 11 exported_fn() { r 42 }
 wenn (exported_fn() == 42) { z.o("PASS:export_s1") }
 exportieren EXPORTED_VAR

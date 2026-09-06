@@ -1,5 +1,5 @@
 # Alphabet: High-Density Logic Evolution
-**Version:** 2.3.5
+**Version:** 2.3.6
 **Lead Architect: Fraol Teshome** (`fraolteshome444@gmail.com`)
 
 ---

@@ -2,6 +2,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <sstream>
 
@@ -36,7 +37,11 @@ void Compiler::validate_types(const std::vector<StmtPtr>& statements) {
             uint16_t declared_type = resolve_type_id(var_stmt->type_id);
             std::string var_name = sv_to_str(var_stmt->name.lexeme);
             var_types_[var_name] = declared_type;
-            if (var_stmt->initializer && declared_type != 0) {
+            // Skip the type check when the variable has no declared type
+            // OR is `const` (const statements create a TYPE_VOID
+            // type_id token as a placeholder; we shouldn't pretend that
+            // means "void" — just accept any initializer).
+            if (var_stmt->initializer && !var_stmt->is_const && declared_type != 0) {
                 uint16_t inferred_type = infer_expression_type(var_stmt->initializer);
                 if (!types_compatible(inferred_type, declared_type)) {
                     std::ostringstream oss;
@@ -101,8 +106,10 @@ bool Compiler::types_compatible(uint16_t source, uint16_t target) {
     if (source == TypeManager::TYPE_INT || target == TypeManager::TYPE_INT)
         return true;
 
-    bool source_is_numeric = (source >= TypeManager::I8 && source <= TypeManager::FLOAT);
-    bool target_is_numeric = (target >= TypeManager::I8 && target <= TypeManager::FLOAT);
+    bool source_is_numeric = (source >= TypeManager::I8 && source <= TypeManager::FLOAT) ||
+                            source == TypeManager::TYPE_INT || source == TypeManager::TYPE_BOOL;
+    bool target_is_numeric = (target >= TypeManager::I8 && target <= TypeManager::FLOAT) ||
+                            target == TypeManager::TYPE_INT || target == TypeManager::TYPE_BOOL;
 
     if (source_is_numeric && target_is_numeric) {
         return true;
@@ -124,7 +131,13 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
             [](const auto& value) -> uint16_t {
                 using T = std::decay_t<decltype(value)>;
                 if constexpr (std::is_same_v<T, std::monostate>) {
-                    return TypeManager::I32;
+                    // null is compatible with every type (void).
+                    return TypeManager::TYPE_VOID;
+                } else if constexpr (std::is_same_v<T, int64_t>) {
+                    // Integer literals (including true/false which the parser
+                    // emits as int64 0/1). Treat as TYPE_INT so they can be
+                    // assigned to any numeric type, including bool.
+                    return TypeManager::TYPE_INT;
                 } else if constexpr (std::is_same_v<T, double>) {
                     return TypeManager::F64;
                 } else if constexpr (std::is_same_v<T, std::string>) {
@@ -136,6 +149,15 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
             lit->value);
     }
 
+    if (auto* fs = dynamic_cast<const FString*>(expr.get())) {
+        // F-strings always yield a string, even when interpolations
+        // are non-string (they get stringified at runtime). Previously
+        // this fell through to the I32 default and tripped
+        // "cannot assign type 3 to variable of type 12" wherever an
+        // f-string was assigned to a 12 (STR) variable.
+        return TypeManager::STR;
+    }
+
     if (auto* bin = dynamic_cast<const Binary*>(expr.get())) {
         uint16_t left_type = infer_expression_type(bin->left);
         uint16_t right_type = infer_expression_type(bin->right);
@@ -143,8 +165,24 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
         if (left_type == TypeManager::STR || right_type == TypeManager::STR) {
             return TypeManager::STR;
         }
-        if (left_type >= TypeManager::I8 && left_type <= TypeManager::I64 && right_type >= TypeManager::I8 &&
-            right_type <= TypeManager::I64) {
+        // Treat TYPE_INT (5), TYPE_BOOL (11), TYPE_VOID (0) and the
+        // explicit integer widths I8..I64 (1..4) as the "integer family".
+        // Previously the check was `>= I8 && <= I64`, which excluded
+        // TYPE_INT=5, so the inferred return type for any expression
+        // involving user-declared `11 foo = ...` (the canonical "int"
+        // type ID) fell through to the catch-all I32 and tripped the
+        // "return type mismatch" error when the method declared 11.
+        auto is_int_family = [](uint16_t t) {
+            return (t >= TypeManager::I8 && t <= TypeManager::I64) ||
+                   t == TypeManager::TYPE_INT ||
+                   t == TypeManager::TYPE_BOOL;
+        };
+        if (is_int_family(left_type) && is_int_family(right_type)) {
+            // Prefer the wider of the two for promotion; if either is
+            // TYPE_INT, fall through to TYPE_INT rather than a width.
+            if (left_type == TypeManager::TYPE_INT || right_type == TypeManager::TYPE_INT) {
+                return TypeManager::TYPE_INT;
+            }
             return std::max(left_type, right_type);
         }
         if (left_type == TypeManager::F32 || left_type == TypeManager::F64 || right_type == TypeManager::F32 ||
@@ -228,6 +266,22 @@ uint16_t Compiler::infer_expression_type(const ExprPtr& expr) {
     if (auto* map = dynamic_cast<const MapLiteral*>(expr.get())) {
         (void)map;
         return TypeManager::MAP;
+    }
+
+    // NullSafeGet ('a?.b') yields the type of the receiver — when the
+    // receiver is a typed variable, the result is that same type (since
+    // field types on objects aren't tracked here).
+    if (auto* nsg = dynamic_cast<const NullSafeGet*>(expr.get())) {
+        uint16_t obj_type = infer_expression_type(nsg->obj);
+        if (obj_type == TypeManager::TYPE_VOID) return TypeManager::TYPE_VOID;
+        return obj_type;  // field type is same as object type for this compiler
+    }
+
+    // Variable reference: type is whatever was declared for the name.
+    if (auto* v = dynamic_cast<const Variable*>(expr.get())) {
+        auto it = var_types_.find(sv_to_str(v->name.lexeme));
+        if (it != var_types_.end()) return it->second;
+        return TypeManager::I32;
     }
 
     return TypeManager::I32;
@@ -439,6 +493,8 @@ void Compiler::visit_expr(const ExprPtr& expr) {
         visit_call(*ce);
     } else if (auto* gete = dynamic_cast<const Get*>(expr.get())) {
         visit_get(*gete);
+    } else if (auto* nsge = dynamic_cast<const NullSafeGet*>(expr.get())) {
+        visit_null_safe_get(*nsge);
     } else if (auto* sete = dynamic_cast<const Set*>(expr.get())) {
         visit_set(*sete);
     } else if (auto* ne = dynamic_cast<const New*>(expr.get())) {
@@ -712,7 +768,18 @@ void Compiler::visit_match(const MatchStmt& stmt) {
     }
 }
 
-void Compiler::visit_class(const ClassStmt&) {}
+// Class compilation is performed centrally by Compiler::compile() which
+// walks the top-level statements, assigns a class id via class_map_
+// (line 254), and invokes compile_class_def for each non-interface
+// class. This visitor is therefore a no-op; classes are never reached
+// through the normal visit() dispatch (which itself skips them at
+// line 281). Implemented as an explicit stub so a future AST traversal
+// that does dispatch classes here cannot silently drop them.
+void Compiler::visit_class(const ClassStmt&) {
+    // Intentionally empty. See comment above.
+    assert(false && "Compiler::visit_class should not be called; "
+                    "classes are compiled by Compiler::compile()");
+}
 
 void Compiler::visit_binary(const Binary& expr) {
     visit_expr(expr.left);
@@ -961,6 +1028,38 @@ void Compiler::visit_get(const Get& expr) {
     emit(OpCode::LOAD_FIELD, sv_to_str(expr.name.lexeme));
 }
 
+void Compiler::visit_null_safe_get(const NullSafeGet& expr) {
+    // Evaluate the object expression. The object is on top of the stack.
+    // We need to either LOAD_FIELD (if non-null) or push null (if null),
+    // without losing the original obj. Strategy:
+    //   DUP                       -> [obj, obj]
+    //   JUMP_IF_FALSE target_null -> pops top: [obj]
+    //                               if obj was truthy (non-null/non-zero/...),
+    //                                 fall through to non-null path.
+    //                               if obj was falsy (null/0/empty/false),
+    //                                 jump to target_null.
+    //   (non-null path)
+    //   POP                       -> [] (drops duplicate)
+    //   LOAD_FIELD name            -> [field]
+    //   JUMP end
+    //   (null path) target_null:
+    //   POP                       -> [] (drops the original obj)
+    //   PUSH_CONST null            -> [null]
+    //   end:
+    visit_expr(expr.obj);
+    emit(OpCode::DUP);
+    size_t jump_if_null = bytecode_.size();
+    emit(OpCode::JUMP_IF_FALSE, static_cast<int64_t>(0));
+    emit(OpCode::POP);
+    emit(OpCode::LOAD_FIELD, sv_to_str(expr.name.lexeme));
+    size_t jump_end = bytecode_.size();
+    emit(OpCode::JUMP, static_cast<int64_t>(0));
+    patch_jump(jump_if_null, bytecode_.size());
+    emit(OpCode::POP);
+    emit(OpCode::PUSH_CONST, nullptr);
+    patch_jump(jump_end, bytecode_.size());
+}
+
 void Compiler::visit_list(const ListLiteral& expr) {
     for (const auto& elem : expr.elements) {
         visit_expr(elem);
@@ -1065,6 +1164,11 @@ CompiledClass Compiler::compile_class_def(const ClassStmt& stmt) {
     CompiledClass cls;
     cls.name = sv_to_str(stmt.name.lexeme);
     cls.id = class_map_[sv_to_str(stmt.name.lexeme)];
+    // Propagate the `a` modifier from the AST to the compiled class so
+    // the VM can refuse to instantiate it. Both top-level `a c Name {...}`
+    // and `class_declaration(true)` set stmt.is_abstract; without this
+    // assignment, no class is ever marked abstract and W44 stays broken.
+    cls.is_abstract = stmt.is_abstract;
 
     if (stmt.superclass) {
         cls.superclass = sv_to_str(stmt.superclass->name.lexeme);
@@ -1111,10 +1215,12 @@ CompiledClass Compiler::compile_class_def(const ClassStmt& stmt) {
             emit(OpCode::POP);
         }
     }
-    if (!bytecode_.empty()) {
-        emit(OpCode::PUSH_CONST, nullptr);
-        emit(OpCode::RET);
-    }
+    // Do NOT emit RET here: field_init runs inline within an existing
+    // method's frame (via run_field_init). An auto-emitted RET would
+    // prematurely pop the calling frame. Originally buggy: bytecode_
+    // would end with RET whenever any non-static field had an initializer,
+    // breaking any method on a class that declared a non-static field with
+    // a default value.
     cls.field_init = std::move(bytecode_);
     bytecode_ = std::move(old_bytecode);
 
@@ -1150,25 +1256,71 @@ void Compiler::load_module(const std::string& path) {
         resolved_path = source_dir_ + "/" + path;
     }
 
-    {
-        std::ifstream test(resolved_path);
-        if (!test.good()) {
-            const char* env_path = std::getenv("ALPHABET_PATH");
-            if (env_path) {
-                std::string env_str(env_path);
-                size_t start = 0;
-                while (start < env_str.size()) {
-                    size_t end = env_str.find(':', start);
-                    if (end == std::string::npos)
-                        end = env_str.size();
-                    std::string dir = env_str.substr(start, end - start);
-                    std::string candidate = dir + "/" + path;
-                    std::ifstream t2(candidate);
-                    if (t2.good()) {
-                        resolved_path = candidate;
-                        break;
-                    }
-                    start = end + 1;
+    // If path doesn't end in .abc, append it (so users can write
+    // `x "test"` instead of `x "test.abc"`).
+    if (!resolved_path.empty() && resolved_path.size() >= 4 &&
+        resolved_path.substr(resolved_path.size() - 4) != ".abc") {
+        resolved_path += ".abc";
+    }
+
+    auto file_exists = [](const std::string& p) {
+        std::ifstream f(p);
+        return f.good();
+    };
+
+    if (!file_exists(resolved_path)) {
+        // Try each ALPHABET_PATH entry.
+        const char* env_path = std::getenv("ALPHABET_PATH");
+        if (env_path) {
+            std::string env_str(env_path);
+            size_t start = 0;
+            while (start < env_str.size()) {
+                size_t end = env_str.find(':', start);
+                if (end == std::string::npos)
+                    end = env_str.size();
+                std::string dir = env_str.substr(start, end - start);
+                std::string candidate = dir + "/" + path;
+                if (!candidate.empty() && candidate.size() >= 4 &&
+                    candidate.substr(candidate.size() - 4) != ".abc") {
+                    candidate += ".abc";
+                }
+                if (file_exists(candidate)) {
+                    resolved_path = candidate;
+                    break;
+                }
+                start = end + 1;
+            }
+        }
+
+        // Final fallback: try `stdlib/<path>` relative to source_dir or
+        // to the parent of the binary, so end-users can `x "test"` and
+        // get stdlib/test.abc without setting ALPHABET_PATH.
+        // If the path already starts with "stdlib/", don't prepend it again.
+        if (!file_exists(resolved_path)) {
+            const std::string stdlib_prefix = "stdlib/";
+            bool already_in_stdlib = path.size() >= stdlib_prefix.size() &&
+                path.compare(0, stdlib_prefix.size(), stdlib_prefix) == 0;
+            std::vector<std::string> stdlib_roots;
+            if (!source_dir_.empty()) {
+                if (already_in_stdlib)
+                    stdlib_roots.push_back(source_dir_);
+                else
+                    stdlib_roots.push_back(source_dir_ + "/stdlib");
+            }
+            // cwd-relative
+            if (already_in_stdlib)
+                stdlib_roots.push_back(".");
+            else
+                stdlib_roots.push_back("stdlib");
+            for (const auto& root : stdlib_roots) {
+                std::string candidate = root + "/" + path;
+                if (!candidate.empty() && candidate.size() >= 4 &&
+                    candidate.substr(candidate.size() - 4) != ".abc") {
+                    candidate += ".abc";
+                }
+                if (file_exists(candidate)) {
+                    resolved_path = candidate;
+                    break;
                 }
             }
         }

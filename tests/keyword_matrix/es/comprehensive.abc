@@ -1,4 +1,4 @@
-#alphabet<es}
+#alphabet<es>
 // === COMPREHENSIVE KEYWORD TEST: SPANISH ===
 
 // === VARIABLES ===
@@ -33,9 +33,9 @@ bucle (contador < 10) { contador = contador + 1 i (contador % 2 != 0) { continua
 i (z.len(pares) == 5) { z.o("PASS:es_continue") }
 
 // === FUNCTION ===
-método 11 factorial(11 num) {
-  i (num <= 1) { retornar 1 }
-  retornar num * factorial(num - 1)
+método 11 factorial(11 num_val) {
+  i (num_val <= 1) { retornar 1 }
+  retornar num * factorial(num_val - 1)
 }
 i (factorial(5) == 120) { z.o("PASS:es_function") }
 

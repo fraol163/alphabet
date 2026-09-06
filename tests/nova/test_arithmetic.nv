@@ -1,0 +1,7 @@
+#nova<1.0, compiled>
+create x = 15;
+create y = 25;
+create total = x + y;
+condition (total == 40) {
+    display("Arithmetic test passed");
+}

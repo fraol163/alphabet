@@ -1,4 +1,4 @@
-#alphabet<golden_test>
+#alphabet<en>
 
 12 greeting = "Hello, Alphabet!"
 z.o(greeting)

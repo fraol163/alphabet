@@ -1,0 +1,68 @@
+#alphabet<en>
+@ assert_true, assert_false, assert_eq, assert_neq, assert_null, assert_not_null, test_summary
+
+5 _pass_count = 0
+5 _fail_count = 0
+
+m 0 assert_true(11 cond, 12 msg) {
+  i (cond) {
+    _pass_count = _pass_count + 1
+  } e {
+    _fail_count = _fail_count + 1
+    z.o("FAIL: " + msg + " (expected true)")
+  }
+}
+
+m 0 assert_false(11 cond, 12 msg) {
+  i (!cond) {
+    _pass_count = _pass_count + 1
+  } e {
+    _fail_count = _fail_count + 1
+    z.o("FAIL: " + msg + " (expected false)")
+  }
+}
+
+m 0 assert_eq(0 actual, 0 expected, 12 msg) {
+  i (actual == expected) {
+    _pass_count = _pass_count + 1
+  } e {
+    _fail_count = _fail_count + 1
+    z.o("FAIL: " + msg + " (expected " + z.tostr(expected) + ", got " + z.tostr(actual) + ")")
+  }
+}
+
+m 0 assert_neq(0 actual, 0 expected, 12 msg) {
+  i (actual != expected) {
+    _pass_count = _pass_count + 1
+  } e {
+    _fail_count = _fail_count + 1
+    z.o("FAIL: " + msg + " (expected not " + z.tostr(expected) + ")")
+  }
+}
+
+m 0 assert_null(0 val, 12 msg) {
+  i (z.is_null(val)) {
+    _pass_count = _pass_count + 1
+  } e {
+    _fail_count = _fail_count + 1
+    z.o("FAIL: " + msg + " (expected null)")
+  }
+}
+
+m 0 assert_not_null(0 val, 12 msg) {
+  i (!z.is_null(val)) {
+    _pass_count = _pass_count + 1
+  } e {
+    _fail_count = _fail_count + 1
+    z.o("FAIL: " + msg + " (expected not null)")
+  }
+}
+
+m 0 test_summary() {
+  z.o("\n" + z.tostr(_pass_count) + " passed, " + z.tostr(_fail_count) + " failed")
+  i (_fail_count > 0) {
+    z.o("TESTS FAILED")
+  } e {
+    z.o("ALL TESTS PASSED")
+  }
+}

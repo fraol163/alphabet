@@ -1,6 +1,6 @@
 # Alphabet Programming Language — Formal Specification
 
-> Version 2.3.5 · This document is the authoritative language reference.
+> Version 2.3.6 · This document is the authoritative language reference.
 > Compiler pipeline: Source → Lexer → Parser → AST → Compiler → Bytecode → VM
 
 ---
@@ -1545,4 +1545,4 @@ multi_line_comment  ::= "/*" { any character } "*/"
 
 ---
 
-*End of Alphabet Language Specification v2.3.5*
+*End of Alphabet Language Specification v2.3.6*

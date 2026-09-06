@@ -1,7 +1,11 @@
 #include "ffi.h"
 #include <algorithm>
 #include <cstring>
+#include <mutex>
 #include <stdexcept>
+#include <tuple>
+#include <unordered_map>
+#include <vector>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -12,17 +16,66 @@
 
 extern "C" {
 
+// Global registry for ffi_register_function. Holds (name, function pointer,
+// arg types, return type) for functions registered without dlopen — useful
+// for embedding the alphabet VM in another host that wants to expose
+// C/C++ functions directly without writing them to a shared library.
+//
+// Thread-safety: the registry is touched only at registration time (rare)
+// and the lookup is read-only after that. A single global mutex protects
+// the underlying map.
+static std::unordered_map<std::string, std::tuple<void*, std::vector<FFIType>, FFIType>>& ffi_registry() {
+    static std::unordered_map<std::string, std::tuple<void*, std::vector<FFIType>, FFIType>> reg;
+    return reg;
+}
+static std::mutex& ffi_registry_mutex() {
+    static std::mutex m;
+    return m;
+}
+
 FFI_EXPORT int ffi_init(void) {
     return 1;
 }
 
-FFI_EXPORT void ffi_cleanup(void) {}
+FFI_EXPORT void ffi_cleanup(void) {
+    std::lock_guard<std::mutex> lock(ffi_registry_mutex());
+    ffi_registry().clear();
+}
 
 FFI_EXPORT FFIResult ffi_call(const char* lib, const char* func, FFIValue* args, int arg_count) {
     FFIResult result = {0, ffi_make_null(), nullptr};
 
-    if (!lib || !func) {
-        result.error_message = "Invalid library or function name";
+    if (!func) {
+        result.error_message = "Function name is required";
+        return result;
+    }
+    // lib is allowed to be nullptr when the function is in the registry.
+
+    // First, check the registered-function registry. This lets embedders
+    // expose C/C++ functions to the VM without compiling them into a
+    // separate shared library. The registry stores function pointers
+    // directly; we don't need dlopen to find them.
+    {
+        std::lock_guard<std::mutex> lock(ffi_registry_mutex());
+        auto it = ffi_registry().find(func);
+        if (it != ffi_registry().end()) {
+            // For registered functions we ignore the `lib` argument and
+            // just dispatch through the stored function pointer. Argument
+            // and return type info is stored alongside but currently
+            // unused — the registered function takes/returns FFIValue
+            // and is expected to do its own marshalling.
+            auto& entry = it->second;
+            void* f = std::get<0>(entry);
+            using RegisteredSig = FFIValue (*)(FFIValue*, int);
+            auto fn = reinterpret_cast<RegisteredSig>(f);
+            result.value = fn(args, arg_count);
+            result.success = 1;
+            return result;
+        }
+    }
+
+    if (!lib) {
+        result.error_message = "Function not found in registry and no library given";
         return result;
     }
 
@@ -85,7 +138,15 @@ FFI_EXPORT void ffi_unload_library(void* handle) {
     }
 }
 
-FFI_EXPORT int ffi_register_function(const char*, void*, FFIType*, int, FFIType) {
+FFI_EXPORT int ffi_register_function(const char* name, void* func_ptr, FFIType* arg_types, int arg_count,
+                                     FFIType return_type) {
+    if (!name || !func_ptr) return 0;
+    std::lock_guard<std::mutex> lock(ffi_registry_mutex());
+    std::vector<FFIType> args;
+    if (arg_types && arg_count > 0) {
+        args.assign(arg_types, arg_types + arg_count);
+    }
+    ffi_registry()[name] = std::make_tuple(func_ptr, std::move(args), return_type);
     return 1;
 }
 

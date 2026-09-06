@@ -47,7 +47,7 @@ alphabet config get telemetry
 ```json
 {
   "event": "program_run",
-  "version": "2.3.5",
+  "version": "2.3.6",
   "language": "en",
   "platform": "linux",
   "features_used": ["map", "filter", "lambda"],

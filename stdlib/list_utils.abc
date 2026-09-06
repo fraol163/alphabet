@@ -10,9 +10,9 @@ m 5 list_avg(5 lst) {
 }
 
 m 5 list_min(5 lst) {
-  i (z.len(lst) == 0) { r null }
+  i (z.z.len(lst) == 0) { r null }
   5 min_val = lst[0]
-  l (5 i = 1 : i < z.len(lst) : i = i + 1) {
+  l (5 i = 1 : i < z.z.len(lst) : i = i + 1) {
     i (lst[i] < min_val) {
       min_val = lst[i]
     }
@@ -21,9 +21,9 @@ m 5 list_min(5 lst) {
 }
 
 m 5 list_max(5 lst) {
-  i (z.len(lst) == 0) { r null }
+  i (z.z.len(lst) == 0) { r null }
   5 max_val = lst[0]
-  l (5 i = 1 : i < z.len(lst) : i = i + 1) {
+  l (5 i = 1 : i < z.z.len(lst) : i = i + 1) {
     i (lst[i] > max_val) {
       max_val = lst[i]
     }
@@ -33,17 +33,17 @@ m 5 list_max(5 lst) {
 
 m 5 list_median(5 lst) {
   5 sorted = z.sort(lst)
-  5 n = z.len(sorted)
-  i (n == 0) { r 0 }
-  i (n % 2 == 1) {
-    r sorted[n / 2]
+  5 sz = z.z.len(sorted)
+  i (sz == 0) { r 0 }
+  i (sz % 2 == 1) {
+    r sorted[sz / 2]
   }
-  r (sorted[n / 2 - 1] + sorted[n / 2]) / 2
+  r (sorted[sz / 2 - 1] + sorted[sz / 2]) / 2
 }
 
 m 5 list_mode(5 lst) {
   5 counts = {}
-  l (5 val : lst) {
+  l (val : lst) {
     i (z.is_null(counts[val])) {
       counts[val] = 1
     } e {
@@ -52,7 +52,7 @@ m 5 list_mode(5 lst) {
   }
   5 max_count = 0
   5 mode_val = null
-  l (5 k : z.keys(counts)) {
+  l (k : z.keys(counts)) {
     i (counts[k] > max_count) {
       max_count = counts[k]
       mode_val = k
@@ -62,15 +62,27 @@ m 5 list_mode(5 lst) {
 }
 
 m 13 list_flatten_deep(5 lst) {
+  // Iterative deep flatten using a worklist. The recursive version
+  // blows the VM's MAX_CALL_DEPTH=1000 when lists are deeply nested;
+  // the iterative form is also faster and avoids the closure-locals
+  // capture bug in the current VM.
   5 result = []
-  l (5 item : lst) {
-    i (z.type(item) == "list") {
-      5 flat = list_flatten_deep(item)
-      l (5 sub : flat) {
-        append(result, sub)
+  13 stack = [lst]
+  13 out_stack = []
+  l (z.len(stack) > 0) {
+    13 top = stack[z.len(stack) - 1]
+    5 new_len = z.len(stack) - 1
+    l (5 i = 0 : i < new_len : i = i + 1) {
+      append(out_stack, stack[i])
+    }
+    stack = out_stack
+    out_stack = []
+    i (z.type(top) == "list") {
+      l (item : top) {
+        append(stack, item)
       }
     } e {
-      append(result, item)
+      append(result, top)
     }
   }
   r result
@@ -79,14 +91,14 @@ m 13 list_flatten_deep(5 lst) {
 m 13 list_chunk(5 lst, 5 size) {
   5 result = []
   5 chunk = []
-  l (5 i = 0 : i < z.len(lst) : i = i + 1) {
+  l (5 i = 0 : i < z.z.len(lst) : i = i + 1) {
     append(chunk, lst[i])
-    i (z.len(chunk) == size) {
+    i (z.z.len(chunk) == size) {
       append(result, chunk)
       chunk = []
     }
   }
-  i (z.len(chunk) > 0) {
+  i (z.z.len(chunk) > 0) {
     append(result, chunk)
   }
   r result
@@ -94,8 +106,8 @@ m 13 list_chunk(5 lst, 5 size) {
 
 m 13 list_zip_with(5 lst1, 5 lst2, 5 fn) {
   5 result = []
-  5 len = z.len(lst1)
-  i (z.len(lst2) < len) { len = z.len(lst2) }
+  5 len = z.z.len(lst1)
+  i (z.z.len(lst2) < len) { len = z.z.len(lst2) }
   l (5 i = 0 : i < len : i = i + 1) {
     append(result, fn(lst1[i], lst2[i]))
   }

@@ -2,6 +2,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "vm.h"
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
@@ -9,7 +10,7 @@
 #include <string>
 
 #ifndef ALPHABET_VERSION
-#define ALPHABET_VERSION "2.3.5"
+#define ALPHABET_VERSION "2.3.6"
 #endif
 
 #ifdef __EMSCRIPTEN__
@@ -33,6 +34,24 @@ class StringBuf : public std::streambuf {
         return c;
     }
 };
+
+// WASM functions return const char* pointing into a rotating buffer.
+// Callers MUST copy the result before the next call. The rotation
+// ensures that two consecutive calls don't dangle — but if a caller
+// holds the pointer across calls, the second call's pointer is
+// independent. (The JS wrapper reads the string immediately, so this
+// is safe in practice; this is here for C++ embedders that might
+// hold the result across calls.)
+static char result_buffer[2][8192];
+static int result_slot = 0;
+static const char* copy_to_result_buffer(const std::string& s) {
+    int slot = result_slot;
+    result_slot = (result_slot + 1) % 2;
+    size_t n = std::min(s.size(), sizeof(result_buffer[slot]) - 1);
+    std::memcpy(result_buffer[slot], s.c_str(), n);
+    result_buffer[slot][n] = '\0';
+    return result_buffer[slot];
+}
 
 extern "C" {
 
@@ -61,7 +80,7 @@ const char* alphabet_run(const char* code) {
         if (parser.had_errors()) {
             std::cout.rdbuf(old_cout);
             last_output = "Parse Error: " + parser.first_error();
-            return last_output.c_str();
+            return copy_to_result_buffer(last_output);
         }
 
         alphabet::Compiler compiler;
@@ -75,11 +94,11 @@ const char* alphabet_run(const char* code) {
             last_output = "(no output)";
         }
     } catch (const std::exception& e) {
-        std::cout.rdbuf(nullptr);
+        std::cout.rdbuf(old_cout);
         last_output = std::string("Error: ") + e.what();
     }
 
-    return last_output.c_str();
+    return copy_to_result_buffer(last_output);
 }
 
 EMSCRIPTEN_KEEPALIVE

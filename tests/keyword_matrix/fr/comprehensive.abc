@@ -1,4 +1,4 @@
-#alphabet<fr}
+#alphabet<fr>
 // === COMPREHENSIVE KEYWORD TEST: FRENCH ===
 
 // === VARIABLES ===
@@ -33,9 +33,9 @@ boucle (compteur < 10) { compteur = compteur + 1 i (compteur % 2 != 0) { continu
 i (z.len(pairs) == 5) { z.o("PASS:fr_continue") }
 
 // === FUNCTION ===
-méthode 11 factorial(11 num) {
-  i (num <= 1) { retour 1 }
-  retour num * factorial(num - 1)
+méthode 11 factorial(11 num_val) {
+  i (num_val <= 1) { retour 1 }
+  retour num * factorial(num_val - 1)
 }
 i (factorial(5) == 120) { z.o("PASS:fr_function") }
 

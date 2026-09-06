@@ -1,6 +1,6 @@
 # Alphabet Language — BNF Grammar
 
-> Formal grammar for the Alphabet programming language (v2.3.5).
+> Formal grammar for the Alphabet programming language (v2.3.6).
 > Compiled pipeline: Lexer → Parser → AST → Compiler → Bytecode → VM
 
 ---

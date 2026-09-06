@@ -7,7 +7,7 @@
 ግልጽ 5 pub_var = 42
 ከሆነ (pub_var == 42) { z.o("PASS:access_s2") }
 // S3: class with public method
-ክፍል AccessCls { ግልጽ ዘዴ 11 greet() { r "hi" } }
+ክፍል AccessCls { ግልጽ ዘዴ 12 greet() { r "hi" } }
 15 ac = n AccessCls()
 ከሆነ (ac.greet() == "hi") { z.o("PASS:access_s3") }
 // S4: class with public field

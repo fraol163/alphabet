@@ -4,10 +4,11 @@ _alphabet_completions() {
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    commands="run watch init test learn fmt lint lsp update"
+    commands="run test init info doc bench examples tour lint voice-tutorial pkg update forge"
 
     if [[ ${cur} == -* ]]; then
-        COMPREPLY=( $(compgen -W "--help --version --debug --sandbox --dump-bytecode --profile -c --compile" -- ${cur}) )
+        # Flags actually supported by the alphabet binary (verified 2026-09-04).
+        COMPREPLY=( $(compgen -W "--help --version --debug --sandbox --dump-bytecode -c --compile -o --output --repl --lsp --stdio" -- ${cur}) )
         return 0
     fi
 
@@ -20,6 +21,10 @@ _alphabet_completions() {
     case "${prev}" in
         run|watch|fmt|lint|lsp)
             COMPREPLY=( $(compgen -f -X '!*.abc' -- ${cur}) )
+            return 0
+            ;;
+        forge)
+            COMPREPLY=( $(compgen -W "init --check --bundle --export-vscode --test --fmt --pkg --repl" -f -X '!*.forge' -- ${cur}) )
             return 0
             ;;
     esac

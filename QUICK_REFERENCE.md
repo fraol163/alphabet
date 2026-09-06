@@ -249,6 +249,12 @@ alphabet -c -o out.bin prog.abc   # Compile to bytecode
 alphabet update                   # Self-update
 alphabet --version                # Show version
 alphabet --help                   # Show help
+
+# Alphabet Forge (Create Custom Languages)
+alphabet forge init <name> [dir]   # Scaffold new language project
+alphabet forge lang.forge -o bin/x # Forge standalone toolchain
+alphabet forge lang.forge --check  # Validate specification & grammar
+alphabet forge lang.forge --bundle # Export complete distribution bundle
 ```
 
 ---
@@ -282,5 +288,5 @@ Type mismatches in arithmetic throw RuntimeError with clear messages
 
 ---
 
-**Version:** 2.3.5 | **Implementation:** Native C++17 | **License:** MIT
+**Version:** 2.3.6 | **Implementation:** Native C++17 | **License:** MIT
 **GitHub:** https://github.com/fraol163/alphabet

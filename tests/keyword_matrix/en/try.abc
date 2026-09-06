@@ -21,10 +21,10 @@ z.o("PASS:try_s7")
 m 11 safe_op() { t { r 42 } h (error) { r 0 } }
 i (safe_op() == 42) { z.o("PASS:try_s8") }
 // S9: in loop
-5 cnt = 0
+5 kk = 0
 5 idx_a = 0
-l (idx_a < 3) { t { cnt = cnt + 1 } h (error) { } idx_a = idx_a + 1 }
-i (cnt == 3) { z.o("PASS:try_s9") }
+l (idx_a < 3) { t { kk = kk + 1 } h (error) { } idx_a = idx_a + 1 }
+i (kk == 3) { z.o("PASS:try_s9") }
 // S10: in class method
 c TryCls { v m 11 safe() { t { r 100 } h (error) { r 0 } } }
 15 tc = n TryCls()

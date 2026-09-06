@@ -1,0 +1,23 @@
+#nova<1.0, compiled>
+
+create greeting = "Testing Nova Language Features...";
+display(greeting);
+
+create x = 10;
+create y = 25;
+create sum = x + y;
+display(sum);
+
+condition (sum > 30) {
+    display("Condition passed: sum is greater than 30!");
+} otherwise {
+    display("Condition failed: sum is not greater than 30.");
+}
+
+create counter = 0;
+repeat (counter < 3) {
+    counter = counter + 1;
+    display(counter);
+}
+
+display("Nova features execution complete!");

@@ -16,7 +16,7 @@ wenn (nm == "hello") { o("P:if9") }
 wenn (z.len(lt) == 3) { o("P:if10") }
 14 mp = {"k":100}
 wenn (z.has(mp,"k")) { o("P:if11") }
-m 5 ispos(5 num) { r num > 0 }
+m 5 ispos(5 num) { r num_val > 0 }
 wenn (ispos(5)) { o("P:if12") }
 wenn (wert == 10) { o(f"P:if13 v={wert}") }
 wenn (wert == 10) o("P:if14")
@@ -52,10 +52,10 @@ o("P:l2")
 schleife (true) { bv=bv+1 wenn (bv==5) { b } }
 wenn (bv==5) { o("P:l3") }
 13 ev=[] 5 ci=0
-schleife (ci<10) { ci=ci+1 wenn (ci%2!=0) { k } z.append(ev,ci) }
+schleife (ci<10) { ci=ci+1 wenn (ci%2!=0) { kk } z.append(ev,ci) }
 wenn (z.len(ev)==5) { o("P:l4") }
 13 rx=[] 5 ri=0
-schleife (ri<10) { ri=ri+1 wenn (ri==3) { k } wenn (ri==8) { b } z.append(rx,ri) }
+schleife (ri<10) { ri=ri+1 wenn (ri==3) { kk } wenn (ri==8) { b } z.append(rx,ri) }
 wenn (z.len(rx)==6) { o("P:l5") }
 5 ps=0 5 pi=0
 schleife (pi<3) { 5 pj=0 schleife (pj<3) { ps=ps+1 pj=pj+1 } pi=pi+1 }
@@ -110,24 +110,24 @@ schleife (bk<5) { bs=bs+bk bk=bk+1 wenn (bk==3) { b } }
 wenn (bs==3) { o("P:b7") }
 // CONTINUE
 13 kp=[] 5 ci2=0
-schleife (ci2<5) { ci2=ci2+1 wenn (ci2==3) { k } z.append(kp,ci2) }
+schleife (ci2<5) { ci2=ci2+1 wenn (ci2==3) { kk } z.append(kp,ci2) }
 wenn (z.len(kp)==4) { o("P:k1") }
 13 kr=[] 5 cj=0
-schleife (cj<5) { cj=cj+1 wenn (cj==3) { wenn (true) { k } } z.append(kr,cj) }
+schleife (cj<5) { cj=cj+1 wenn (cj==3) { wenn (true) { kk } } z.append(kr,cj) }
 wenn (z.len(kr)==4) { o("P:k2") }
 5 ic=0 5 ck2=0
-schleife (ck2<3) { ic=0 5 cl=0 schleife (cl<3) { cl=cl+1 wenn (cl==2) { k } ic=ic+1 } ck2=ck2+1 }
+schleife (ck2<3) { ic=0 5 cl=0 schleife (cl<3) { cl=cl+1 wenn (cl==2) { kk } ic=ic+1 } ck2=ck2+1 }
 wenn (ic==2) { o("P:k3") }
 13 ce=[] 5 cv=0
-schleife (cv<6) { cv=cv+1 wenn (cv%2!=0) { k } z.append(ce,cv) }
+schleife (cv<6) { cv=cv+1 wenn (cv%2!=0) { kk } z.append(ce,cv) }
 wenn (z.len(ce)==3) { o("P:k4") }
 13 cq=[] 5 cw=0
-schleife (cw<8) { cw=cw+1 wenn (cw%3==0) { k } z.append(cq,cw) }
+schleife (cw<8) { cw=cw+1 wenn (cw%3==0) { kk } z.append(cq,cw) }
 wenn (z.len(cq)==5) { o("P:k5") }
 13 cm=[] 5 cx=0
-schleife (cx<10) { cx=cx+1 wenn (cx==3) { k } wenn (cx==8) { b } z.append(cm,cx) }
+schleife (cx<10) { cx=cx+1 wenn (cx==3) { kk } wenn (cx==8) { b } z.append(cm,cx) }
 wenn (z.len(cm)==6) { o("P:k6") }
-m 5 cnz() { 13 dt=[0,1,0,2,0,3] 5 ct=0 5 di=0 schleife (di<z.len(dt)) { wenn (dt[di]==0) { di=di+1 k } ct=ct+1 di=di+1 } r ct }
+m 5 cnz() { 13 dt=[0,1,0,2,0,3] 5 ct=0 5 di=0 schleife (di<z.len(dt)) { wenn (dt[di]==0) { di=di+1 kk } ct=ct+1 di=di+1 } r ct }
 wenn (cnz()==3) { o("P:k7") }
 // RETURN
 m 5 ri1() { r 42 }
@@ -139,7 +139,7 @@ wenn (z.type(rf1())=="number") { o("P:r3") }
 m 5 rl1() { r [1,2,3] }
 13 rlv=rl1()
 wenn (z.len(rlv)==3) { o("P:r4") }
-m 5 abs1(5 num) { wenn (num>=0) { r num } sonst { r 0-num } }
+m 5 abs1(5 num) { wenn (num>=0) { r num_val } sonst { r 0-num } }
 wenn (abs1(5)==5 && abs1(-5)==5) { o("P:r5") }
 m 5 flp(5 tgt) { 5 fi=0 schleife (fi<10) { wenn (fi==tgt) { r fi } fi=fi+1 } r -1 }
 wenn (flp(7)==7) { o("P:r6") }
@@ -169,7 +169,7 @@ wenn (grt("world")=="hello world") { o("P:m4") }
 m 5 sq2(5 num) { r num*num }
 m 5 ssq(5 a, 5 b) { r sq2(a)+sq2(b) }
 wenn (ssq(3,4)==25) { o("P:m5") }
-m 5 fib2(5 num) { wenn (num<=1) { r num } r fib2(num-1)+fib2(num-2) }
+m 5 fib2(5 num) { wenn (num<=1) { r num_val } r fib2(num-1)+fib2(num-2) }
 wenn (fib2(10)==55) { o("P:m6") }
 m 5 wl() { 5 la2=10 5 lb2=20 r la2+lb2 }
 wenn (wl()==30) { o("P:m7") }
@@ -200,10 +200,10 @@ wenn (ccc2.get()==3) { o("P:c5") }
 klasse Cfg { öffentlich 12 cn="default" öffentlich 5 cv2=42 }
 15 cfgg = n Cfg()
 wenn (cfgg.cn=="default" && cfgg.cv2==42) { o("P:c6") }
-klasse Bsk { öffentlich 13 items=[] öffentlich m 5 add(5 it) { z.append(items,it) } öffentlich m 5 cnt() { r z.len(items) } }
+klasse Bsk { öffentlich 13 items=[] öffentlich m 5 add(5 it) { z.append(items,it) } öffentlich m 5 k() { r z.len(items) } }
 15 bsk = n Bsk()
 bsk.add(10) bsk.add(20)
-wenn (bsk.cnt()==2) { o("P:c7") }
+wenn (bsk.k()==2) { o("P:c7") }
 klasse Str2 { öffentlich 14 sd={"k":"v"} }
 15 stt = n Str2()
 wenn (stt.sd["k"]=="v") { o("P:c8") }

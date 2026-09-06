@@ -1,6 +1,6 @@
 #alphabet<en>
 // Edge Case 45: Nested loop 5 deep
 5 count = 0
-5 i = 0
-l (i < 2) { 5 j = 0 l (j < 2) { 5 k = 0 l (k < 2) { 5 l2 = 0 l (l2 < 2) { 5 m = 0 l (m < 2) { count = count + 1 m = m + 1 } l2 = l2 + 1 } k = k + 1 } j = j + 1 } i = i + 1 }
+5 idx = 0
+l (idx < 2) { 5 jv = 0 l (jv < 2) { 5 kk = 0 l (kk < 2) { 5 l2 = 0 l (l2 < 2) { 5 mv = 0 l (mv < 2) { count = count + 1 mv = mv + 1 } l2 = l2 + 1 } kk = kk + 1 } jv = jv + 1 } idx = idx + 1 }
 i (count == 32) { z.o("PASS:ctrl_45_deep_loop") } e { z.o("FAIL:ctrl_45_deep_loop count=" + str(count)) }

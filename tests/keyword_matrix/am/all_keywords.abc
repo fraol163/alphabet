@@ -15,7 +15,7 @@
 ከሆነ (z.len(lt) == 3) { o("P:if10") }
 14 mp = {"k":100}
 ከሆነ (z.has(mp,"k")) { o("P:if11") }
-ዘዴ 5 ispos(5 num) { r num > 0 }
+ዘዴ 5 ispos(5 num) { r num_val > 0 }
 ከሆነ (ispos(5)) { o("P:if12") }
 ከሆነ (v1 == 10) { o(f"P:if13 v={v1}") }
 ከሆነ (v1 == 10) o("P:if14")
@@ -202,10 +202,10 @@ ccc2.inc() ccc2.inc() ccc2.inc()
 ክፍል Cfg { ግልጽ 12 cn="default" ግልጽ 5 cv2=42 }
 15 cfgg = num Cfg()
 ከሆነ (cfgg.cn=="default" && cfgg.cv2==42) { o("P:c6") }
-ክፍል Bsk { ግልጽ 13 items=[] ግልጽ ዘዴ 5 add(5 it) { z.append(items,it) } ግልጽ ዘዴ 5 cnt() { ተመለስ z.len(items) } }
+ክፍል Bsk { ግልጽ 13 items=[] ግልጽ ዘዴ 5 add(5 it) { z.append(items,it) } ግልጽ ዘዴ 5 k() { ተመለስ z.len(items) } }
 15 bsk = num Bsk()
 bsk.add(10) bsk.add(20)
-ከሆነ (bsk.cnt()==2) { o("P:c7") }
+ከሆነ (bsk.k()==2) { o("P:c7") }
 ክፍል Str { ግልጽ 14 sd={"k":"v"} }
 15 stt = num Str()
 ከሆነ (stt.sd["k"]=="v") { o("P:c8") }

@@ -26,7 +26,12 @@ m 12 platform_name() {
 }
 
 m 12 platform_arch() {
-  r "x86_64"
+  5 arch = z.exec("uname -m")
+  i (z.z.len(arch) > 0) { r arch }
+  // Fallback for Windows or environments without uname.
+  5 proc_arch = z.env("PROCESSOR_ARCHITECTURE")
+  i (!z.is_null(proc_arch)) { r proc_arch }
+  r "unknown"
 }
 
 m 11 is_linux() {

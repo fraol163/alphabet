@@ -1,6 +1,6 @@
 # Alphabet Language Reference
 
-**Complete reference for Alphabet v2.3.5**
+**Complete reference for Alphabet v2.3.6**
 
 ---
 

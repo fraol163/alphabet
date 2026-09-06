@@ -1,4 +1,4 @@
-#alphabet<golden_test>
+#alphabet<en>
 
 5 x = 10
 i (x > 5) {

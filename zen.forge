@@ -1,0 +1,44 @@
+language Zen {
+    version: "1.0.0"
+    extension: ".zen"
+    paradigm: "bytecode"
+    types: "dynamic"
+    author: "Alphabet Forge"
+
+    header {
+        style: "shebang"
+        prefix: "#!/usr/bin/env zen"
+        required: false
+    }
+
+    banner {
+        art: """
+______            
+|___  /            
+   / /  ___ _ __   
+  / /  / _ \ '_ \  
+./ /__|  __/ | | | 
+\_____/\___|_| |_| 
+"""
+        color: "green"
+        tagline: "Minimalist, Expressive Language"
+        show_on: ["repl", "version", "help"]
+    }
+
+    tokens {
+        keyword "let"    => VAR
+        keyword "echo"   => PRINT
+        keyword "when"   => IF
+        keyword "else"   => ELSE
+        keyword "loop"   => WHILE
+        keyword "fn"     => FUNCTION
+        keyword "return" => RETURN
+    }
+
+    grammar {
+        rule Program   = Statement*
+        rule Statement = VarDecl | PrintStmt | IfStmt | ExprStmt
+        rule VarDecl   = "let" Identifier "=" Expr ";"
+        rule PrintStmt = "echo" "(" Expr ")" ";"
+    }
+}

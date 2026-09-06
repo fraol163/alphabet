@@ -583,7 +583,7 @@ TEST_CASE("F-string multiple variables", "[vm][fstring]") {
 }
 
 // ============================================================================
-// New v2.3.5 Tests — Shorthand Builtins, Type Names, Null-safe, Range
+// New v2.3.6 Tests — Shorthand Builtins, Type Names, Null-safe, Range
 // ============================================================================
 
 TEST_CASE("Named type string variable", "[vm][types]") {
@@ -690,3 +690,62 @@ TEST_CASE("Ternary operator false branch", "[vm][ternary]") {
         test::run_capture("#alphabet<en>\n5 x = 3\nlet result = x > 5 ? \"big\" : \"small\"\nz.o(result)");
     REQUIRE(output == "small\n");
 }
+
+TEST_CASE("Null arithmetic propagates null as no value pass-through", "[vm][null][arithmetic]") {
+    std::string output = test::run_capture(
+        "#alphabet<en>\n"
+        "5 a = null + 5\n"
+        "5 b = 5 + null\n"
+        "5 c = null - 5\n"
+        "5 d = 5 - null\n"
+        "5 e = null * 5\n"
+        "5 f = 5 * null\n"
+        "5 g = null / 5\n"
+        "5 h = 5 / null\n"
+        "5 i = null % 5\n"
+        "5 j = 5 % null\n"
+        "5 k = null + null\n"
+        "z.o(a)\n"
+        "z.o(b)\n"
+        "z.o(c)\n"
+        "z.o(d)\n"
+        "z.o(e)\n"
+        "z.o(f)\n"
+        "z.o(g)\n"
+        "z.o(h)\n"
+        "z.o(i)\n"
+        "z.o(j)\n"
+        "z.o(k)\n");
+    REQUIRE(output == "null\nnull\nnull\nnull\nnull\nnull\nnull\nnull\nnull\nnull\nnull\n");
+}
+
+TEST_CASE("Null comparisons with numbers return false for relational ops", "[vm][null][comparison]") {
+    std::string output = test::run_capture(
+        "#alphabet<en>\n"
+        "5 lt1 = null < 5\n"
+        "5 lt2 = 5 < null\n"
+        "5 gt1 = null > 5\n"
+        "5 gt2 = 5 > null\n"
+        "5 le1 = null <= 5\n"
+        "5 le2 = 5 <= null\n"
+        "5 ge1 = null >= 5\n"
+        "5 ge2 = 5 >= null\n"
+        "5 eq1 = null == 5\n"
+        "5 eq2 = null == null\n"
+        "5 ne1 = null != 5\n"
+        "5 ne2 = null != null\n"
+        "z.o(lt1)\n"
+        "z.o(lt2)\n"
+        "z.o(gt1)\n"
+        "z.o(gt2)\n"
+        "z.o(le1)\n"
+        "z.o(le2)\n"
+        "z.o(ge1)\n"
+        "z.o(ge2)\n"
+        "z.o(eq1)\n"
+        "z.o(eq2)\n"
+        "z.o(ne1)\n"
+        "z.o(ne2)\n");
+    REQUIRE(output == "false\nfalse\nfalse\nfalse\nfalse\nfalse\nfalse\nfalse\nfalse\ntrue\ntrue\nfalse\n");
+}
+

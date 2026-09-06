@@ -1,61 +1,61 @@
 #alphabet<en>
 @ factorial, fibonacci, gcd, lcm, is_prime, prime_factors, fibonacci_sequence, collatz
 
-m 5 factorial(5 n) {
-  i (n <= 1) { r 1 }
-  r n * factorial(n - 1)
+m 5 factorial(5 num) {
+  idx_a (num <= 1) { r 1 }
+  r num * factorial(num - 1)
 }
 
-m 5 fibonacci(5 n) {
-  i (n <= 0) { r 0 }
-  i (n == 1) { r 1 }
+m 5 fibonacci(5 num) {
+  idx_a (num <= 0) { r 0 }
+  idx_a (num == 1) { r 1 }
   5 a = 0
-  5 b = 1
-  l (5 i = 2 : i <= n : i = i + 1) {
-    5 temp = a + b
-    a = b
-    b = temp
+  5 bb = 1
+  l (5 idx_a = 2 : idx_a <= num : idx_a = idx_a + 1) {
+    5 temp = a + bb
+    a = bb
+    bb = temp
   }
-  r b
+  r bb
 }
 
-m 5 gcd(5 a, 5 b) {
-  l (b != 0) {
-    5 temp = b
-    b = a % b
+m 5 gcd(5 a, 5 bb) {
+  l (bb != 0) {
+    5 temp = bb
+    bb = a % bb
     a = temp
   }
   r a
 }
 
-m 5 lcm(5 a, 5 b) {
-  r (a * b) / gcd(a, b)
+m 5 lcm(5 a, 5 bb) {
+  r (a * bb) / gcd(a, bb)
 }
 
-m 11 is_prime(5 n) {
-  i (n < 2) { r 0 }
-  i (n == 2) { r 1 }
-  i (n % 2 == 0) { r 0 }
-  5 i = 3
-  l (i * i <= n) {
-    i (n % i == 0) { r 0 }
-    i = i + 2
+m 11 is_prime(5 num) {
+  idx_a (num < 2) { r 0 }
+  idx_a (num == 2) { r 1 }
+  idx_a (num % 2 == 0) { r 0 }
+  5 idx_a = 3
+  l (idx_a * idx_a <= num) {
+    idx_a (num % idx_a == 0) { r 0 }
+    idx_a = idx_a + 2
   }
   r 1
 }
 
-m 13 prime_factors(5 n) {
+m 13 prime_factors(5 num) {
   5 factors = []
   5 d = 2
-  l (d * d <= n) {
-    l (n % d == 0) {
+  l (d * d <= num) {
+    l (num % d == 0) {
       append(factors, d)
-      n = n / d
+      num = num / d
     }
     d = d + 1
   }
-  i (n > 1) {
-    append(factors, n)
+  idx_a (num > 1) {
+    append(factors, num)
   }
   r factors
 }
@@ -63,25 +63,26 @@ m 13 prime_factors(5 n) {
 m 13 fibonacci_sequence(5 count) {
   5 seq = []
   5 a = 0
-  5 b = 1
-  l (5 i = 0 : i < count : i = i + 1) {
+  5 bb = 1
+  l (5 idx_a = 0 : idx_a < count : idx_a = idx_a + 1) {
     append(seq, a)
-    5 temp = a + b
-    a = b
-    b = temp
+    5 temp = a + bb
+    a = bb
+    bb = temp
   }
   r seq
 }
 
-m 13 collatz(5 n) {
-  5 seq = [n]
-  l (n != 1) {
-    i (n % 2 == 0) {
-      n = n / 2
+m 13 collatz(5 num) {
+  5 seq = [num]
+  l (num != 1) {
+    5 i = num % 2
+    i (i == 0) {
+      num = num / 2
     } e {
-      n = n * 3 + 1
+      num = num * 3 + 1
     }
-    append(seq, n)
+    append(seq, num)
   }
   r seq
 }

@@ -1,5 +1,5 @@
 name: alphabet
-version: '2.3.5'
+version: '2.3.6'
 summary: Multilingual programming language
 description: |
   Alphabet is a multilingual programming language that lets you code
@@ -13,14 +13,13 @@ base: core22
 parts:
   alphabet:
     plugin: cmake
-    source: https://github.com/alphabet-lang/alphabet.git
-    source-tag: v2.3.5
+    source: https://github.com/fraol163/alphabet.git
+    source-tag: v2.3.6
     cmake-parameters:
       - -DCMAKE_BUILD_TYPE=Release
     build-packages:
       - g++
       - cmake
-      - libnlohmann-json-dev
     stage-packages:
       - libstdc++6
 

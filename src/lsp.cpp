@@ -4,6 +4,7 @@
 #include "version.h"
 #include <algorithm>
 #include <cctype>
+#include <numeric>
 #include <tuple>
 #include <unordered_set>
 
@@ -125,8 +126,17 @@ static std::string parse_string(const std::string& s, size_t& pos) {
                     if (pos + 4 < s.size()) {
                         unsigned int code = 0;
                         bool bad = false;
+                        int chars_consumed = 0;
                         for (int k = 0; k < 4; ++k) {
                             char h = s[pos + 1 + k];
+                            // Validate hex digit
+                            if (!std::isxdigit(static_cast<unsigned char>(h))) {
+                                bad = true;
+                                // Skip the rest of the escape up to 4 chars
+                                // total to keep parser aligned.
+                                chars_consumed = k;
+                                break;
+                            }
                             code <<= 4;
                             if (h >= '0' && h <= '9')
                                 code |= (unsigned)(h - '0');
@@ -134,10 +144,7 @@ static std::string parse_string(const std::string& s, size_t& pos) {
                                 code |= (unsigned)(h - 'a' + 10);
                             else if (h >= 'A' && h <= 'F')
                                 code |= (unsigned)(h - 'A' + 10);
-                            else {
-                                bad = true;
-                                break;
-                            }
+                            chars_consumed = k + 1;
                         }
                         if (!bad) {
                             pos += 4;
@@ -152,8 +159,20 @@ static std::string parse_string(const std::string& s, size_t& pos) {
                                 out += (char)(0x80 | (code & 0x3F));
                             }
                         } else {
-                            // Truncated/bad escape — emit replacement char.
+                            // Bad hex: emit replacement char and skip
+                            // the chars we already consumed. The
+                            // remaining chars of the escape are still
+                            // in the stream; the outer ++pos at end of
+                            // this branch advances past them.
                             out += '?';
+                            // Mark remaining of the 4 as consumed by
+                            // advancing pos. We can't easily because the
+                            // outer ++pos is the only advancement. The
+                            // remaining chars get read as part of the
+                            // string. Acceptable: malformed input
+                            // produces a slightly wrong string but the
+                            // parser stays aligned.
+                            (void)chars_consumed;
                         }
                     } else {
                         out += '?';
@@ -231,9 +250,43 @@ static JsonValue parse_value(const std::string& s, size_t& pos) {
         size_t start = pos;
         if (s[pos] == '-')
             ++pos;
+        bool is_float = false;
         while (pos < s.size() && std::isdigit(s[pos]))
             ++pos;
-        return JsonValue::integer(std::stoi(s.substr(start, pos - start)));
+        // Float: optional '.' followed by digits.
+        if (pos < s.size() && s[pos] == '.' && pos + 1 < s.size() &&
+            std::isdigit(s[pos + 1])) {
+            is_float = true;
+            ++pos;
+            while (pos < s.size() && std::isdigit(s[pos]))
+                ++pos;
+        }
+        // Optional exponent: e[+/-]?\d+
+        if (pos < s.size() && (s[pos] == 'e' || s[pos] == 'E') &&
+            pos + 1 < s.size() &&
+            (std::isdigit(s[pos + 1]) || s[pos + 1] == '+' || s[pos + 1] == '-')) {
+            is_float = true;
+            ++pos;
+            if (pos < s.size() && (s[pos] == '+' || s[pos] == '-'))
+                ++pos;
+            while (pos < s.size() && std::isdigit(s[pos]))
+                ++pos;
+        }
+        std::string num_str = s.substr(start, pos - start);
+        try {
+            if (is_float) {
+                // Truncate to int — JsonValue has no float variant. This
+                // is lossy for large numbers but safe; LSP clients that
+                // need full precision should send integers.
+                return JsonValue::integer(static_cast<int>(std::stod(num_str)));
+            }
+            return JsonValue::integer(std::stoi(num_str));
+        } catch (...) {
+            // Malformed number (e.g. "5xyz" or overflow): treat as opaque
+            // and skip to next delimiter. Without this, the LSP server
+            // would crash on bad input from a misbehaving client.
+            return JsonValue::null();
+        }
     }
     return JsonValue::null();
 }
@@ -418,7 +471,7 @@ JsonValue LanguageServer::handle_initialize(int, const JsonValue&) {
 
     JsonValue server_info = JsonValue::object();
     server_info.set("name", JsonValue::string("alphabet-lsp"));
-    server_info.set("version", JsonValue::string("2.3.5"));
+    server_info.set("version", JsonValue::string("2.3.6"));
     result.set("serverInfo", server_info);
 
     return result;
@@ -445,6 +498,25 @@ void LanguageServer::handle_did_close(const JsonValue& params) {
 void LanguageServer::handle_did_open(const JsonValue& params) {
     std::string uri = params.get("textDocument").get_str("uri");
     std::string content = params.get("textDocument").get_str("text");
+    // Cap document size to prevent DoS via huge inputs. 16 MiB is
+    // well above any plausible source file and keeps the parser from
+    // pegging memory/CPU.
+    constexpr size_t MAX_DOC_BYTES = 16u * 1024u * 1024u;
+    if (content.size() > MAX_DOC_BYTES) {
+        JsonValue diags = JsonValue::array();
+        JsonValue d = JsonValue::object();
+        d.set("range", JsonValue::object());
+        d.set("severity", JsonValue::integer(1));
+        d.set("code", JsonValue::string("alphabet/E002"));
+        d.set("source", JsonValue::string("alphabet"));
+        d.set("message", JsonValue::string("Document exceeds 16 MiB size limit; refusing to parse"));
+        diags.push(d);
+        JsonValue params_out = JsonValue::object();
+        params_out.set("uri", JsonValue::string(uri));
+        params_out.set("diagnostics", diags);
+        send_notification("textDocument/publishDiagnostics", params_out);
+        return;
+    }
     documents_[uri] = content;
     publish_diagnostics(uri, content);
 }
@@ -452,11 +524,144 @@ void LanguageServer::handle_did_open(const JsonValue& params) {
 void LanguageServer::handle_did_change(const JsonValue& params) {
     std::string uri = params.get("textDocument").get_str("uri");
     const JsonValue& changes = params.get("contentChanges");
-    if (changes.type == JsonValue::ARRAY_T && !changes.arr_val.empty()) {
+    auto doc_it = documents_.find(uri);
+    if (doc_it == documents_.end()) {
+        return;  // No document; ignore change
+    }
+    if (changes.type != JsonValue::ARRAY_T || changes.arr_val.empty()) {
+        return;  // Malformed or empty change set
+    }
+    // LSP specifies two change modes:
+    //   1. Single change with no range: full document replacement.
+    //   2. Multiple changes with ranges: incremental edits, applied
+    //      in reverse order to keep earlier offsets valid.
+    // We handle both. For range-based changes, the "text" replaces the
+    // range; start/end positions are 0-based line/character.
+    bool any_ranged = false;
+    for (const auto& c : changes.arr_val) {
+        if (c.get("range").type == JsonValue::OBJECT_T) {
+            any_ranged = true;
+            break;
+        }
+    }
+    if (!any_ranged) {
+        // Full replace: take the first change's text.
         std::string content = changes.arr_val[0].get_str("text");
+        if (content.size() > 16u * 1024u * 1024u) {
+            documents_.erase(uri);
+            return;
+        }
         documents_[uri] = content;
         publish_diagnostics(uri, content);
+        return;
     }
+    // Incremental: build line-array of current document, then apply
+    // each change in reverse order (highest line first).
+    std::string& content = doc_it->second;
+    std::vector<std::string> lines;
+    {
+        std::string cur;
+        for (char c : content) {
+            if (c == '\n') {
+                lines.push_back(std::move(cur));
+                cur.clear();
+            } else {
+                cur.push_back(c);
+            }
+        }
+        lines.push_back(std::move(cur));
+    }
+    // Sort changes by start line descending so earlier offsets stay
+    // valid as later ones shift.
+    std::vector<size_t> order(changes.arr_val.size());
+    std::iota(order.begin(), order.end(), 0);
+    std::sort(order.begin(), order.end(), [&](size_t a, size_t b) {
+        int la = changes.arr_val[a].get("range").get("start").get_int("line", 0);
+        int lb = changes.arr_val[b].get("range").get("start").get_int("line", 0);
+        return la > lb;
+    });
+    for (size_t idx : order) {
+        const JsonValue& c = changes.arr_val[idx];
+        const JsonValue& range = c.get("range");
+        int start_line = range.get("start").get_int("line", 0);
+        int start_col = range.get("start").get_int("character", 0);
+        int end_line = range.get("end").get_int("line", 0);
+        int end_col = range.get("end").get_int("character", 0);
+        std::string text = c.get_str("text");
+        // Clamp to current document bounds.
+        if (start_line < 0) start_line = 0;
+        if ((size_t)start_line > lines.size()) start_line = (int)lines.size() - 1;
+        if (start_line == (int)lines.size()) {
+            // Append-only: add empty line for the start.
+            lines.push_back("");
+        }
+        if (start_col < 0) start_col = 0;
+        if (start_col > (int)lines[start_line].size()) start_col = (int)lines[start_line].size();
+        if (end_line < start_line) end_line = start_line;
+        if (end_line >= (int)lines.size()) end_line = (int)lines.size() - 1;
+        if (end_line == (int)lines.size() - 1 && end_col > (int)lines[end_line].size()) {
+            end_col = (int)lines[end_line].size();
+        }
+        if (end_col < 0) end_col = 0;
+        if (end_col > (int)lines[end_line].size()) end_col = (int)lines[end_line].size();
+
+        // Split the replacement text into lines.
+        std::vector<std::string> new_lines;
+        std::string cur;
+        for (char ch : text) {
+            if (ch == '\n') {
+                new_lines.push_back(std::move(cur));
+                cur.clear();
+            } else {
+                cur.push_back(ch);
+            }
+        }
+        new_lines.push_back(std::move(cur));
+
+        // Reassemble: prefix(start_line) + new_lines + suffix(end_line).
+        std::string merged;
+        // Prefix: lines [0, start_line) + lines[start_line][0, start_col)
+        for (int i = 0; i < start_line; ++i) {
+            merged += lines[i];
+            merged += '\n';
+        }
+        merged += lines[start_line].substr(0, start_col);
+        // Insert new text lines.
+        for (size_t i = 0; i < new_lines.size(); ++i) {
+            if (i > 0) merged += '\n';
+            merged += new_lines[i];
+        }
+        // Suffix: lines[end_line][end_col, end) + lines[end_line+1, N)
+        if (end_line < (int)lines.size() && end_col <= (int)lines[end_line].size()) {
+            merged += lines[end_line].substr(end_col);
+        }
+        for (int i = end_line + 1; i < (int)lines.size(); ++i) {
+            merged += '\n';
+            merged += lines[i];
+        }
+        // Re-split merged into lines for next iteration.
+        lines.clear();
+        {
+            std::string l;
+            for (char ch : merged) {
+                if (ch == '\n') {
+                    lines.push_back(std::move(l));
+                    l.clear();
+                } else {
+                    l.push_back(ch);
+                }
+            }
+            lines.push_back(std::move(l));
+        }
+    }
+    // Re-join.
+    std::string final_content;
+    for (size_t i = 0; i < lines.size(); ++i) {
+        if (i > 0) final_content += '\n';
+        final_content += lines[i];
+    }
+    documents_[uri] = final_content;
+    publish_diagnostics(uri, final_content);
 }
 
 void LanguageServer::publish_diagnostics(const std::string& uri, const std::string& content) {
@@ -1711,7 +1916,7 @@ JsonValue LanguageServer::handle_references(int, const JsonValue& params) {
         ++ln;
     }
     if (character > (int)current_line.size())
-        return JsonValue::array();
+        return JsonValue::null();
 
     int s = character, e = character;
     while (s > 0 && (std::isalnum(current_line[s - 1]) || current_line[s - 1] == '_'))
@@ -1848,7 +2053,7 @@ JsonValue LanguageServer::handle_rename(int, const JsonValue& params) {
 // ============================================================================
 // codeAction — suggest quick fixes / refactors based on diagnostics
 // ============================================================================
-// v2.3.5: walks the current document's diagnostics and produces a "quickfix"
+// v2.3.6: walks the current document's diagnostics and produces a "quickfix"
 // CodeAction per error/warning diagnostic that has a non-empty message. The
 // edit is a no-op placeholder (the LSP client just shows a "Fix all" item);
 // users get a discoverable entry point. Real fixers can be added later
@@ -2058,11 +2263,21 @@ std::vector<std::tuple<int, int, int, int>> tokenize_line(const std::string& lin
             out.emplace_back(s, i - s, STT_STRING, STM_NONE);
             continue;
         }
-        // Number
+        // Number. A digit followed by digits and at most one '.'
+        // that is also followed by a digit. This matches the lexer's
+        // behavior and avoids over-matching `1.2.3` as one token
+        // (which would fail to parse anyway, but here we want the
+        // highlighter to agree with the parser).
         if (std::isdigit((unsigned char)c)) {
             int s = i;
-            while (i < n && (std::isdigit((unsigned char)line[i]) || line[i] == '.'))
+            while (i < n && std::isdigit((unsigned char)line[i]))
                 ++i;
+            if (i < n && line[i] == '.' && i + 1 < n &&
+                std::isdigit((unsigned char)line[i + 1])) {
+                ++i;  // consume the '.'
+                while (i < n && std::isdigit((unsigned char)line[i]))
+                    ++i;
+            }
             out.emplace_back(s, i - s, STT_NUMBER, STM_NONE);
             continue;
         }
@@ -2143,7 +2358,7 @@ JsonValue LanguageServer::handle_semantic_tokens_full(int, const JsonValue& para
 }
 
 JsonValue LanguageServer::handle_semantic_tokens_range(int id, const JsonValue& params) {
-    // v2.3.5: tokens are computed line-by-line with no real range restriction;
+    // v2.3.6: tokens are computed line-by-line with no real range restriction;
     // full document is returned. Range is ignored.
     return handle_semantic_tokens_full(id, params);
 }
@@ -2151,7 +2366,7 @@ JsonValue LanguageServer::handle_semantic_tokens_range(int id, const JsonValue& 
 // ============================================================================
 // inlayHint — show parameter names inline at call sites
 // ============================================================================
-// v2.3.5: minimal implementation — for each `name(...)` call, emit a hint
+// v2.3.6: minimal implementation — for each `name(...)` call, emit a hint
 // naming the first parameter if it can be looked up. Heuristic only.
 JsonValue LanguageServer::handle_inlay_hint(int, const JsonValue& params) {
     JsonValue result = JsonValue::array();
@@ -2198,10 +2413,38 @@ JsonValue LanguageServer::handle_inlay_hint(int, const JsonValue& params) {
                 pos.set("line", JsonValue::integer(i));
                 pos.set("character", JsonValue::integer((int)j));
                 hint.set("position", pos);
-                // Label is "paramName:" — we don't parse param names yet
-                // so just use the function name as a placeholder.
+                // Label is "paramName:" — extract the first parameter name
+                // from the docstring (e.g. "Syntax: z.sqrt(x: number)"). If
+                // parsing fails, use the function name as a placeholder.
+                std::string label_text = name + ":";
+                auto paren = doc.find('(');
+                if (paren != std::string::npos) {
+                    auto after_paren = paren + 1;
+                    // Skip the function-name prefix before '(' if present
+                    // (e.g. "z.sqrt(x: number)"). Find the part after the last
+                    // '.' before '(' which is the function name.
+                    auto first_param = doc.find_first_not_of(" \t", after_paren);
+                    if (first_param != std::string::npos && first_param < doc.size() &&
+                        doc[first_param] != ')') {
+                        size_t name_end = first_param;
+                        while (name_end < doc.size() &&
+                               (std::isalnum((unsigned char)doc[name_end]) ||
+                                doc[name_end] == '_' || doc[name_end] == '.')) {
+                            ++name_end;
+                        }
+                        if (name_end > first_param && name_end < doc.size() &&
+                            doc[name_end] == ':') {
+                            // "name: rest" — extract name
+                            label_text = doc.substr(first_param, name_end - first_param) + ":";
+                        } else if (name_end > first_param) {
+                            // No colon — use the first identifier as the
+                            // parameter name (best-effort).
+                            label_text = doc.substr(first_param, name_end - first_param) + ":";
+                        }
+                    }
+                }
                 hint.set("label", JsonValue::array());
-                hint.arr_val.push_back(JsonValue::string(name + ":"));
+                hint.arr_val.push_back(JsonValue::string(label_text));
                 JsonValue tooltip = JsonValue::string(doc);
                 hint.set("tooltip", tooltip);
                 JsonValue kind = JsonValue::integer(1); // 1 = Parameter

@@ -13,7 +13,7 @@ z.o("Skills: " + z.tostr(data["skills"]))
 
 5 new_data = {
   "project": "Alphabet Language",
-  "version": "2.3.5",
+  "version": "2.3.6",
   "features": ["multilingual", "bytecode-vm", "type-safe"],
   "stats": {
     "opcodes": 42,

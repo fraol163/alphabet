@@ -31,9 +31,9 @@ m 5 bench_loop_sum() {
 }
 
 m 5 bench_string_concat() {
-  5 s = ""
+  12 s = ""
   l (5 i = 0 : i < 1000 : i = i + 1) {
-    s = s + "a"
+    12 s = s + "a"
   }
   r z.len(s)
 }
@@ -56,4 +56,4 @@ benchmark("List ops 1K", bench_list_ops, 100)
 z.o("\n--- Comparison ---")
 5 fib_time = benchmark("Fibonacci", bench_fibonacci, 10)
 5 loop_time = benchmark("Loop", bench_loop_sum, 10)
-z.o("Fibonacci is " + z.tostr(fib_time / loop_time) + "x slower than loop")
+i (loop_time > 0) { z.o("Fibonacci is " + z.tostr(fib_time / loop_time) + "x slower than loop") } e { z.o("Benchmarks too fast to measure on this hardware") }

@@ -21,10 +21,10 @@ z.o("PASS:try_s7")
 methode 11 safe_op() { versuchen { r 42 } fangen (error) { r 0 } }
 wenn (safe_op() == 42) { z.o("PASS:try_s8") }
 // S9: in loop
-5 cnt = 0
+5 kk = 0
 5 idx_a = 0
-schleife (idx_a < 3) { versuchen { cnt = cnt + 1 } fangen (error) { } idx_a = idx_a + 1 }
-wenn (cnt == 3) { z.o("PASS:try_s9") }
+schleife (idx_a < 3) { versuchen { kk = kk + 1 } fangen (error) { } idx_a = idx_a + 1 }
+wenn (kk == 3) { z.o("PASS:try_s9") }
 // S10: in class method
 klasse TryCls { öffentlich methode 11 safe() { versuchen { r 100 } fangen (error) { r 0 } } }
 15 tc = n TryCls()

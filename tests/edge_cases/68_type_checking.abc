@@ -1,5 +1,5 @@
 #alphabet<en>
-// Edge Case 68: Type checking (avoid keyword conflicts - n=new, x=import)
+// Edge Case 68: Type checking (avoid keyword conflicts - n_val=new, xv=idxmport)
 5 num = 42
 12 str_val = "hello"
 8 flt = 3.14

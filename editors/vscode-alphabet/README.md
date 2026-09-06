@@ -1,6 +1,6 @@
 # Alphabet Language — VS Code Extension
 
-Official VS Code support for the [Alphabet](https://github.com/fraol163/alphabet) programming language (v2.3.5).
+Official VS Code support for the [Alphabet](https://github.com/fraol163/alphabet) programming language (v2.3.6).
 
 ## ✨ Zero-install: works without the `alphabet` binary
 

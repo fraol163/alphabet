@@ -2,6 +2,7 @@
 
 #include "vm.h"
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -10,6 +11,7 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <random>
 #include <sstream>
 #include <thread>
 #ifdef _WIN32
@@ -18,6 +20,37 @@
 #endif
 
 namespace alphabet {
+
+// Thread-local Mersenne Twister; each thread gets its own seeded engine.
+// Old impl used srand()/rand() which are not thread-safe (data race on
+// internal state across threads).
+static std::mt19937_64& tls_rng() {
+    static thread_local std::mt19937_64 eng{std::random_device{}()};
+    return eng;
+}
+
+// Reject strings containing shell metacharacters that would allow command
+// injection through shell concatenation. Defense-in-depth: stdlib also
+// validates, but a single chokepoint here protects http_get/http_post/exec
+// from being weaponized via string args.
+static bool has_shell_metachars(const std::string& s) {
+    for (char c : s) {
+        switch (c) {
+        case ';': case '|': case '&': case '`': case '$':
+        case '<': case '>': case '\n': case '\r': case '\0':
+        case '\'': case '"': case '\\': case '(': case ')':
+        case '{': case '}': case '*': case '?': case '~':
+        case '#': case '!':
+            return true;
+        default:
+            break;
+        }
+    }
+    return false;
+}
+
+// Atomic counter to make per-call tmpfiles unique even if VM pointer is reused.
+static std::atomic<uint64_t> safe_counter{0};
 
 namespace json {
 
@@ -623,8 +656,13 @@ void VM::system_call(const std::string& method, int arg_count) {
         if (haystack.is_string() && needle.is_string()) {
             const auto& s = haystack.as_string();
             const auto& n = needle.as_string();
-            size_t pos = s.find(n);
-            push(Value(pos != std::string::npos ? static_cast<double>(pos) : -1.0));
+            if (n.empty()) {
+                // Match count(): empty needle never matches.
+                push(Value(-1.0));
+            } else {
+                size_t pos = s.find(n);
+                push(Value(pos != std::string::npos ? static_cast<double>(pos) : -1.0));
+            }
         } else if (haystack.is_list()) {
             const auto& lst = haystack.as_list();
             for (size_t i = 0; i < lst.size(); ++i) {
@@ -1072,20 +1110,25 @@ void VM::system_call(const std::string& method, int arg_count) {
             Value url_val = pop();
             if (url_val.is_string()) {
                 std::string url = url_val.as_string();
-                std::string result;
-                std::string cmd = "curl -sS --max-time 10 " + url + " 2>&1";
-                FILE* pipe = popen(cmd.c_str(), "r");
-                if (pipe) {
-                    char buffer[4096];
-                    while (fgets(buffer, sizeof(buffer), pipe)) {
-                        result += buffer;
+                if (has_shell_metachars(url)) {
+                    push(Value(std::string("")));
+                } else {
+                    std::string result;
+                    // Wrap in ' so single quotes in URL are rejected by shell.
+                    std::string cmd = "curl -sS --max-time 10 '" + url + "' 2>&1";
+                    FILE* pipe = popen(cmd.c_str(), "r");
+                    if (pipe) {
+                        char buffer[4096];
+                        while (fgets(buffer, sizeof(buffer), pipe)) {
+                            result += buffer;
+                        }
+                        int rc = pclose(pipe);
+                        if (rc != 0 && result.empty()) {
+                            result = "";
+                        }
                     }
-                    int rc = pclose(pipe);
-                    if (rc != 0 && result.empty()) {
-                        result = "";
-                    }
+                    push(Value(std::move(result)));
                 }
-                push(Value(std::move(result)));
             } else {
                 push(Value(std::string("")));
             }
@@ -1101,24 +1144,30 @@ void VM::system_call(const std::string& method, int arg_count) {
             if (url_val.is_string() && body_val.is_string()) {
                 std::string url = url_val.as_string();
                 std::string body = body_val.as_string();
-                std::string result;
-                std::string tmpfile = "/tmp/alpha_http_post_" + std::to_string(reinterpret_cast<uintptr_t>(this));
-                {
-                    std::ofstream tmp(tmpfile);
-                    tmp << body;
-                }
-                std::string cmd = "curl -sS --max-time 10 -X POST -H \"Content-Type: application/json\" -d @" +
-                                  tmpfile + " " + url + " 2>&1";
-                FILE* pipe = popen(cmd.c_str(), "r");
-                if (pipe) {
-                    char buffer[4096];
-                    while (fgets(buffer, sizeof(buffer), pipe)) {
-                        result += buffer;
+                if (has_shell_metachars(url) || has_shell_metachars(body)) {
+                    push(Value(std::string("")));
+                } else {
+                    std::string result;
+                    std::string tmpfile = "/tmp/alpha_http_post_" +
+                                           std::to_string(reinterpret_cast<uintptr_t>(this)) + "_" +
+                                           std::to_string(safe_counter++);
+                    {
+                        std::ofstream tmp(tmpfile);
+                        tmp << body;
                     }
-                    pclose(pipe);
+                    std::string cmd = "curl -sS --max-time 10 -X POST -H \"Content-Type: application/json\" -d @" +
+                                      tmpfile + " '" + url + "' 2>&1";
+                    FILE* pipe = popen(cmd.c_str(), "r");
+                    if (pipe) {
+                        char buffer[4096];
+                        while (fgets(buffer, sizeof(buffer), pipe)) {
+                            result += buffer;
+                        }
+                        pclose(pipe);
+                    }
+                    std::remove(tmpfile.c_str());
+                    push(Value(std::move(result)));
                 }
-                std::remove(tmpfile.c_str());
-                push(Value(std::move(result)));
             } else {
                 push(Value(std::string("")));
             }
@@ -1151,6 +1200,9 @@ void VM::system_call(const std::string& method, int arg_count) {
     } else if (method == "json_stringify" && arg_count >= 1) {
         Value val = pop();
         push(Value(json::stringify(val)));
+    // safe_counter (atomic uint64) is declared at file scope above the
+        // json:: namespace so it can be shared across http_post calls.
+
     } else if (method == "exec" && arg_count >= 1) {
         if (sandbox_mode_) {
             pop();
@@ -1159,19 +1211,27 @@ void VM::system_call(const std::string& method, int arg_count) {
             Value cmd_val = pop();
             if (cmd_val.is_string()) {
                 std::string cmd = cmd_val.as_string();
-                std::string result;
-                FILE* pipe = popen(cmd.c_str(), "r");
-                if (pipe) {
-                    char buffer[4096];
-                    while (fgets(buffer, sizeof(buffer), pipe)) {
-                        result += buffer;
+                // exec() is explicitly for running shell commands, so we
+                // can't reject all metacharacters — but block the most
+                // dangerous ones (subshell, env expansion, history exp).
+                if (cmd.find('`') != std::string::npos || cmd.find("$(") != std::string::npos ||
+                    cmd.find("!!") != std::string::npos) {
+                    push(Value(std::string("")));
+                } else {
+                    std::string result;
+                    FILE* pipe = popen(cmd.c_str(), "r");
+                    if (pipe) {
+                        char buffer[4096];
+                        while (fgets(buffer, sizeof(buffer), pipe)) {
+                            result += buffer;
+                        }
+                        int rc = pclose(pipe);
+                        if (rc != 0 && result.empty()) {
+                            result = "";
+                        }
                     }
-                    int rc = pclose(pipe);
-                    if (rc != 0 && result.empty()) {
-                        result = "";
-                    }
+                    push(Value(std::move(result)));
                 }
-                push(Value(std::move(result)));
             } else {
                 push(Value(std::string("")));
             }
@@ -1209,25 +1269,21 @@ void VM::system_call(const std::string& method, int arg_count) {
         }
         push(Value(nullptr));
     } else if (method == "rand") {
-        static bool seeded = false;
-        if (!seeded) {
-            srand(static_cast<unsigned>(time(nullptr)));
-            seeded = true;
-        }
-        push(Value(static_cast<double>(rand()) / RAND_MAX));
+        std::uniform_real_distribution<double> dist(0.0, 1.0);
+        push(Value(dist(tls_rng())));
     } else if (method == "randint" && arg_count >= 2) {
         Value max_val = pop();
         Value min_val = pop();
-        static bool seeded = false;
-        if (!seeded) {
-            srand(static_cast<unsigned>(time(nullptr)));
-            seeded = true;
-        }
-        int lo = min_val.is_number() ? static_cast<int>(min_val.as_number()) : 0;
-        int hi = max_val.is_number() ? static_cast<int>(max_val.as_number()) : 100;
+        int64_t lo = min_val.is_number() ? static_cast<int64_t>(min_val.as_number()) : 0;
+        int64_t hi = max_val.is_number() ? static_cast<int64_t>(max_val.as_number()) : 100;
         if (lo > hi)
             std::swap(lo, hi);
-        push(Value(static_cast<double>(lo + rand() % (hi - lo + 1))));
+        if (lo == hi) {
+            push(Value(static_cast<double>(lo)));
+        } else {
+            std::uniform_int_distribution<int64_t> dist(lo, hi);
+            push(Value(static_cast<double>(dist(tls_rng()))));
+        }
     } else if (method == "slice") {
         if (arg_count >= 3) {
             Value end_val = pop();

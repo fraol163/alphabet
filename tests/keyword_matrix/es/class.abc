@@ -21,7 +21,7 @@ si (pt.px == 10 && pt.py == 20) { z.o("PASS:class_s4") }
 clase MathUtil { público estático 11 add(11 num_a, 11 num_b) { r num_a + num_b } }
 si (MathUtil.add(3, 4) == 7) { z.o("PASS:class_s5") }
 // S6: method calling method
-clase Counter { público 5 cnt = 0 público método 11 increment() { cnt = cnt + 1 } público método 11 get_count() { r cnt } }
+clase Counter { público 5 kk = 0 público método 11 increment() { kk = kk + 1 } público método 11 get_count() { r kk } }
 15 cn = n Counter()
 cn.increment()
 cn.increment()

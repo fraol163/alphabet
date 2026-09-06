@@ -193,12 +193,6 @@ void ProjectManager::print_info(const ProjectConfig& config) {
     std::cout << "Test files: " << tests.size() << "\n";
 }
 
-std::map<std::string, std::string> ProjectManager::parse_toml(const std::string& content) {
-    std::map<std::string, std::string> result;
-    // Simple implementation — handled in load()
-    return result;
-}
-
 std::string ProjectManager::parse_section(const std::string& line) {
     if (line.size() >= 2 && line.front() == '[' && line.back() == ']') {
         return line.substr(1, line.size() - 2);

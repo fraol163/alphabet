@@ -1,6 +1,16 @@
 #alphabet<en>
 /// Mini Text Adventure
 /// Demonstrates: maps, state, functions, match/case
+///
+/// NOTE: This example is interactive and reads from stdin. To run it,
+/// pipe commands into it, e.g.:
+///   echo -e "look\ngo north\nlook\nquit" | alphabet text_adventure.abc
+/// Each command prints output. The example has a known issue where
+/// the `default` arm is parsed as a regular case (the parser treats
+/// `default` as a string literal rather than the special default
+/// marker) — so unknown commands are silently ignored instead of
+/// triggering the default branch. See parser.cpp:class_declaration
+/// for a similar fix.
 
 z.o("=== Mini Text Adventure ===")
 z.o("You wake up in a dark room...")

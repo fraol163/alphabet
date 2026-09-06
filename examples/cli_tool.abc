@@ -45,7 +45,7 @@ q (command) {
     z.o("Platform: " + z.env("OSTYPE"))
     z.o("User: " + z.env("USER"))
     z.o("Home: " + z.env("HOME"))
-    z.o("Alphabet: v2.3.5")
+    z.o("Alphabet: v2.3.6")
   }
   default: {
     z.o("Unknown command: " + command)

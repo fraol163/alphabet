@@ -5,6 +5,7 @@ on:
     types: [created]
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -76,6 +77,15 @@ jobs:
         run: |
           cd build
           cpack -G "${{ matrix.generator }}" -C Release
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: alphabet-${{ matrix.target }}
+          path: |
+            dist/*
+            build/alphabet-*.*
+          if-no-files-found: warn
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2

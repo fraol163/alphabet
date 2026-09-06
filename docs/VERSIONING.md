@@ -13,13 +13,13 @@ MAJOR.MINOR.PATCH
 
 ## Current Version
 
-**v2.3.5** — Released May 31, 2026
+**v2.3.6** — Released May 31, 2026
 
 ## Version History
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| v2.3.5 | 2026-05-31 | Closures, z.map/filter/reduce, ternary, error hints |
+| v2.3.6 | 2026-05-31 | Closures, z.map/filter/reduce, ternary, error hints |
 | v2.3.4 | 2026-05-28 | Visibility enforcement, do-while, named types, lambdas |
 | v2.3.3 | 2026-05-15 | REPL redesign, brace tracking, history |
 | v2.3.2 | 2026-05-01 | F-string expressions, match/case |
@@ -62,5 +62,5 @@ MAJOR.MINOR.PATCH
 
 ```bash
 alphabet --version
-# Alphabet 2.3.5 (Native C++)
+# Alphabet 2.3.6 (Native C++)
 ```

@@ -13,12 +13,16 @@ m 5 factorial(5 val) {
 }
 
 m 5 gcd(5 aa, 5 bb) {
-  l (bb != 0) {
-    5 tmp = bb
-    bb = aa % bb
-    aa = tmp
+  // Use locals instead of reassigning parameters (functional style).
+  // Note: `x` is the `import` keyword, so we use `aa1`/`bb1` instead.
+  5 aa1 = aa
+  5 bb1 = bb
+  l (bb1 != 0) {
+    5 tmp = bb1
+    bb1 = aa1 % bb1
+    aa1 = tmp
   }
-  r aa
+  r aa1
 }
 
 m 5 lcm(5 aa, 5 bb) {

@@ -396,13 +396,27 @@ StmtPtr Parser::class_declaration(bool is_abstract) {
     std::shared_ptr<Variable> superclass;
     std::vector<Variable> interfaces;
 
-    if (match({TokenType::EXTENDS})) {
+    if (match({TokenType::EXTENDS, TokenType::ABSTRACT})) {
         Token super_name = consume_identifier("Expect superclass or interface name.");
         superclass = std::make_shared<Variable>(super_name);
 
         while (match({TokenType::COMMA})) {
             Token if_name = consume_identifier("Expect interface name.");
             interfaces.emplace_back(if_name);
+        }
+    }
+
+    // After the class name, also accept `interface Name1, Name2, ...`
+    // to declare the class as implementing one or more interfaces.
+    // This is the class-body version of the top-level `interface`
+    // keyword and is needed for test cases like
+    // `classe Circle interface Drawable { ... }`.
+    if (match({TokenType::INTERFACE})) {
+        Token if_name = consume_identifier("Expect interface name.");
+        interfaces.emplace_back(if_name);
+        while (match({TokenType::COMMA})) {
+            Token more = consume_identifier("Expect interface name.");
+            interfaces.emplace_back(more);
         }
     }
 
@@ -420,10 +434,27 @@ StmtPtr Parser::class_declaration(bool is_abstract) {
                 if (visibility)
                     break;
                 visibility = advance();
+                // Continue rather than break so the loop also consumes
+                // translated-form suffixes (e.g. German `öffentliche` is
+                // tokenized as `v` + `e`; we need to consume the `e` so
+                // the next token is the method/field, not a stray ELSE).
+                continue;
             } else if (match({TokenType::STATIC})) {
                 if (is_static)
                     break;
                 is_static = true;
+                continue;
+            } else if (match({TokenType::ABSTRACT})) {
+                // `a name(...)` is a method or `a name;` is a field
+                // (abstract field). The keyword is consumed here; the
+                // downstream is-method/is-field branch decides what to
+                // do with it. We do NOT break here because translated
+                // forms like German `abstrakte` and Amharic `ሥር` produce
+                // a trailing `e` (else) or `ያለበለዚያ` that the loop would
+                // otherwise leave for the method/field branch and fail
+                // with "Expect method or field declaration". The loop's
+                // own fall-through handles the next token correctly.
+                continue;
             } else {
                 break;
             }
@@ -432,9 +463,15 @@ StmtPtr Parser::class_declaration(bool is_abstract) {
         if (match({TokenType::METHOD})) {
             methods.push_back(method(visibility, is_static));
         } else if (check(TokenType::NUMBER)) {
+            // Could be a field (`5 x = ...`) or a method with explicit
+            // return type (`5 name(args) { ... }`). Look ahead: if the
+            // token after the number is an identifier AND the token
+            // after *that* is LPAREN, treat as a method.
             size_t saved = current_;
             advance();
-            if (check(TokenType::METHOD)) {
+            if (check(TokenType::IDENTIFIER) &&
+                current_ + 1 < tokens_.size() &&
+                tokens_[current_ + 1].type == TokenType::LPAREN) {
                 current_ = saved;
                 methods.push_back(method(visibility, is_static));
             } else {
@@ -448,8 +485,12 @@ StmtPtr Parser::class_declaration(bool is_abstract) {
 
     consume(TokenType::RBRACE, "Expect '}' after class body.");
 
+    // Propagate the abstract flag to the ClassStmt so the compiler can
+    // set CompiledClass.is_abstract and the VM can refuse to instantiate
+    // abstract classes. Without this, top-level `a c Name {...}` was
+    // parsed correctly but the abstract flag was silently dropped.
     return std::make_shared<ClassStmt>(name, std::move(superclass), std::move(methods), std::move(fields),
-                                       std::move(interfaces));
+                                       std::move(interfaces), false, is_abstract);
 }
 
 FunctionStmt Parser::method(std::optional<Token> visibility, bool is_static, bool is_abstract) {
@@ -490,7 +531,23 @@ FunctionStmt Parser::method(std::optional<Token> visibility, bool is_static, boo
 }
 
 StmtPtr Parser::top_level_function() {
+    // Strip optional visibility modifiers that may precede a top-level
+    // function. These are no-ops outside a class body, but the keyword
+    // matrix tests use `public méthode ...` to demonstrate that
+    // visibility keywords also work in the translated form. Without
+    // this strip, the parser sees `public` as a bare identifier and
+    // fails with "Expect expression".
+    while (match({TokenType::PUBLIC, TokenType::PRIVATE, TokenType::STATIC, TokenType::ABSTRACT})) {
+    }
     std::optional<Token> return_type;
+
+    // The `m` METHOD keyword is also optional at the top level (e.g.
+    // `v 5 pub_fn()` works the same as `v m 5 pub_fn()`). The class
+    // body always requires `m`, but at top level the dispatch in
+    // statement() routes both forms here.
+    if (check(TokenType::METHOD)) {
+        advance();
+    }
 
     if (check(TokenType::NUMBER)) {
         return_type = advance();
@@ -544,10 +601,25 @@ StmtPtr Parser::var_statement(std::optional<Token> visibility, bool is_static) {
 
 StmtPtr Parser::const_statement() {
     Token const_token = previous();
+    // const supports the same syntax as var: optional type ID before
+    // the name. Without this, `constante 5 MAX = 100` (the French
+    // full-keyword test) fails because the parser sees `5` (NUMBER)
+    // instead of an identifier.
     Token type_id(TokenType::NUMBER, std::string_view("0"), 0, const_token.line);
-    Token name = consume_identifier("Expect variable name after 'const'.");
+    Token name;
+    if (check(TokenType::NUMBER)) {
+        type_id = advance();
+        name = consume_identifier("Expect variable name after type ID.");
+    } else {
+        // No type prefix: the first identifier IS the name, and the
+        // type is void (0). var_declaration handles this case, but
+        // here we keep the type_id="0" default so downstream code
+        // (the validator) accepts it.
+        name = consume_identifier("Expect variable name after 'const'.");
+    }
     consume(TokenType::EQUALS, "Expect '=' after const variable name.");
     ExprPtr initializer = expression();
+    (void)const_token;
     return std::make_shared<VarStmt>(type_id, name, std::move(initializer), std::nullopt, false, true);
 }
 
@@ -607,19 +679,83 @@ StmtPtr Parser::statement() {
         return std::make_shared<VarStmt>(type_id, name, std::move(initializer), std::nullopt);
     }
 
-    if (check(TokenType::NUMBER) || (is_identifier() && check_next_is_identifier())) {
-        if (get_type_keyword_id() >= 0 && current_ + 2 < tokens_.size() &&
-            tokens_[current_ + 2].type == TokenType::LPAREN) {
-            return top_level_function();
-        }
-        return var_statement();
-    }
+    // Method declarations at top level: `m name(args) { body }` and
+    // `5 m name(args) { body }` (with explicit return type). The METHOD
+    // keyword shares the `m` lexeme with the variable-name check below,
+    // so we must dispatch on it BEFORE the var-declaration path runs,
+    // otherwise `m cwd()` would be parsed as a variable declaration
+    // with `m` as the type ID and `cwd` as the variable name.
     if (check(TokenType::METHOD)) {
         if (current_ + 1 < tokens_.size() && tokens_[current_ + 1].type == TokenType::LPAREN) {
             return expression_statement();
         }
         advance();
         return top_level_function();
+    }
+
+    // Visibility/abstract modifiers at top level: `v m 5 pub_fn()`,
+    // `v 5 pub_fn()`, `a 5 area()`, etc. These are top-level
+    // function/method declarations with optional prefix modifiers.
+    // Without this dispatch the visibility token is treated as a
+    // bare identifier and we fall into `var_statement()` with
+    // "Expect variable name". The lookahead also routes the
+    // `v 5 x = ...` (visibility + var-decl) form to the var path
+    // by falling through (so we don't try to parse it as a
+    // function body). ABSTRACT is included here because the
+    // function form `a 5 area()` is a real pattern, but the
+    // following var-decl path below excludes ABSTRACT for the
+    // `a.aname` variable-usage case.
+    if (check(TokenType::PUBLIC) || check(TokenType::PRIVATE) || check(TokenType::STATIC) || check(TokenType::ABSTRACT)) {
+        bool looks_like_function = false;
+        size_t look = current_ + 1;
+        if (look < tokens_.size() && tokens_[look].type == TokenType::METHOD) {
+            looks_like_function = true;
+        } else if (look + 2 < tokens_.size() && tokens_[look].type == TokenType::NUMBER &&
+                   tokens_[look + 1].type == TokenType::IDENTIFIER &&
+                   tokens_[look + 2].type == TokenType::LPAREN) {
+            looks_like_function = true;
+        }
+        if (looks_like_function) {
+            return top_level_function();
+        }
+        // Otherwise fall through — the existing `check(NUMBER) ||
+        // (is_identifier() && check_next_is_identifier())` path
+        // handles `v 5 x = ...` as a var-decl with visibility.
+    }
+
+    // `v m 5 pub_fn()` and `v 5 pub_fn()` (with a visibility prefix but
+    // no explicit `m`) must also dispatch to top_level_function. The
+    // visibility keyword was already consumed by the earlier
+    // visibility-strip pass (in top_level_function itself), so we only
+    // need to look at the next token here: METHOD, or NUMBER+IDENT+LPAREN
+    // (typed-method pattern).
+    if (check(TokenType::NUMBER) &&
+        current_ + 2 < tokens_.size() &&
+        tokens_[current_ + 1].type == TokenType::IDENTIFIER &&
+        tokens_[current_ + 2].type == TokenType::LPAREN) {
+        return top_level_function();
+    }
+
+    if (check(TokenType::NUMBER) || check(TokenType::PUBLIC) || check(TokenType::PRIVATE) ||
+        check(TokenType::STATIC) ||
+        (is_identifier() && check_next_is_identifier())) {
+        if (get_type_keyword_id() >= 0 && current_ + 2 < tokens_.size() &&
+            tokens_[current_ + 2].type == TokenType::LPAREN) {
+            return top_level_function();
+        }
+        // If the current token is a visibility modifier, propagate it
+        // to the var-declaration so the resulting VarStmt has its
+        // visibility set (the keyword_matrix tests use `v 5 x = ...`
+        // at top level, which previously reached this branch with
+        // PUBLIC as the first token and silently dropped it).
+        // ABSTRACT is excluded because `a` is also used as a variable
+        // name (e.g. `15 a = n Animal(); a.aname = "..."`) and we
+        // must not consume it as a visibility modifier.
+        if (check(TokenType::PUBLIC) || check(TokenType::PRIVATE) || check(TokenType::STATIC)) {
+            Token vis = advance();
+            return var_statement(vis, false);
+        }
+        return var_statement();
     }
     return expression_statement();
 }
@@ -793,8 +929,35 @@ StmtPtr Parser::try_statement() {
 
     consume(TokenType::HANDLE, "Expect 'h' after try block.");
     consume(TokenType::LPAREN, "Expect '(' after 'h'.");
-    Token exception_type = consume(TokenType::NUMBER, "Expect exception type ID.");
-    Token exception_var = consume_identifier("Expect exception variable name.");
+    // Both forms are valid: `h (type var)` (traditional) and
+    // `h (var)` (short form, just a variable name). Accept the first
+    // token as either a NUMBER (type id, e.g. `15`) or an identifier
+    // (variable name). If the next token is RPAREN, we had only one
+    // identifier; if it's anything else, expect a second identifier
+    // (the variable name) and an RPAREN.
+    Token exception_type;
+    Token exception_var;
+    if (check(TokenType::RPAREN)) {
+        throw error(peek(), "Expect exception type or variable name after 'h'.");
+    }
+    if (check(TokenType::NUMBER)) {
+        exception_type = advance();
+        if (check(TokenType::RPAREN)) {
+            throw error(peek(), "Expect exception variable name after type ID.");
+        }
+        exception_var = consume_identifier("Expect exception variable name.");
+    } else {
+        Token ident1 = consume_identifier("Expect exception type or variable name after 'h'.");
+        if (check(TokenType::RPAREN)) {
+            // Single-identifier form: `h (var) { ... }`.
+            exception_type = Token(TokenType::NUMBER, std::string_view("0"), 0.0, ident1.line);
+            exception_var = ident1;
+        } else {
+            // Two-identifier form: `h (type var) { ... }`.
+            exception_type = Token(TokenType::NUMBER, std::string_view("0"), 0.0, ident1.line);
+            exception_var = consume_identifier("Expect exception variable name.");
+        }
+    }
     consume(TokenType::RPAREN, "Expect ')' after exception catch details.");
     consume(TokenType::LBRACE, "Expect '{' before handle block.");
     Block handle_block(block());
@@ -851,7 +1014,7 @@ StmtPtr Parser::match_statement() {
     StmtPtr default_case;
 
     while (!check(TokenType::RBRACE) && !is_at_end()) {
-        if (match({TokenType::ELSE})) {
+        if (match({TokenType::ELSE, TokenType::DEFAULT})) {
             consume(TokenType::COLON, "Expect ':' after 'default'.");
             default_case = statement();
         } else if (check(TokenType::NUMBER) || check(TokenType::STRING) || check(TokenType::IDENTIFIER)) {
@@ -1122,9 +1285,12 @@ ExprPtr Parser::call() {
         if (match({TokenType::LPAREN})) {
             expr = finish_call(expr);
         } else if (match({TokenType::DOT})) {
-            Token name = consume_identifier("Expect property name after '.'.");
-            expr = std::make_shared<Get>(std::move(expr), name);
-        } else if (check(TokenType::LBRACKET)) {
+     Token name = consume_identifier("Expect property name after '.'.");
+     expr = std::make_shared<Get>(std::move(expr), name);
+ } else if (match({TokenType::QUESTION_DOT})) {
+     Token name = consume_identifier("Expect property name after '?.'.");
+     expr = std::make_shared<NullSafeGet>(std::move(expr), name);
+ } else if (check(TokenType::LBRACKET)) {
             // Lookahead: if [ident, ident] = this is destructuring, not index
             // Single [ident] = ... is treated as index assignment, not destructuring
             size_t saved = current_;
@@ -1228,7 +1394,11 @@ ExprPtr Parser::primary() {
     }
 
     if (is_identifier()) {
-        return std::make_shared<Variable>(advance());
+        Token t = advance();
+        if (std::string(t.lexeme) == "null") {
+            return std::make_shared<Literal>(nullptr);
+        }
+        return std::make_shared<Variable>(t);
     }
 
     if (match({TokenType::LBRACKET})) {

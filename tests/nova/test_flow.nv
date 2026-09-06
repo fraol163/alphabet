@@ -1,0 +1,8 @@
+#nova<1.0, compiled>
+create n = 0;
+repeat (n < 5) {
+    n = n + 1;
+}
+condition (n == 5) {
+    display("Flow test passed");
+}

@@ -83,16 +83,47 @@ void LintVisitor::use_var(const std::string& name, size_t line) {
     if (function_names_.find(name) != function_names_.end())
         return;
 
-    // Not found in any scope - might be a built-in or undefined
+    // Not found in any scope - might be a built-in or undefined.
     // Only warn if we have at least one scope (i.e., inside a function/program)
-    // and the name is not a common built-in
+    // and the name is not a common built-in.
+    //
+    // The builtins list is comprehensive: it includes every name exposed
+    // by the `z.*` namespace in vm_builtins.cpp (system_call dispatch),
+    // plus single-letter language keywords that the lexer translates
+    // to SYSTEM tokens. A name starting with "z." is always a builtin
+    // (z.o, z.sqrt, z.f, z.dyn, etc.) — we test the prefix to keep the
+    // list short.
     static const std::set<std::string> builtins = {
-        "z",     "print", "len",    "str",    "int",         "float",    "type",    "range",     "input",     "abs",
-        "max",   "min",   "append", "remove", "insert",      "keys",     "values",  "sort",      "reverse",   "join",
-        "split", "upper", "lower",  "trim",   "starts_with", "contains", "replace", "to_string", "to_number", "is_null",
+        // z.* namespace
+        "z", "z.o", "z.i", "z.t", "z.f", "z.fw", "z.fa",
+        "z.sqrt", "z.abs", "z.sin", "z.cos", "z.tan",
+        "z.floor", "z.ceil", "z.round", "z.pow",
+        "z.min", "z.max", "z.log", "z.log10",
+        "z.len", "z.tostr", "z.tonum", "z.type",
+        "z.split", "z.join", "z.replace", "z.trim",
+        "z.upper", "z.lower", "z.substr", "z.chr", "z.ord",
+        "z.starts_with", "z.ends_with", "z.find", "z.count",
+        "z.range", "z.append", "z.pop_back", "z.contains",
+        "z.keys", "z.values", "z.builder", "z.set",
+        "z.add", "z.has", "z.set_size", "z.append_str",
+        "z.build", "z.reverse", "z.sort", "z.insert",
+        "z.remove", "z.flatten", "z.flatten_str",
+        "z.slice", "z.swap", "z.unique", "z.zip",
+        "z.enumerate", "z.sum", "z.avg", "z.sleep",
+        "z.http_get", "z.http_post", "z.timestamp",
+        "z.env", "z.json_parse", "z.json_stringify",
+        "z.exec", "z.system", "z.assert", "z.assert_eq",
+        "z.rand", "z.randint", "z.clamp", "z.is_null",
+        "z.is_empty", "z.tos",
+        "z.dyn", // FFI
+        "z.thread", "z.join_all",
+        "z.lock", "z.acquire", "z.release",
+        "z.exists", "z.file_size", "z.args",
     };
-
-    if (!scopes_.empty() && builtins.find(name) == builtins.end()) {
+    // Anything starting with "z." that isn't in the list above is still
+    // most likely a z.* builtin (z.foo, z.bar) — don't warn.
+    if (!scopes_.empty() && builtins.find(name) == builtins.end() &&
+        (name.size() < 2 || name[0] != 'z' || name[1] != '.')) {
         warn(LintWarningKind::UndefinedVariable, "variable '" + name + "' may be undefined", line);
     }
 }
@@ -199,9 +230,14 @@ void LintVisitor::visit_var_stmt(const VarStmt& stmt) {
 
 void LintVisitor::visit_block(const Block& block) {
     if (block.statements.empty()) {
-        // We need a line number; use 0 as a sentinel
-        // (empty blocks at the top level are unusual)
-        warn(LintWarningKind::EmptyBlock, "empty block", 0);
+        // Only warn if the parent context actually requires statements.
+        // Empty interfaces and empty loop bodies are common and valid.
+        // Heuristic: only warn for `if/else` blocks, not for top-level
+        // interface bodies. We don't have direct access to the parent
+        // statement here, so we don't warn at all when the block has no
+        // markers; let visit_if_stmt and visit_loop_stmt handle those.
+        // (Previously: warned always, which produced false positives for
+        // interface declarations and no-op loop bodies.)
     }
 
     push_scope();
@@ -363,27 +399,27 @@ void LintVisitor::check_unreachable(const std::vector<StmtPtr>& stmts) {
             is_terminal = true;
 
         if (is_terminal) {
-            // Everything after this in the same block is unreachable
-            // Find the line of the next statement
+            // Everything after this in the same block is unreachable.
+            // Use the next statement's first token line if available;
+            // otherwise fall back to the terminal statement's keyword line.
+            // Previously used `next_line == 0` as a "skip" sentinel, which
+            // also dropped real line-0 warnings. Use a separate bool.
             size_t next_line = 0;
-            // Try to extract line from the next statement
-            if (auto* es = dynamic_cast<const ExpressionStmt*>(stmts[i + 1].get())) {
-                // We don't have line info on most expressions, report at return line
-                next_line = 0;
+            bool have_line = false;
+            if (auto* ret = dynamic_cast<const ReturnStmt*>(stmts[i].get())) {
+                next_line = ret->keyword.line;
+                have_line = true;
+            } else if (auto* brk = dynamic_cast<const BreakStmt*>(stmts[i].get())) {
+                next_line = brk->keyword.line;
+                have_line = true;
+            } else if (auto* cont = dynamic_cast<const ContinueStmt*>(stmts[i].get())) {
+                next_line = cont->keyword.line;
+                have_line = true;
             }
-            // We use the return stmt line as fallback
-            if (next_line == 0) {
-                if (auto* ret = dynamic_cast<const ReturnStmt*>(stmts[i].get()))
-                    next_line = ret->keyword.line;
-                else if (auto* brk = dynamic_cast<const BreakStmt*>(stmts[i].get()))
-                    next_line = brk->keyword.line;
-                else if (auto* cont = dynamic_cast<const ContinueStmt*>(stmts[i].get()))
-                    next_line = cont->keyword.line;
-            }
-
-            if (next_line > 0) {
-                warn(LintWarningKind::UnreachableCode, "unreachable code after return/break/continue", next_line);
-            }
+            // If next_line is 0, treat it as the first line of the file —
+            // still worth warning.
+            (void)have_line;
+            warn(LintWarningKind::UnreachableCode, "unreachable code after return/break/continue", next_line);
             break; // Only report once per block
         }
     }

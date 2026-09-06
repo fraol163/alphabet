@@ -1,5 +1,5 @@
 #alphabet<en>
 // Edge Case 41: Variable reassignment (no block scoping)
-5 x = 10
-x = 20
-i (x == 20) { z.o("PASS:var_41_shadow") } e { z.o("FAIL:var_41_shadow") }
+5 xv = 10
+xv = 20
+i (xv == 20) { z.o("PASS:var_41_shadow") } e { z.o("FAIL:var_41_shadow") }

@@ -1,4 +1,4 @@
-#alphabet<de}
+#alphabet<de>
 // === COMPREHENSIVE KEYWORD TEST: GERMAN ===
 
 // === VARIABLES ===
@@ -33,9 +33,9 @@ schleife (zaehler < 10) { zaehler = zaehler + 1 i (zaehler % 2 != 0) { fortsetze
 i (z.len(gerade) == 5) { z.o("PASS:de_continue") }
 
 // === FUNCTION ===
-methode 11 factorial(11 num) {
-  i (num <= 1) { zurück 1 }
-  zurück num * factorial(num - 1)
+methode 11 factorial(11 num_val) {
+  i (num_val <= 1) { zurück 1 }
+  zurück num * factorial(num_val - 1)
 }
 i (factorial(5) == 120) { z.o("PASS:de_function") }
 

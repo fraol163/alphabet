@@ -23,9 +23,9 @@ m 11 is_bool(0 val) {
 
 m 11 is_empty(0 val) {
   i (z.is_null(val)) { r 1 }
-  i (z.type(val) == "string") { r z.len(val) == 0 }
-  i (z.type(val) == "list") { r z.len(val) == 0 }
-  i (z.type(val) == "map") { r z.len(val) == 0 }
+  i (z.type(val) == "string") { r z.z.len(val) == 0 }
+  i (z.type(val) == "list") { r z.z.len(val) == 0 }
+  i (z.type(val) == "map") { r z.z.len(val) == 0 }
   r 0
 }
 

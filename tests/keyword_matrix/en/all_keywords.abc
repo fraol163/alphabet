@@ -15,7 +15,7 @@ i (nm == "hello") { o("P:if9") }
 i (z.len(lt) == 3) { o("P:if10") }
 14 mp = {"k":100}
 i (z.has(mp,"k")) { o("P:if11") }
-m 5 ispos(5 num) { r num > 0 }
+m 5 ispos(5 num) { r num_val > 0 }
 i (ispos(5)) { o("P:if12") }
 i (v1 == 10) { o(f"P:if13 v={v1}") }
 i (v1 == 10) o("P:if14")
@@ -51,10 +51,10 @@ o("P:l2")
 l (true) { bv=bv+1 i (bv==5) { b } }
 i (bv==5) { o("P:l3") }
 13 ev=[] 5 ci=0
-l (ci<10) { ci=ci+1 i (ci%2!=0) { k } z.append(ev,ci) }
+l (ci<10) { ci=ci+1 i (ci%2!=0) { kk } z.append(ev,ci) }
 i (z.len(ev)==5) { o("P:l4") }
 13 rx=[] 5 ri=0
-l (ri<10) { ri=ri+1 i (ri==3) { k } i (ri==8) { b } z.append(rx,ri) }
+l (ri<10) { ri=ri+1 i (ri==3) { kk } i (ri==8) { b } z.append(rx,ri) }
 i (z.len(rx)==6) { o("P:l5") }
 5 ps=0 5 pi=0
 l (pi<3) { 5 pj=0 l (pj<3) { ps=ps+1 pj=pj+1 } pi=pi+1 }
@@ -112,24 +112,24 @@ l (bk<5) { bs=bs+bk bk=bk+1 i (bk==3) { b } }
 i (bs==3) { o("P:b8") }
 
 13 kp=[] 5 ci2=0
-l (ci2<5) { ci2=ci2+1 i (ci2==3) { k } z.append(kp,ci2) }
+l (ci2<5) { ci2=ci2+1 i (ci2==3) { kk } z.append(kp,ci2) }
 i (z.len(kp)==4) { o("P:k1") }
 13 kr=[] 5 cj=0
-l (cj<5) { cj=cj+1 i (cj==3) { i (true) { k } } z.append(kr,cj) }
+l (cj<5) { cj=cj+1 i (cj==3) { i (true) { kk } } z.append(kr,cj) }
 i (z.len(kr)==4) { o("P:k2") }
 5 ic=0 5 ck=0
-l (ck<3) { ic=0 5 cl=0 l (cl<3) { cl=cl+1 i (cl==2) { k } ic=ic+1 } ck=ck+1 }
+l (ck<3) { ic=0 5 cl=0 l (cl<3) { cl=cl+1 i (cl==2) { kk } ic=ic+1 } ck=ck+1 }
 i (ic==2) { o("P:k3") }
 13 ce=[] 5 cv=0
-l (cv<6) { cv=cv+1 i (cv%2!=0) { k } z.append(ce,cv) }
+l (cv<6) { cv=cv+1 i (cv%2!=0) { kk } z.append(ce,cv) }
 i (z.len(ce)==3) { o("P:k4") }
 13 cq=[] 5 cw=0
-l (cw<8) { cw=cw+1 i (cw%3==0) { k } z.append(cq,cw) }
+l (cw<8) { cw=cw+1 i (cw%3==0) { kk } z.append(cq,cw) }
 i (z.len(cq)==5) { o("P:k5") }
 13 cm=[] 5 cx=0
-l (cx<10) { cx=cx+1 i (cx==3) { k } i (cx==8) { b } z.append(cm,cx) }
+l (cx<10) { cx=cx+1 i (cx==3) { kk } i (cx==8) { b } z.append(cm,cx) }
 i (z.len(cm)==6) { o("P:k6") }
-m 5 cnz() { 13 dt=[0,1,0,2,0,3] 5 ct=0 5 di=0 l (di<z.len(dt)) { i (dt[di]==0) { di=di+1 k } ct=ct+1 di=di+1 } r ct }
+m 5 cnz() { 13 dt=[0,1,0,2,0,3] 5 ct=0 5 di=0 l (di<z.len(dt)) { i (dt[di]==0) { di=di+1 kk } ct=ct+1 di=di+1 } r ct }
 i (cnz()==3) { o("P:k7") }
 
 m 5 ri1() { r 42 }
@@ -141,7 +141,7 @@ i (z.type(rf1())=="number") { o("P:r3") }
 m 5 rl1() { r [1,2,3] }
 13 rlv=rl1()
 i (z.len(rlv)==3) { o("P:r4") }
-m 5 abs1(5 num) { i (num>=0) { r num } e { r 0-num } }
+m 5 abs1(5 num) { i (num>=0) { r num_val } e { r 0-num } }
 i (abs1(5)==5 && abs1(-5)==5) { o("P:r5") }
 m 5 flp(5 tgt) { 5 fi=0 l (fi<10) { i (fi==tgt) { r fi } fi=fi+1 } r -1 }
 i (flp(7)==7) { o("P:r6") }
@@ -171,7 +171,7 @@ i (grt("world")=="hello world") { o("P:m4") }
 m 5 sq2(5 num) { r num*num }
 m 5 ssq(5 a, 5 b) { r sq2(a)+sq2(b) }
 i (ssq(3,4)==25) { o("P:m5") }
-m 5 fib2(5 num) { i (num<=1) { r num } r fib2(num-1)+fib2(num-2) }
+m 5 fib2(5 num) { i (num<=1) { r num_val } r fib2(num-1)+fib2(num-2) }
 i (fib2(10)==55) { o("P:m6") }
 m 5 wl() { 5 la2=10 5 lb2=20 r la2+lb2 }
 i (wl()==30) { o("P:m7") }
@@ -202,10 +202,10 @@ i (ccc2.get()==3) { o("P:c5") }
 c Cfg { v 12 cn="default" v 5 cv2=42 }
 15 cfgg = num Cfg()
 i (cfgg.cn=="default" && cfgg.cv2==42) { o("P:c6") }
-c Bsk { v 13 items=[] v m 5 add(5 it) { z.append(items,it) } v m 5 cnt() { r z.len(items) } }
+c Bsk { v 13 items=[] v m 5 add(5 it) { z.append(items,it) } v m 5 k() { r z.len(items) } }
 15 bsk = num Bsk()
 bsk.add(10) bsk.add(20)
-i (bsk.cnt()==2) { o("P:c7") }
+i (bsk.k()==2) { o("P:c7") }
 c Str { v 14 sd={"k":"v"} }
 15 stt = num Str()
 i (stt.sd["k"]=="v") { o("P:c8") }

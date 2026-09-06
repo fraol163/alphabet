@@ -21,7 +21,7 @@ i (pt.px == 10 && pt.py == 20) { z.o("PASS:class_s4") }
 c MathUtil { v s 11 add(11 num_a, 11 num_b) { r num_a + num_b } }
 i (MathUtil.add(3, 4) == 7) { z.o("PASS:class_s5") }
 // S6: method calling method
-c Counter { v 5 cnt = 0 v m 11 increment() { cnt = cnt + 1 } v m 11 get_count() { r cnt } }
+c Counter { v 5 kk = 0 v m 11 increment() { kk = kk + 1 } v m 11 get_count() { r kk } }
 15 cn = n Counter()
 cn.increment()
 cn.increment()

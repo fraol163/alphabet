@@ -1,0 +1,45 @@
+language Nova {
+    version: "1.0.0"
+    extension: ".nv"
+    paradigm: "compiled"
+    types: "dynamic"
+    author: "Fraol"
+
+    header {
+        style: "prefix"
+        prefix: "#nova"
+        required: false
+        syntax: "<{version},{mode}>"
+        default: "<1.0, compiled>"
+    }
+
+    banner {
+        art: """
+ _   _                     
+| \ | | _____   ____ _     
+|  \| |/ _ \ \ / / _` |    
+| |\  | (_) \ V / (_| |    
+|_| \_|\___/ \_/ \__,_|    
+"""
+        color: "cyan"
+        tagline: "The Next-Gen Compiled Language"
+        show_on: ["repl", "version", "help"]
+    }
+
+    tokens {
+        keyword "create"    => VAR
+        keyword "display"   => PRINT
+        keyword "condition" => IF
+        keyword "otherwise" => ELSE
+        keyword "repeat"    => WHILE
+        keyword "action"    => FUNCTION
+        keyword "send"      => RETURN
+    }
+
+    grammar {
+        rule Program   = Statement*
+        rule Statement = VarDecl | PrintStmt | IfStmt | ExprStmt
+        rule VarDecl   = "create" Identifier "=" Expr ";"
+        rule PrintStmt = "display" "(" Expr ")" ";"
+    }
+}

@@ -1,7 +1,7 @@
 #alphabet<am>
 // === INTERFACE TESTS ===
 ክፍል Drawable { ግልጽ ዘዴ 11 draw() { } }
-ክፍል Circle በይነገጽ Drawable { ግልጽ ዘዴ 11 draw() { r "circle" } }
+ክፍል Circle በይነገጽ Drawable { ግልጽ ዘዴ 12 draw() { r "circle" } }
 15 ci = n Circle()
 ከሆነ (ci.draw() == "circle") { z.o("PASS:iface_s1") }
 ክፍል Formattable { ግልጽ ዘዴ 12 fmt() { } ግልጽ ዘዴ 11 validate() { } }

@@ -7,7 +7,7 @@ si (pub_fn() == 1) { z.o("PASS:access_s1") }
 public 5 pub_var = 42
 si (pub_var == 42) { z.o("PASS:access_s2") }
 // S3: class with public method
-classe AccessCls { public méthode 11 greet() { r "hi" } }
+classe AccessCls { public méthode 12 greet() { r "hi" } }
 15 ac = n AccessCls()
 si (ac.greet() == "hi") { z.o("PASS:access_s3") }
 // S4: class with public field

@@ -1,9 +1,8 @@
 # Build output
-build/
-build_asan/
-build_debug/
-build_release/
-build-wasm/
+build*/
+bin/
+Testing/
+audit_test/
 
 # CMake generated
 CMakeCache.txt
@@ -54,7 +53,6 @@ presentation_assets/
 ~lock.*.pptx#
 
 # Test scratch files
-test.abc
 test_json.abc
 test_output.txt
 test_crlf.abc

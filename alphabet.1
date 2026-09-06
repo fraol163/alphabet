@@ -1,5 +1,5 @@
 ." Alphabet Language - a multilingual compiled programming language
-.TH ALPHABET 1 "May 2026" "v2.3.5" "User Commands"
+.TH ALPHABET 1 "September 2026" "v2.3.6" "User Commands"
 .SH NAME
 alphabet \- a multilingual compiled programming language with bytecode VM
 .SH SYNOPSIS
@@ -54,6 +54,18 @@ Format source code
 .TP
 .B alphabet lint <file.abc>
 Lint source code for issues
+.TP
+.B alphabet forge <spec.forge> [--output <path>] [--target <mode>]
+Universal meta-compiler to forge custom programming languages and standalone toolchains
+.TP
+.B alphabet forge init <name> [dir] [--style <prefix|shebang|pragma|none>]
+Scaffold a new custom programming language project
+.TP
+.B alphabet forge <spec.forge> --check
+Validate language specification and PEG grammar integrity
+.TP
+.B alphabet forge <spec.forge> --bundle [dir]
+Export complete standalone distribution bundle with compiler, VS Code extension, docs, and playground
 .SH SYNTAX
 The first line must be a language header:
 .B #alphabet<en>

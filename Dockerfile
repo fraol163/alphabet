@@ -4,13 +4,12 @@ RUN apt-get update && apt-get install -y \
     cmake \
     build-essential \
     git \
-    nlohmann-json3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY . .
 
-RUN cmake -B build -DCMAKE_BUILD_TYPE=Release \
+RUN cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF \
     && cmake --build build -j$(nproc)
 
 FROM ubuntu:24.04

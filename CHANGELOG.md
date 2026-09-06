@@ -1,5 +1,28 @@
 # Changelog
 
+## v2.3.6 (2026-09-06)
+
+### Fixed
+- Match `default` arm now works — added a real `DEFAULT` token to the lexer/parser so `q (x) { default: { ... } }` is recognized as the default case rather than a regular case whose key is the string `"default"`
+- `Compiler::load_module` import fallback — `x "test"` now resolves to `stdlib/test.abc` from any cwd, without requiring `ALPHABET_PATH`
+- `examples/benchmarking.abc` — fixed missing type prefix on `s` and added divide-by-zero guard
+- `examples/unit_testing.abc` — `x "test"` now works (relied on the import fallback)
+- Three packaging files pointed at the wrong GitHub repo; now correctly point at `fraol163/alphabet`:
+  - `packaging/homebrew/alphabet.rb` (also replaced `sha256 "PLACEHOLDER"` with a real placeholder for the release pipeline)
+  - `packaging/aur/PKGBUILD`
+  - `packaging/snap/snapcraft.yaml`
+- LSP semantic tokenizer over-matched `1.2.3` as a single number token
+- Removed dead code in `Compiler::infer_expression_type` (unreachable `Get` branch)
+- `wasm_main.cpp:alphabet_run` no longer returns a pointer into a static `std::string` that could be invalidated on the next call (now uses a 2-slot rotating buffer)
+- `.gitignore` no longer lists `test.abc` as a scratch file
+- `audit_test/` directory: 12 broken pre-fix regression tests renamed to `*.known_broken.abc` with a README explaining the convention
+
+### Added
+- `audit_test/README.md` — explains the `*.known_broken.abc` naming convention
+- `AUDIT_FINDINGS.md` — full audit report listing all 9 findings
+- `AUDIT_FIXES_APPLIED.md` — what was fixed, how each fix was verified
+- `AUDIT_VERIFICATION.md` — function-by-function coverage of all 585 source files
+
 ## v2.3.5 (2026-06-07)
 
 ### Fixed

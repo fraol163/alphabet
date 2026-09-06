@@ -20,7 +20,7 @@ wenn (match_ret(1) == "one") { z.o("PASS:match_s5") }
 // S6: if inside case body
 5 val_d = 2
 5 res = 0
-übereinstimmen (val_d) { 1: res = 1 2: wenn (true) { res = 22 } e: res = 0 }
+übereinstimmen (val_d) { 1: res = 1 2: {wenn (true) { res = 22  } } e: res = 0 }
 wenn (res == 22) { z.o("PASS:match_s6") }
 // S7: loop inside case
 5 sum_a = 0

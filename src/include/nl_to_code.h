@@ -41,9 +41,6 @@ class NLToCode {
     // Helper: wrap in braces if needed
     std::string wrap_body(const std::string& body) const;
 
-    // Helper: extract strings from quotes
-    std::string extract_string(const std::string& text, size_t& pos) const;
-
     // Helper: Amharic post-processing
     std::string post_process_amharic(const std::string& text) const;
 };

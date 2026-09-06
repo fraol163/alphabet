@@ -2,6 +2,8 @@
 #include "catch.hpp"
 
 #include <cstdio>
+#include <filesystem>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -950,46 +952,38 @@ TEST_CASE("Class with field initializer does not break methods", "[compiler][reg
 TEST_CASE("Bytecode loader rejects truncated files", "[bytecode][regression][bcio]") {
     // "ALPH" header + version=2, but truncated before the body.
     std::string bad = std::string("ALPH") + char(0) + char(2);
-    char tmp[] = "/tmp/abc_bcio_trunc_XXXXXX";
-    int fd = mkstemp(tmp);
-    if (fd < 0) {
-        SUCCEED("could not create tmp; skipping");
-    } else {
-        ssize_t w = write(fd, bad.data(), bad.size());
-        (void)w;
-        close(fd);
-        bool threw = false;
-        try {
-            alphabet::Program p = alphabet::Program::load_from_file(tmp);
-        } catch (const std::runtime_error&) {
-            threw = true;
-        }
-        std::remove(tmp);
-        REQUIRE(threw);
+    std::string tmp = (std::filesystem::temp_directory_path() / "abc_bcio_trunc.bin").string();
+    {
+        std::ofstream out(tmp, std::ios::binary);
+        out.write(bad.data(), static_cast<std::streamsize>(bad.size()));
     }
+    bool threw = false;
+    try {
+        alphabet::Program p = alphabet::Program::load_from_file(tmp);
+    } catch (const std::runtime_error&) {
+        threw = true;
+    }
+    std::remove(tmp.c_str());
+    REQUIRE(threw);
 }
 
 // BUG BCIO-4: loading a bytecode file with a wrong magic / version
 // used to silently corrupt; now throws a clear error.
 TEST_CASE("Bytecode loader rejects bad magic", "[bytecode][regression][bcio]") {
     std::string bad = "NOPE" + char(0) + char(2) + char(0) + char(0) + char(0) + char(0);
-    char tmp[] = "/tmp/abc_bcio_bad_XXXXXX";
-    int fd = mkstemp(tmp);
-    if (fd < 0) {
-        SUCCEED("could not create tmp; skipping");
-    } else {
-        ssize_t w = write(fd, bad.data(), bad.size());
-        (void)w;
-        close(fd);
-        bool threw = false;
-        try {
-            alphabet::Program p = alphabet::Program::load_from_file(tmp);
-        } catch (const std::runtime_error&) {
-            threw = true;
-        }
-        std::remove(tmp);
-        REQUIRE(threw);
+    std::string tmp = (std::filesystem::temp_directory_path() / "abc_bcio_bad.bin").string();
+    {
+        std::ofstream out(tmp, std::ios::binary);
+        out.write(bad.data(), static_cast<std::streamsize>(bad.size()));
     }
+    bool threw = false;
+    try {
+        alphabet::Program p = alphabet::Program::load_from_file(tmp);
+    } catch (const std::runtime_error&) {
+        threw = true;
+    }
+    std::remove(tmp.c_str());
+    REQUIRE(threw);
 }
 
 // BUG #10 (null comparison & arithmetic semantics): GT/LT/GE/LE with null used to

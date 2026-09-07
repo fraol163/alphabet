@@ -675,6 +675,8 @@ Contributions from developers of all backgrounds are welcomed:
 5. Push to branch: `git push origin feature/amazing-feature`
 6. Open a Pull Request.
 
+   And Special Thanks for Ricky-ultimate  ...
+http://github.com/ricky-ultimate/alphabet-language
 ---
 
 ## License
